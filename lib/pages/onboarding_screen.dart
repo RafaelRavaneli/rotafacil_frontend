@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pallete.dart';
+import '../utils/pallete.dart';
 import 'create_account_screen.dart';
 
 class OnboardingScreen extends StatelessWidget {
