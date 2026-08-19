@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pallete.dart';
+import '../utils/pallete.dart';
 import 'home_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
