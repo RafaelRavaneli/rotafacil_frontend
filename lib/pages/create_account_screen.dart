@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../utils/pallete.dart';
 import 'home_screen.dart';
 
@@ -11,7 +12,7 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  bool isGuia = true;
+  String tipoConta = 'guia';
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +89,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Nome
                   const Text(
                     'Nome completo',
                     style: TextStyle(
@@ -95,6 +97,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 8),
 
                   TextFormField(
@@ -112,11 +115,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           color: Pallete.inputBorder,
                         ),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Pallete.inputBorder,
+                        ),
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 18),
 
+                  // E-mail
                   const Text(
                     'E-mail',
                     style: TextStyle(
@@ -124,6 +134,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 8),
 
                   TextFormField(
@@ -142,11 +153,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           color: Pallete.inputBorder,
                         ),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Pallete.inputBorder,
+                        ),
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 18),
 
+                  // Telefone
                   const Text(
                     'Telefone',
                     style: TextStyle(
@@ -154,6 +172,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 8),
 
                   TextFormField(
@@ -172,11 +191,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           color: Pallete.inputBorder,
                         ),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Pallete.inputBorder,
+                        ),
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 18),
 
+                  // Senha
                   const Text(
                     'Senha',
                     style: TextStyle(
@@ -184,6 +210,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 8),
 
                   TextFormField(
@@ -202,11 +229,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                           color: Pallete.inputBorder,
                         ),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(
+                          color: Pallete.inputBorder,
+                        ),
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 22),
 
+                  // Tipo de conta
                   const Text(
                     'Tipo de conta',
                     style: TextStyle(
@@ -219,17 +253,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
                   Row(
                     children: [
+                      // GUIA
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              isGuia = true;
+                              tipoConta = 'guia';
                             });
                           },
                           child: Container(
                             height: 55,
                             decoration: BoxDecoration(
-                              color: isGuia
+                              color: tipoConta == 'guia'
                                   ? Pallete.herb
                                   : Pallete.white,
                               borderRadius: BorderRadius.circular(15),
@@ -239,9 +274,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                ' Guia',
+                                'Guia',
                                 style: TextStyle(
-                                  color: isGuia
+                                  color: tipoConta == 'guia'
                                       ? Pallete.white
                                       : Pallete.moss,
                                   fontWeight: FontWeight.bold,
@@ -252,19 +287,20 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         ),
                       ),
 
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
 
+                      // TURISTA
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              isGuia = false;
+                              tipoConta = 'turista';
                             });
                           },
                           child: Container(
                             height: 55,
                             decoration: BoxDecoration(
-                              color: !isGuia
+                              color: tipoConta == 'turista'
                                   ? Pallete.herb
                                   : Pallete.white,
                               borderRadius: BorderRadius.circular(15),
@@ -274,12 +310,49 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                ' Turista',
+                                'Turista',
                                 style: TextStyle(
-                                  color: !isGuia
+                                  color: tipoConta == 'turista'
                                       ? Pallete.white
                                       : Pallete.moss,
                                   fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // AGÊNCIA
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              tipoConta = 'agencia';
+                            });
+                          },
+                          child: Container(
+                            height: 55,
+                            decoration: BoxDecoration(
+                              color: tipoConta == 'agencia'
+                                  ? Pallete.herb
+                                  : Pallete.white,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Pallete.inputBorder,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Agência',
+                                style: TextStyle(
+                                  color: tipoConta == 'agencia'
+                                      ? Pallete.white
+                                      : Pallete.moss,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                 ),
                               ),
                             ),
@@ -291,14 +364,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
                   const SizedBox(height: 25),
 
+                  // Botão cadastrar
                   SizedBox(
                     width: double.infinity,
                     height: 58,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushReplacement(context,
-                              MaterialPageRoute(builder: (context)=> const HomeScreen(),
-                              ),
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeScreen(),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -321,6 +397,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
                   const SizedBox(height: 15),
 
+                  // Já possui conta
                   Center(
                     child: TextButton(
                       onPressed: () {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/pallete.dart';
+import 'meus_agendamentos_screen.dart';
+import 'perfil_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,10 +15,7 @@ class HomeScreen extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'RotaFácil',
-          style: TextStyle(
-            color: Pallete.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Pallete.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: SingleChildScrollView(
@@ -35,10 +34,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'O que vamos explorar hoje?',
-              style: TextStyle(
-                color: Pallete.moss,
-                fontSize: 17,
-              ),
+              style: TextStyle(color: Pallete.moss, fontSize: 17),
             ),
             const SizedBox(height: 25),
 
@@ -46,10 +42,7 @@ class HomeScreen extends StatelessWidget {
             TextField(
               decoration: InputDecoration(
                 hintText: 'Buscar trilhas, guias...',
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Pallete.herb,
-                ),
+                prefixIcon: const Icon(Icons.search, color: Pallete.herb),
                 filled: true,
                 fillColor: Pallete.white,
                 border: OutlineInputBorder(
@@ -116,10 +109,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     backgroundColor: Pallete.inputBorder,
-                    child: Icon(
-                      Icons.person,
-                      color: Pallete.herb,
-                    ),
+                    child: Icon(Icons.person, color: Pallete.herb),
                   ),
                   SizedBox(width: 15),
                   Text(
@@ -143,6 +133,25 @@ class HomeScreen extends StatelessWidget {
         selectedItemColor: Pallete.herb,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
+
+        onTap: (index) {
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MeusAgendamentosScreen(),
+              ),
+            );
+          }
+
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PerfilScreen()),
+            );
+          }
+        },
+
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
