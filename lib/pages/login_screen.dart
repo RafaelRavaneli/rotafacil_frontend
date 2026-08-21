@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../services/auth_services.dart';
 import '../utils/pallete.dart';
+
 import 'create_account_screen.dart';
+import 'esqueci_senha_screen.dart';
 import 'home_screen.dart';
+import 'painel_guia_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,7 +16,82 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final senhaController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool carregando = false;
+
+  Future<void> fazerLogin() async {
+    final email = emailController.text.trim();
+    final senha = senhaController.text.trim();
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha o e-mail e a senha.')),
+      );
+      return;
+    }
+
+    setState(() {
+      carregando = true;
+    });
+
+    try {
+      final loginValido = await AuthService.fazerLogin(
+        email: email,
+        senha: senha,
+      );
+
+      if (!mounted) return;
+
+      if (!loginValido) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('E-mail ou senha incorretos.')),
+        );
+        return;
+      }
+
+      final tipoPerfil = await AuthService.getTipoPerfil();
+
+      if (!mounted) return;
+
+      if (tipoPerfil == 'turista') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else if (tipoPerfil == 'guia' || tipoPerfil == 'agencia') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PainelGuiaScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tipo de perfil não encontrado.')),
+        );
+      }
+    } catch (erro) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível realizar o login.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          carregando = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    senhaController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     TextFormField(
+                      controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: 'Digite seu e-mail',
@@ -98,6 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     TextFormField(
+                      controller: senhaController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: 'Digite sua senha',
@@ -131,12 +212,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Esqueci a senha
+                    // Esqueci minha senha
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // Futuramente implementar recuperação de senha.
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EsqueciSenhaScreen(),
+                            ),
+                          );
                         },
                         child: const Text(
                           'Esqueci minha senha',
@@ -150,21 +236,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 15),
 
-                    // Botão entrar
+                    // Botão Entrar
                     SizedBox(
                       width: double.infinity,
                       height: 58,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Temporariamente entra direto na Home.
-                          // Depois substituiremos pela chamada à API.
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: carregando ? null : fazerLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Pallete.herb,
                           foregroundColor: Pallete.white,
@@ -173,13 +250,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: const Text(
-                          'Entrar',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: carregando
+                            ? const SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  color: Pallete.white,
+                                ),
+                              )
+                            : const Text(
+                                'Entrar',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
 

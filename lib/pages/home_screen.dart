@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'busca_filtros_screen.dart';
 import '../utils/pallete.dart';
 import 'meus_agendamentos_screen.dart';
 import 'perfil_screen.dart';
@@ -135,6 +136,15 @@ class HomeScreen extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
 
         onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BuscaFiltrosScreen(),
+              ),
+            );
+          }
+
           if (index == 2) {
             Navigator.push(
               context,
@@ -151,7 +161,6 @@ class HomeScreen extends StatelessWidget {
             );
           }
         },
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
