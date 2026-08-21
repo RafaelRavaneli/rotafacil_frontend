@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/agendamento_service.dart';
 import '../utils/pallete.dart';
 
 class DetalhesTrilhaScreen extends StatelessWidget {
@@ -41,7 +42,6 @@ class DetalhesTrilhaScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Área da imagem
             Container(
               width: double.infinity,
               height: 220,
@@ -97,7 +97,9 @@ class DetalhesTrilhaScreen extends StatelessWidget {
                           valor: dificuldade,
                         ),
                       ),
+
                       const SizedBox(width: 12),
+
                       Expanded(
                         child: _infoCard(
                           icon: Icons.calendar_month_outlined,
@@ -159,7 +161,9 @@ class DetalhesTrilhaScreen extends StatelessWidget {
                           Icons.place_outlined,
                           color: Pallete.herb,
                         ),
+
                         const SizedBox(width: 10),
+
                         Expanded(
                           child: Text(
                             pontoEncontro,
@@ -182,7 +186,7 @@ class DetalhesTrilhaScreen extends StatelessWidget {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (context) {
+                          builder: (dialogContext) {
                             return AlertDialog(
                               title: const Text(
                                 'Confirmar agendamento',
@@ -193,19 +197,35 @@ class DetalhesTrilhaScreen extends StatelessWidget {
                               actions: [
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.pop(context);
+                                    Navigator.pop(dialogContext);
                                   },
                                   child: const Text('Cancelar'),
                                 ),
+
                                 ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
+                                  onPressed: () async {
+                                    final adicionado =
+                                        await AgendamentoService
+                                            .adicionarAgendamento(
+                                      trilha: nome,
+                                      cidade: cidade,
+                                      estado: estado,
+                                      data: data,
+                                      dificuldade: dificuldade,
+                                      pontoEncontro: pontoEncontro,
+                                    );
+
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(dialogContext);
 
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                         content: Text(
-                                          'Trilha agendada com sucesso!',
+                                          adicionado
+                                              ? 'Trilha agendada com sucesso!'
+                                              : 'Essa trilha já está nos seus agendamentos.',
                                         ),
                                       ),
                                     );
@@ -266,7 +286,9 @@ class DetalhesTrilhaScreen extends StatelessWidget {
             icon,
             color: Pallete.herb,
           ),
+
           const SizedBox(height: 8),
+
           Text(
             titulo,
             style: const TextStyle(
@@ -274,7 +296,9 @@ class DetalhesTrilhaScreen extends StatelessWidget {
               fontSize: 12,
             ),
           ),
+
           const SizedBox(height: 4),
+
           Text(
             valor,
             textAlign: TextAlign.center,

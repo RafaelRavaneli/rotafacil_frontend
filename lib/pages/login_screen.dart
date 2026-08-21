@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_services.dart';
 import '../utils/pallete.dart';
 
-import 'create_account_screen.dart';
+import 'escolha_perfil_screen.dart';
 import 'esqueci_senha_screen.dart';
 import 'home_screen.dart';
 import 'painel_guia_screen.dart';
@@ -28,7 +28,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || senha.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha o e-mail e a senha.')),
+        const SnackBar(
+          content: Text('Preencha o e-mail e a senha.'),
+        ),
       );
       return;
     }
@@ -47,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!loginValido) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('E-mail ou senha incorretos.')),
+          const SnackBar(
+            content: Text('E-mail ou senha incorretos.'),
+          ),
         );
         return;
       }
@@ -59,23 +63,36 @@ class _LoginScreenState extends State<LoginScreen> {
       if (tipoPerfil == 'turista') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
         );
-      } else if (tipoPerfil == 'guia' || tipoPerfil == 'agencia') {
+      } else if (tipoPerfil == 'guia' ||
+          tipoPerfil == 'agencia') {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const PainelGuiaScreen()),
+          MaterialPageRoute(
+            builder: (context) => const PainelGuiaScreen(),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tipo de perfil não encontrado.')),
+          const SnackBar(
+            content: Text(
+              'Tipo de perfil não encontrado.',
+            ),
+          ),
         );
       }
     } catch (erro) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível realizar o login.')),
+        const SnackBar(
+          content: Text(
+            'Não foi possível realizar o login.',
+          ),
+        ),
       );
     } finally {
       if (mounted) {
@@ -101,10 +118,14 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Cabeçalho
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(25, 55, 25, 30),
+                padding: const EdgeInsets.fromLTRB(
+                  25,
+                  55,
+                  25,
+                  30,
+                ),
                 color: Pallete.herb,
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(height: 8),
                     Text(
                       'Entre na sua conta para continuar',
-                      style: TextStyle(color: Pallete.pearl, fontSize: 17),
+                      style: TextStyle(
+                        color: Pallete.pearl,
+                        fontSize: 17,
+                      ),
                     ),
                   ],
                 ),
@@ -129,11 +153,12 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 45),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 25,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // E-mail
                     const Text(
                       'E-mail',
                       style: TextStyle(
@@ -166,7 +191,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Senha
                     const Text(
                       'Senha',
                       style: TextStyle(
@@ -195,7 +219,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscurePassword = !_obscurePassword;
+                              _obscurePassword =
+                                  !_obscurePassword;
                             });
                           },
                         ),
@@ -212,7 +237,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Esqueci minha senha
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -220,7 +244,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const EsqueciSenhaScreen(),
+                              builder: (context) =>
+                                  const EsqueciSenhaScreen(),
                             ),
                           );
                         },
@@ -236,7 +261,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 15),
 
-                    // Botão Entrar
                     SizedBox(
                       width: double.infinity,
                       height: 58,
@@ -271,14 +295,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 25),
 
-                    // Cadastro
                     Center(
                       child: TextButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const CreateAccountScreen(),
+                              builder: (context) =>
+                                  const EscolhaPerfilScreen(),
                             ),
                           );
                         },

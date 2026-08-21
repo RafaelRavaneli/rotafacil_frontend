@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rotafacil/pages/escolha_perfil_screen.dart';
 import '../utils/pallete.dart';
 import 'create_account_screen.dart';
 
@@ -66,7 +67,7 @@ class OnboardingScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(context,
-                      MaterialPageRoute(builder: (context)=> const CreateAccountScreen(),
+                      MaterialPageRoute(builder: (context)=> const EscolhaPerfilScreen(),
                       ),
                     );
                   },

@@ -5,7 +5,9 @@ import '../utils/pallete.dart';
 import 'login_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
-  const CreateAccountScreen({super.key});
+  final String tipoPerfilInicial;
+
+  const CreateAccountScreen({super.key, required this.tipoPerfilInicial});
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -17,10 +19,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final telefoneController = TextEditingController();
   final senhaController = TextEditingController();
 
-  String tipoPerfil = 'guia';
+  late String tipoPerfil;
 
   bool obscurePassword = true;
   bool carregando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    tipoPerfil = widget.tipoPerfilInicial;
+  }
 
   Future<void> cadastrar() async {
     final nome = nomeController.text.trim();
@@ -143,35 +151,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     );
   }
 
-  Widget botaoPerfil({required String texto, required String valor}) {
-    final selecionado = tipoPerfil == valor;
-
-    return Expanded(
-      child: SizedBox(
-        height: 55,
-        child: OutlinedButton(
-          onPressed: () {
-            setState(() {
-              tipoPerfil = valor;
-            });
-          },
-          style: OutlinedButton.styleFrom(
-            backgroundColor: selecionado ? Pallete.herb : Pallete.white,
-            foregroundColor: selecionado ? Pallete.white : Pallete.moss,
-            side: const BorderSide(color: Pallete.inputBorder),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-          ),
-          child: Text(
-            texto,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,33 +216,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 senha: true,
               ),
 
-              const SizedBox(height: 25),
-
-              const Text(
-                'Tipo de conta',
-                style: TextStyle(
-                  color: Pallete.moss,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  botaoPerfil(texto: 'Guia', valor: 'guia'),
-
-                  const SizedBox(width: 8),
-
-                  botaoPerfil(texto: 'Turista', valor: 'turista'),
-
-                  const SizedBox(width: 8),
-
-                  botaoPerfil(texto: 'Agência', valor: 'agencia'),
-                ],
-              ),
-
-              const SizedBox(height: 25),
+              const SizedBox(height: 30),
 
               SizedBox(
                 width: double.infinity,
