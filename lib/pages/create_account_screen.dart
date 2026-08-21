@@ -1,346 +1,280 @@
 import 'package:flutter/material.dart';
+
+import '../services/auth_services.dart';
 import '../utils/pallete.dart';
-import 'home_screen.dart';
+import 'login_screen.dart';
 
 class CreateAccountScreen extends StatefulWidget {
-  const CreateAccountScreen({super.key});
+  final String tipoPerfilInicial;
+
+  const CreateAccountScreen({super.key, required this.tipoPerfilInicial});
 
   @override
-  State<CreateAccountScreen> createState() =>
-      _CreateAccountScreenState();
+  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  bool isGuia = true;
+  final nomeController = TextEditingController();
+  final emailController = TextEditingController();
+  final telefoneController = TextEditingController();
+  final senhaController = TextEditingController();
+
+  late String tipoPerfil;
+
+  bool obscurePassword = true;
+  bool carregando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    tipoPerfil = widget.tipoPerfilInicial;
+  }
+
+  Future<void> cadastrar() async {
+    final nome = nomeController.text.trim();
+    final email = emailController.text.trim();
+    final telefone = telefoneController.text.trim();
+    final senha = senhaController.text.trim();
+
+    if (nome.isEmpty || email.isEmpty || telefone.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos.')),
+      );
+      return;
+    }
+
+    setState(() {
+      carregando = true;
+    });
+
+    try {
+      await AuthService.cadastrarUsuario(
+        nome: nome,
+        email: email,
+        telefone: telefone,
+        senha: senha,
+        tipoPerfil: tipoPerfil,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conta cadastrada com sucesso!')),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao cadastrar a conta.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          carregando = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    nomeController.dispose();
+    emailController.dispose();
+    telefoneController.dispose();
+    senhaController.dispose();
+    super.dispose();
+  }
+
+  Widget campoTexto({
+    required String titulo,
+    required String hint,
+    required IconData icon,
+    required TextEditingController controller,
+    TextInputType? keyboardType,
+    bool senha = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(
+            color: Pallete.moss,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: senha ? obscurePassword : false,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon, color: Pallete.herb),
+            suffixIcon: senha
+                ? IconButton(
+                    onPressed: () {
+                      setState(() {
+                        obscurePassword = !obscurePassword;
+                      });
+                    },
+                    icon: Icon(
+                      obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: Pallete.herb,
+                    ),
+                  )
+                : null,
+            filled: true,
+            fillColor: Pallete.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Pallete.inputBorder),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Pallete.inputBorder),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: const BorderSide(color: Pallete.herb, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Pallete.pearl,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Cabeçalho
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(25, 55, 25, 25),
-              color: Pallete.herb,
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Criar Conta',
-                    style: TextStyle(
-                      color: Pallete.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Junte-se à comunidade de guias',
-                    style: TextStyle(
-                      color: Pallete.pearl,
-                      fontSize: 17,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Foto
-            Stack(
-              children: [
-                const CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Pallete.inputBorder,
-                  child: Icon(
-                    Icons.person,
-                    size: 60,
-                    color: Pallete.herb,
-                  ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Criar conta',
+                style: TextStyle(
+                  color: Pallete.moss,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'Preencha seus dados para começar.',
+                style: TextStyle(color: Pallete.moss, fontSize: 16),
+              ),
+
+              const SizedBox(height: 30),
+
+              campoTexto(
+                titulo: 'Nome completo',
+                hint: 'Digite seu nome completo',
+                icon: Icons.person_outline,
+                controller: nomeController,
+              ),
+
+              const SizedBox(height: 20),
+
+              campoTexto(
+                titulo: 'E-mail',
+                hint: 'Digite seu e-mail',
+                icon: Icons.email_outlined,
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
+
+              const SizedBox(height: 20),
+
+              campoTexto(
+                titulo: 'Telefone',
+                hint: 'Digite seu telefone',
+                icon: Icons.phone_outlined,
+                controller: telefoneController,
+                keyboardType: TextInputType.phone,
+              ),
+
+              const SizedBox(height: 20),
+
+              campoTexto(
+                titulo: 'Senha',
+                hint: 'Digite sua senha',
+                icon: Icons.lock_outline,
+                controller: senhaController,
+                senha: true,
+              ),
+
+              const SizedBox(height: 30),
+
+              SizedBox(
+                width: double.infinity,
+                height: 58,
+                child: ElevatedButton(
+                  onPressed: carregando ? null : cadastrar,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Pallete.herb,
+                    foregroundColor: Pallete.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: carregando
+                      ? const SizedBox(
+                          width: 25,
+                          height: 25,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Pallete.white,
+                          ),
+                        )
+                      : const Text(
+                          'Cadastrar',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Já tem conta? Entrar',
+                    style: TextStyle(
                       color: Pallete.herb,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Pallete.white,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Nome completo',
-                    style: TextStyle(
-                      color: Pallete.moss,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  TextFormField(
-                    decoration: InputDecoration(
-                      hintText: 'Digite seu nome completo',
-                      prefixIcon: const Icon(
-                        Icons.person_outline,
-                        color: Pallete.herb,
-                      ),
-                      filled: true,
-                      fillColor: Pallete.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Pallete.inputBorder,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  const Text(
-                    'E-mail',
-                    style: TextStyle(
-                      color: Pallete.moss,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  TextFormField(
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: 'Digite seu e-mail',
-                      prefixIcon: const Icon(
-                        Icons.email_outlined,
-                        color: Pallete.herb,
-                      ),
-                      filled: true,
-                      fillColor: Pallete.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Pallete.inputBorder,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  const Text(
-                    'Telefone',
-                    style: TextStyle(
-                      color: Pallete.moss,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  TextFormField(
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: 'Digite seu telefone',
-                      prefixIcon: const Icon(
-                        Icons.phone_outlined,
-                        color: Pallete.herb,
-                      ),
-                      filled: true,
-                      fillColor: Pallete.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Pallete.inputBorder,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  const Text(
-                    'Senha',
-                    style: TextStyle(
-                      color: Pallete.moss,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  TextFormField(
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Digite sua senha',
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        color: Pallete.herb,
-                      ),
-                      filled: true,
-                      fillColor: Pallete.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(
-                          color: Pallete.inputBorder,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const Text(
-                    'Tipo de conta',
-                    style: TextStyle(
-                      color: Pallete.moss,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isGuia = true;
-                            });
-                          },
-                          child: Container(
-                            height: 55,
-                            decoration: BoxDecoration(
-                              color: isGuia
-                                  ? Pallete.herb
-                                  : Pallete.white,
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Pallete.inputBorder,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                ' Guia',
-                                style: TextStyle(
-                                  color: isGuia
-                                      ? Pallete.white
-                                      : Pallete.moss,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              isGuia = false;
-                            });
-                          },
-                          child: Container(
-                            height: 55,
-                            decoration: BoxDecoration(
-                              color: !isGuia
-                                  ? Pallete.herb
-                                  : Pallete.white,
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Pallete.inputBorder,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                ' Turista',
-                                style: TextStyle(
-                                  color: !isGuia
-                                      ? Pallete.white
-                                      : Pallete.moss,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(context,
-                              MaterialPageRoute(builder: (context)=> const HomeScreen(),
-                              ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Pallete.herb,
-                        foregroundColor: Pallete.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: const Text(
-                        'Cadastrar',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Já tem conta? Entrar',
-                        style: TextStyle(
-                          color: Pallete.herb,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-                ],
               ),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
