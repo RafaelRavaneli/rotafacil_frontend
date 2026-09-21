@@ -1,0 +1,27 @@
+name: rotafacil
+description: "RotaFácil - Front-end completo com persistência local, GPS e FCM"
+publish_to: 'none'
+version: 1.1.0+2
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.5
+  http: ^1.6.0
+  image_picker: ^1.2.0
+  geolocator: ^14.0.3
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
+  crypto: ^3.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

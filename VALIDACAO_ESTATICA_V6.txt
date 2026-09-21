@@ -1,0 +1,15 @@
+RotaFácil V6 — checagem estrutural
+
+Arquivos Dart: 57
+Imports relativos inexistentes: 0
+Arquivos com delimitadores desbalanceados: 0
+
+Imports ausentes:
+Nenhum
+
+Delimitadores:
+Nenhum problema detectado
+
+OBS:
+A validação definitiva deve ser feita com `flutter analyze`
+no computador do projeto.

@@ -1,0 +1,14 @@
+RotaFácil V4 — checagem estrutural da geração
+
+Arquivos Dart: 56
+Imports relativos inexistentes: 0
+Arquivos com delimitadores desbalanceados: 0
+
+Esta checagem não substitui `flutter analyze` no seu computador, pois
+o ambiente de geração não possui o executável Flutter.
+
+Imports ausentes:
+Nenhum
+
+Delimitadores:
+Nenhum problema detectado

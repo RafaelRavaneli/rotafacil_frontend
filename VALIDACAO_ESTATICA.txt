@@ -1,0 +1,23 @@
+RotaFácil V3 — validação estática feita na geração
+
+Arquivos Dart verificados: 53
+Imports relativos inexistentes: 0
+Arquivos com delimitadores desbalanceados: 0
+Callbacks vazios onPressed/onTap encontrados: 0
+Padrões de underscores que causavam os avisos anteriores: 0
+
+IMPORTANTE:
+O ambiente que gerou o ZIP não possui o executável Flutter/Dart.
+Por isso esta checagem NÃO substitui `flutter analyze` no seu computador.
+
+Depois de extrair:
+1. flutter create .
+2. flutter pub get
+3. flutter analyze
+4. flutter run -d chrome
+
+Imports ausentes:
+Nenhum
+
+Delimitadores:
+Nenhum problema detectado

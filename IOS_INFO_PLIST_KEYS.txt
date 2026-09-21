@@ -1,0 +1,19 @@
+Depois de executar `flutter create .`, adicione em:
+
+ios/Runner/Info.plist
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>O RotaFácil usa sua localização para buscar trilhas próximas e definir o ponto da trilha.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>O RotaFácil acessa suas fotos para selecionar a imagem da trilha.</string>
+
+<key>UIBackgroundModes</key>
+<array>
+    <string>remote-notification</string>
+</array>
+
+No Xcode:
+1. Signing & Capabilities
+2. + Capability > Push Notifications
+3. Background Modes > Remote notifications
