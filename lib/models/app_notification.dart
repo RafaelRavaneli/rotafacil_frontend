@@ -14,12 +14,12 @@ class AppNotificationItem {
   bool read;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'createdAt': createdAt.toIso8601String(),
-        'read': read,
-      };
+    'id': id,
+    'title': title,
+    'body': body,
+    'createdAt': createdAt.toIso8601String(),
+    'read': read,
+  };
 
   factory AppNotificationItem.fromJson(Map<String, dynamic> json) {
     return AppNotificationItem(
@@ -28,7 +28,7 @@ class AppNotificationItem {
       body: json['body']?.toString() ?? '',
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-              DateTime.now(),
+          DateTime.now(),
       read: json['read'] == true,
     );
   }

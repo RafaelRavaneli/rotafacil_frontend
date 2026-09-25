@@ -24,17 +24,11 @@ class _AgencyShellState extends State<AgencyShell> {
       case 1:
         return const GuidesScreen();
       case 2:
-        return const TrailsManagementScreen(
-          isAgency: true,
-        );
+        return const TrailsManagementScreen(isAgency: true);
       case 3:
-        return const BookingsScreen(
-          role: 'agencia',
-        );
+        return const BookingsScreen(role: 'agencia');
       case 4:
-        return const ProfileTab(
-          role: 'Agência',
-        );
+        return const ProfileTab(role: 'Agência');
       default:
         return const AgencyDashboardTab();
     }
@@ -48,10 +42,7 @@ class _AgencyShellState extends State<AgencyShell> {
       // Constrói apenas a página selecionada.
       // Isso evita que abas pesadas escondidas bloqueiem
       // a interface inteira no Chrome.
-      body: KeyedSubtree(
-        key: ValueKey<int>(index),
-        child: _currentPage(),
-      ),
+      body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
@@ -79,21 +70,13 @@ class _AgencyShellState extends State<AgencyShell> {
             label: 'Trilhas',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.calendar_month_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.calendar_month_rounded,
-            ),
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month_rounded),
             label: 'Agendamentos',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.person_outline_rounded,
-            ),
-            selectedIcon: Icon(
-              Icons.person_rounded,
-            ),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',
           ),
         ],

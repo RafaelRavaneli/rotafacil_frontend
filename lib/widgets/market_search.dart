@@ -23,25 +23,15 @@ class MarketSearch extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 13,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(
             children: [
-              const Icon(
-                Icons.search_rounded,
-                color: AppColors.ink,
-                size: 22,
-              ),
+              const Icon(Icons.search_rounded, color: AppColors.ink, size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   hint,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
                 ),
               ),
               const Icon(

@@ -14,12 +14,12 @@ class LocalGuide {
   String status;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'email': email,
-        'specialty': specialty,
-        'status': status,
-      };
+    'id': id,
+    'name': name,
+    'email': email,
+    'specialty': specialty,
+    'status': status,
+  };
 
   factory LocalGuide.fromJson(Map<String, dynamic> json) {
     return LocalGuide(

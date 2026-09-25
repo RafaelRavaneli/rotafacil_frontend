@@ -11,56 +11,43 @@ import '../guide/guide_shell.dart';
 import '../tourist/tourist_shell.dart';
 import 'forgot_password_screen.dart';
 import 'register_screen.dart';
+import '../../utils/auth_error_message.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({
-    super.key,
-    required this.role,
-  });
+  const LoginScreen({super.key, required this.role});
 
   final UserRole role;
 
   @override
-  State<LoginScreen> createState() =>
-      _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController =
-      TextEditingController();
-  final passwordController =
-      TextEditingController();
-  final documentController =
-      TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final documentController = TextEditingController();
 
   bool obscure = true;
   bool loading = false;
 
   bool get needsDocument {
-    return widget.role == UserRole.guide ||
-        widget.role == UserRole.agency;
+    return widget.role == UserRole.guide || widget.role == UserRole.agency;
   }
 
   String get documentLabel {
-    return widget.role == UserRole.guide
-        ? 'CPF'
-        : 'CNPJ';
+    return widget.role == UserRole.guide ? 'CPF' : 'CNPJ';
   }
 
   @override
   void initState() {
     super.initState();
 
-    final user =
-        AppStore.instance.userForRole(
-      widget.role.title,
-    );
+    final user = AppStore.instance.userForRole(widget.role.title);
 
     emailController.text = user.email;
 
     if (needsDocument) {
-      documentController.text =
-          DocumentValidator.formatForRole(
+      documentController.text = DocumentValidator.formatForRole(
         widget.role.title,
         user.document,
       );
@@ -76,34 +63,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    final email =
-        emailController.text.trim();
-    final password =
-        passwordController.text;
-    final document =
-        documentController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final document = documentController.text.trim();
 
-    if (email.isEmpty ||
-        password.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Preencha e-mail e senha.',
-          ),
-        ),
-      );
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Preencha e-mail e senha.')));
 
       return;
     }
 
     if (needsDocument &&
-        !DocumentValidator.isValidForRole(
-          widget.role.title,
-          document,
-        )) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+        !DocumentValidator.isValidForRole(widget.role.title, document)) {
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '$documentLabel inválido. '
@@ -117,12 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => loading = true);
 
-    String resolvedRole =
-        widget.role.apiValue;
+    String resolvedRole = widget.role.apiValue;
 
     try {
-      final result =
-          await AuthGateway.instance.login(
+      final result = await AuthGateway.instance.login(
         selectedRole: widget.role,
         email: email,
         password: password,
@@ -134,8 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result == null) {
         setState(() => loading = false);
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               needsDocument
@@ -148,32 +119,24 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      resolvedRole =
-          result.role.toLowerCase().trim();
+      resolvedRole = result.role.toLowerCase().trim();
 
-      await NotificationService.instance
-          .registerAfterLogin();
+      await NotificationService.instance.registerAfterLogin();
     } catch (error) {
       if (!mounted) return;
 
       setState(() => loading = false);
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-        SnackBar(
-          content: Text(
-            error.toString(),
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
 
       return;
     }
 
     if (!mounted) return;
 
-    final Widget destination =
-        switch (resolvedRole) {
+    final Widget destination = switch (resolvedRole) {
       'guia' => const GuideShell(),
       'agencia' => const AgencyShell(),
       _ => const TouristShell(),
@@ -181,9 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => destination,
-      ),
+      MaterialPageRoute(builder: (_) => destination),
       (_) => false,
     );
   }
@@ -210,13 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(),
       body: SafeArea(
         child: ListView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            24,
-            12,
-            24,
-            32,
-          ),
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
           children: [
             const SizedBox(height: 14),
             const Text(
@@ -232,121 +187,89 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               'Entre para continuar como '
               '${widget.role.title.toLowerCase()}.',
-              style: const TextStyle(
-                color: AppColors.muted,
-                fontSize: 13.5,
-              ),
+              style: const TextStyle(color: AppColors.muted, fontSize: 13.5),
             ),
             const SizedBox(height: 30),
             TextField(
               controller: emailController,
-              keyboardType:
-                  TextInputType.emailAddress,
-              decoration:
-                  const InputDecoration(
-                labelText: 'E-mail',
-              ),
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'E-mail'),
             ),
             if (needsDocument) ...[
               const SizedBox(height: 14),
               TextField(
-                controller:
-                    documentController,
-                keyboardType:
-                    TextInputType.number,
+                controller: documentController,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: documentLabel,
-                  helperText:
-                      '$documentLabel obrigatório para o acesso.',
-                  prefixIcon: const Icon(
-                    Icons.badge_outlined,
-                  ),
+                  helperText: '$documentLabel obrigatório para o acesso.',
+                  prefixIcon: const Icon(Icons.badge_outlined),
                 ),
               ),
             ],
             const SizedBox(height: 14),
             TextField(
-              controller:
-                  passwordController,
+              controller: passwordController,
               obscureText: obscure,
               decoration: InputDecoration(
                 labelText: 'Senha',
                 suffixIcon: IconButton(
                   onPressed: () {
-                    setState(
-                      () => obscure = !obscure,
-                    );
+                    setState(() => obscure = !obscure);
                   },
                   icon: Icon(
                     obscure
-                        ? Icons
-                            .visibility_outlined
-                        : Icons
-                            .visibility_off_outlined,
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
                   ),
                 ),
               ),
             ),
             Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          ForgotPasswordScreen(
-                        role: widget.role,
-                      ),
+                      builder: (_) => ForgotPasswordScreen(role: widget.role),
                     ),
                   );
                 },
                 child: const Text(
                   'Esqueci minha senha',
                   style: TextStyle(
-                    color:
-                        AppColors.green700,
+                    color: AppColors.green700,
                     fontSize: 12,
-                    fontWeight:
-                        FontWeight.w700,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
             FilledButton(
-              onPressed:
-                  loading ? null : _login,
+              onPressed: loading ? null : _login,
               child: loading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
-                      child:
-                          CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        color:
-                            AppColors.white,
+                        color: AppColors.white,
                       ),
                     )
                   : const Text('Entrar'),
             ),
             const SizedBox(height: 18),
             Container(
-              padding:
-                  const EdgeInsets.all(13),
+              padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
-                color:
-                    AppColors.green100,
-                borderRadius:
-                    BorderRadius.circular(
-                  14,
-                ),
+                color: AppColors.green100,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 demoText,
                 style: const TextStyle(
-                  color:
-                      AppColors.green900,
+                  color: AppColors.green900,
                   fontSize: 11.5,
                   height: 1.4,
                 ),
@@ -354,36 +277,26 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 18),
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   'Ainda não tem conta?',
-                  style: TextStyle(
-                    color:
-                        AppColors.muted,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            RegisterScreen(
-                          role: widget.role,
-                        ),
+                        builder: (_) => RegisterScreen(role: widget.role),
                       ),
                     );
                   },
                   child: const Text(
                     'Criar conta',
                     style: TextStyle(
-                      color:
-                          AppColors.green700,
-                      fontWeight:
-                          FontWeight.w800,
+                      color: AppColors.green700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),

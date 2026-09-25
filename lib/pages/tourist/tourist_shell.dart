@@ -24,17 +24,11 @@ class _TouristShellState extends State<TouristShell> {
       case 1:
         return const _ExploreTab();
       case 2:
-        return const BookingsScreen(
-          role: 'turista',
-        );
+        return const BookingsScreen(role: 'turista');
       case 3:
-        return const MessagesScreen(
-          role: 'turista',
-        );
+        return const MessagesScreen(role: 'turista');
       case 4:
-        return const ProfileTab(
-          role: 'Turista',
-        );
+        return const ProfileTab(role: 'Turista');
       default:
         return const TouristHomeTab();
     }
@@ -44,10 +38,7 @@ class _TouristShellState extends State<TouristShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cream,
-      body: KeyedSubtree(
-        key: ValueKey<int>(index),
-        child: _currentPage(),
-      ),
+      body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (value) {
@@ -68,30 +59,18 @@ class _TouristShellState extends State<TouristShell> {
             label: 'Explorar',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.calendar_month_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.calendar_month_rounded,
-            ),
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month_rounded),
             label: 'Agendamentos',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.chat_bubble_outline_rounded,
-            ),
-            selectedIcon: Icon(
-              Icons.chat_bubble_rounded,
-            ),
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            selectedIcon: Icon(Icons.chat_bubble_rounded),
             label: 'Mensagens',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.person_outline_rounded,
-            ),
-            selectedIcon: Icon(
-              Icons.person_rounded,
-            ),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',
           ),
         ],
@@ -109,8 +88,7 @@ class _ExploreTab extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
             const Text(
@@ -124,27 +102,18 @@ class _ExploreTab extends StatelessWidget {
             const SizedBox(height: 6),
             const Text(
               'Encontre trilhas por cidade, dificuldade, data ou proximidade.',
-              style: TextStyle(
-                color: AppColors.muted,
-              ),
+              style: TextStyle(color: AppColors.muted),
             ),
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        const TrailSearchScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const TrailSearchScreen()),
                 );
               },
-              icon: const Icon(
-                Icons.search_rounded,
-              ),
-              label: const Text(
-                'Abrir busca com filtros',
-              ),
+              icon: const Icon(Icons.search_rounded),
+              label: const Text('Abrir busca com filtros'),
             ),
           ],
         ),

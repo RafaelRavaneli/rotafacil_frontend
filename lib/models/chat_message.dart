@@ -16,13 +16,13 @@ class ChatMessage {
   final String guideName;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'senderRole': senderRole,
-        'recipientRole': recipientRole,
-        'text': text,
-        'createdAt': createdAt.toIso8601String(),
-        'guideName': guideName,
-      };
+    'id': id,
+    'senderRole': senderRole,
+    'recipientRole': recipientRole,
+    'text': text,
+    'createdAt': createdAt.toIso8601String(),
+    'guideName': guideName,
+  };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final oldRole = json['role']?.toString();
@@ -48,7 +48,7 @@ class ChatMessage {
       text: json['text']?.toString() ?? '',
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-              DateTime.now(),
+          DateTime.now(),
       guideName: json['guideName']?.toString() ?? '',
     );
   }

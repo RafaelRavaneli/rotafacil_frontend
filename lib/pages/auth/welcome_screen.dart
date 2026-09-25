@@ -19,9 +19,8 @@ class WelcomeScreen extends StatelessWidget {
           Image.network(
             _hero,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: AppColors.green800,
-            ),
+            errorBuilder: (context, error, stackTrace) =>
+                Container(color: AppColors.green800),
           ),
           Container(
             decoration: const BoxDecoration(
@@ -42,10 +41,7 @@ class WelcomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 34, 24, 22),
               child: Column(
                 children: [
-                  const AppLogo(
-                    large: true,
-                    showName: false,
-                  ),
+                  const AppLogo(large: true, showName: false),
                   const SizedBox(height: 12),
                   const Text(
                     'RotaFácil',
@@ -95,8 +91,7 @@ class WelcomeScreen extends StatelessWidget {
                         );
                       },
                       style: FilledButton.styleFrom(
-                        backgroundColor:
-                            AppColors.white.withValues(alpha: .14),
+                        backgroundColor: AppColors.white.withValues(alpha: .14),
                         foregroundColor: AppColors.white,
                         side: BorderSide(
                           color: AppColors.white.withValues(alpha: .42),
@@ -134,10 +129,7 @@ class WelcomeScreen extends StatelessWidget {
 }
 
 class _Benefit extends StatelessWidget {
-  const _Benefit({
-    required this.icon,
-    required this.text,
-  });
+  const _Benefit({required this.icon, required this.text});
 
   final IconData icon;
   final String text;

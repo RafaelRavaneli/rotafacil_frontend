@@ -18,12 +18,10 @@ class NetworkImageBox extends StatefulWidget {
   final BoxFit fit;
 
   @override
-  State<NetworkImageBox> createState() =>
-      _NetworkImageBoxState();
+  State<NetworkImageBox> createState() => _NetworkImageBoxState();
 }
 
-class _NetworkImageBoxState
-    extends State<NetworkImageBox> {
+class _NetworkImageBoxState extends State<NetworkImageBox> {
   Uint8List? bytes;
 
   @override
@@ -33,9 +31,7 @@ class _NetworkImageBoxState
   }
 
   @override
-  void didUpdateWidget(
-    NetworkImageBox oldWidget,
-  ) {
+  void didUpdateWidget(NetworkImageBox oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.url != widget.url) {
@@ -52,15 +48,12 @@ class _NetworkImageBoxState
 
     final comma = widget.url.indexOf(',');
 
-    if (comma < 0 ||
-        comma >= widget.url.length - 1) {
+    if (comma < 0 || comma >= widget.url.length - 1) {
       return;
     }
 
     try {
-      bytes = base64Decode(
-        widget.url.substring(comma + 1),
-      );
+      bytes = base64Decode(widget.url.substring(comma + 1));
     } catch (_) {
       bytes = null;
     }
@@ -71,10 +64,7 @@ class _NetworkImageBoxState
     final localBytes = bytes;
 
     return ClipRRect(
-      borderRadius:
-          BorderRadius.circular(
-        widget.borderRadius,
-      ),
+      borderRadius: BorderRadius.circular(widget.borderRadius),
       child: localBytes != null
           ? Image.memory(
               localBytes,
@@ -82,18 +72,15 @@ class _NetworkImageBoxState
               width: double.infinity,
               height: double.infinity,
               gaplessPlayback: true,
-              filterQuality:
-                  FilterQuality.medium,
+              filterQuality: FilterQuality.medium,
             )
           : Image.network(
               widget.url,
               fit: widget.fit,
               width: double.infinity,
               height: double.infinity,
-              filterQuality:
-                  FilterQuality.medium,
-              errorBuilder:
-                  (context, error, stackTrace) {
+              filterQuality: FilterQuality.medium,
+              errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: AppColors.green100,
                   alignment: Alignment.center,

@@ -9,16 +9,13 @@ import 'services/session_service.dart';
 import 'state/app_store.dart';
 import 'theme/app_theme.dart';
 
-final GlobalKey<NavigatorState> appNavigatorKey =
-    GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 class RotaFacilApp extends StatelessWidget {
-  const RotaFacilApp({
-    super.key,
-  });
+  const RotaFacilApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +34,10 @@ class _SessionBootstrap extends StatefulWidget {
   const _SessionBootstrap();
 
   @override
-  State<_SessionBootstrap> createState() =>
-      _SessionBootstrapState();
+  State<_SessionBootstrap> createState() => _SessionBootstrapState();
 }
 
-class _SessionBootstrapState
-    extends State<_SessionBootstrap> {
+class _SessionBootstrapState extends State<_SessionBootstrap> {
   late Future<Widget> _bootstrapFuture;
 
   @override
@@ -60,11 +55,9 @@ class _SessionBootstrapState
 
       final session = SessionService.instance;
 
-      final role =
-          session.role?.trim().toLowerCase() ?? '';
+      final role = session.role?.trim().toLowerCase() ?? '';
 
-      final email =
-          session.email?.trim() ?? '';
+      final email = session.email?.trim() ?? '';
 
       // Não existe uma sessão salva.
       if (role.isEmpty || email.isEmpty) {
@@ -74,8 +67,7 @@ class _SessionBootstrapState
       // Quando o backend estiver ativo,
       // uma sessão válida precisa possuir token.
       if (AppConfig.useBackend) {
-        final token =
-            session.token?.trim() ?? '';
+        final token = session.token?.trim() ?? '';
 
         if (token.isEmpty) {
           await session.clear();
@@ -117,21 +109,14 @@ class _SessionBootstrapState
   Widget build(BuildContext context) {
     return FutureBuilder<Widget>(
       future: _bootstrapFuture,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<Widget> snapshot,
-      ) {
-        if (snapshot.connectionState !=
-            ConnectionState.done) {
+      builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        return snapshot.data ??
-            const WelcomeScreen();
+        return snapshot.data ?? const WelcomeScreen();
       },
     );
   }

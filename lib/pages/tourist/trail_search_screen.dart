@@ -78,9 +78,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
         position = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => locating = false);
     }
@@ -127,15 +127,15 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     final results = <_TrailResult>[];
 
     for (final trail in AppStore.instance.trails) {
-      final cityMatch = cityTerm.isEmpty ||
-          trail.city.toLowerCase().contains(cityTerm);
+      final cityMatch =
+          cityTerm.isEmpty || trail.city.toLowerCase().contains(cityTerm);
 
-      final stateMatch = stateTerm.isEmpty ||
-          trail.state.toLowerCase() == stateTerm;
+      final stateMatch =
+          stateTerm.isEmpty || trail.state.toLowerCase() == stateTerm;
 
-      final difficultyMatch = difficulty == 'Todas' ||
-          trail.difficulty.toLowerCase() ==
-              difficulty.toLowerCase();
+      final difficultyMatch =
+          difficulty == 'Todas' ||
+          trail.difficulty.toLowerCase() == difficulty.toLowerCase();
 
       final date = _trailDate(trail);
 
@@ -147,8 +147,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
 
       final distance = _distanceFromUser(trail);
 
-      final nearMatch =
-          !nearMe || (distance != null && distance <= radiusKm);
+      final nearMatch = !nearMe || (distance != null && distance <= radiusKm);
 
       if (cityMatch &&
           stateMatch &&
@@ -156,19 +155,14 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
           startMatch &&
           endMatch &&
           nearMatch) {
-        results.add(
-          _TrailResult(
-            trail: trail,
-            userDistanceKm: distance,
-          ),
-        );
+        results.add(_TrailResult(trail: trail, userDistanceKm: distance));
       }
     }
 
     if (nearMe) {
       results.sort(
-        (a, b) => (a.userDistanceKm ?? 999999)
-            .compareTo(b.userDistanceKm ?? 999999),
+        (a, b) =>
+            (a.userDistanceKm ?? 999999).compareTo(b.userDistanceKm ?? 999999),
       );
     }
 
@@ -229,12 +223,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
           'Buscar trilhas',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        actions: [
-          TextButton(
-            onPressed: _clear,
-            child: const Text('Limpar'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _clear, child: const Text('Limpar'))],
       ),
       body: AnimatedBuilder(
         animation: AppStore.instance,
@@ -253,9 +242,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
                         labelText: 'Cidade',
-                        prefixIcon: Icon(
-                          Icons.location_city_outlined,
-                        ),
+                        prefixIcon: Icon(Icons.location_city_outlined),
                       ),
                     ),
                   ),
@@ -264,8 +251,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                     child: TextField(
                       controller: state,
                       maxLength: 2,
-                      textCapitalization:
-                          TextCapitalization.characters,
+                      textCapitalization: TextCapitalization.characters,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
                         labelText: 'UF',
@@ -278,26 +264,12 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: difficulty,
-                decoration: const InputDecoration(
-                  labelText: 'Dificuldade',
-                ),
+                decoration: const InputDecoration(labelText: 'Dificuldade'),
                 items: const [
-                  DropdownMenuItem(
-                    value: 'Todas',
-                    child: Text('Todas'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Fácil',
-                    child: Text('Fácil'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Moderada',
-                    child: Text('Moderada'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Difícil',
-                    child: Text('Difícil'),
-                  ),
+                  DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+                  DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
+                  DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
+                  DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -311,24 +283,16 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _pickStart,
-                      icon: const Icon(
-                        Icons.calendar_today_outlined,
-                      ),
-                      label: Text(
-                        'De: ${_dateLabel(startDate)}',
-                      ),
+                      icon: const Icon(Icons.calendar_today_outlined),
+                      label: Text('De: ${_dateLabel(startDate)}'),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _pickEnd,
-                      icon: const Icon(
-                        Icons.event_available_outlined,
-                      ),
-                      label: Text(
-                        'Até: ${_dateLabel(endDate)}',
-                      ),
+                      icon: const Icon(Icons.event_available_outlined),
+                      label: Text('Até: ${_dateLabel(endDate)}'),
                     ),
                   ),
                 ],
@@ -346,8 +310,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                   locating
                       ? 'Obtendo GPS...'
                       : nearMe
-                          ? 'Localização capturada.'
-                          : 'Usa o GPS do dispositivo.',
+                      ? 'Localização capturada.'
+                      : 'Usa o GPS do dispositivo.',
                 ),
               ),
               if (nearMe) ...[
@@ -355,9 +319,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                   children: [
                     const Text(
                       'Raio',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const Spacer(),
                     Text(
@@ -394,9 +356,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: Center(
-                    child: Text(
-                      'Nenhuma trilha encontrada com esses filtros.',
-                    ),
+                    child: Text('Nenhuma trilha encontrada com esses filtros.'),
                   ),
                 )
               else
@@ -415,10 +375,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
 }
 
 class _TrailResult {
-  const _TrailResult({
-    required this.trail,
-    this.userDistanceKm,
-  });
+  const _TrailResult({required this.trail, this.userDistanceKm});
 
   final Trail trail;
   final double? userDistanceKm;
@@ -441,10 +398,7 @@ class _ResultCard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  TrailDetailsScreen(trail: trail),
-            ),
+            MaterialPageRoute(builder: (_) => TrailDetailsScreen(trail: trail)),
           );
         },
         child: Padding(
@@ -454,22 +408,16 @@ class _ResultCard extends StatelessWidget {
               SizedBox(
                 width: 100,
                 height: 78,
-                child: NetworkImageBox(
-                  url: trail.imageUrl,
-                  borderRadius: 12,
-                ),
+                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 12),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       trail.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 4),
                     Text(

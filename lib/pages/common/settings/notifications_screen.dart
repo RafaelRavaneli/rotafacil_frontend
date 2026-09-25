@@ -36,7 +36,10 @@ class NotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notificações', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Notificações',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: AnimatedBuilder(
         animation: Listenable.merge([store, notifications]),
@@ -57,13 +60,17 @@ class NotificationsScreen extends StatelessWidget {
                 value: store.bookingNotifications,
                 onChanged: store.setBookingNotifications,
                 title: const Text('Agendamentos'),
-                subtitle: const Text('Confirmações, cancelamentos e lembretes.'),
+                subtitle: const Text(
+                  'Confirmações, cancelamentos e lembretes.',
+                ),
               ),
               SwitchListTile.adaptive(
                 value: store.marketingNotifications,
                 onChanged: store.setMarketingNotifications,
                 title: const Text('Novidades e recomendações'),
-                subtitle: const Text('Sugestões de novas trilhas e experiências.'),
+                subtitle: const Text(
+                  'Sugestões de novas trilhas e experiências.',
+                ),
               ),
               const Divider(height: 30),
               ListTile(
@@ -112,7 +119,8 @@ class NotificationsScreen extends StatelessWidget {
                 onPressed: () async {
                   await store.addNotification(
                     title: 'Notificação de teste',
-                    body: 'As notificações internas do RotaFácil estão funcionando.',
+                    body:
+                        'As notificações internas do RotaFácil estão funcionando.',
                   );
 
                   if (!context.mounted) return;
@@ -131,7 +139,9 @@ class NotificationsScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const NotificationCenterScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationCenterScreen(),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.notifications_none_rounded),

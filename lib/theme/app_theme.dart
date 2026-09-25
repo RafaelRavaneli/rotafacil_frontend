@@ -38,14 +38,8 @@ class AppTheme {
           color: AppColors.ink,
           fontWeight: FontWeight.w800,
         ),
-        bodyLarge: TextStyle(
-          color: AppColors.ink,
-          height: 1.45,
-        ),
-        bodyMedium: TextStyle(
-          color: AppColors.muted,
-          height: 1.4,
-        ),
+        bodyLarge: TextStyle(color: AppColors.ink, height: 1.45),
+        bodyMedium: TextStyle(color: AppColors.muted, height: 1.4),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.cream,
@@ -70,10 +64,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: AppColors.green700,
-            width: 1.4,
-          ),
+          borderSide: const BorderSide(color: AppColors.green700, width: 1.4),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -85,10 +76,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -99,20 +87,14 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
         backgroundColor: AppColors.paper,
         indicatorColor: AppColors.green100,
         labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
-          ),
+          TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
         ),
       ),
       dividerColor: AppColors.border,

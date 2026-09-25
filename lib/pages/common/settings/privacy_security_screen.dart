@@ -13,7 +13,10 @@ class PrivacySecurityScreen extends StatelessWidget {
     final store = AppStore.instance;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Privacidade e segurança', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Privacidade e segurança',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: AnimatedBuilder(
         animation: store,
@@ -25,13 +28,21 @@ class PrivacySecurityScreen extends StatelessWidget {
                 value: store.profileVisible,
                 onChanged: store.setProfileVisible,
                 title: const Text('Perfil visível'),
-                subtitle: const Text('Controla a visibilidade das informações públicas do perfil.'),
+                subtitle: const Text(
+                  'Controla a visibilidade das informações públicas do perfil.',
+                ),
               ),
               const Divider(height: 30),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.password_rounded, color: AppColors.green700),
-                title: const Text('Alterar senha', style: TextStyle(fontWeight: FontWeight.w800)),
+                leading: const Icon(
+                  Icons.password_rounded,
+                  color: AppColors.green700,
+                ),
+                title: const Text(
+                  'Alterar senha',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   showDialog<void>(
@@ -42,9 +53,17 @@ class PrivacySecurityScreen extends StatelessWidget {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.devices_outlined, color: AppColors.green700),
-                title: const Text('Sessão atual', style: TextStyle(fontWeight: FontWeight.w800)),
-                subtitle: Text(SessionService.instance.email ?? 'Sessão local ativa'),
+                leading: const Icon(
+                  Icons.devices_outlined,
+                  color: AppColors.green700,
+                ),
+                title: const Text(
+                  'Sessão atual',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(
+                  SessionService.instance.email ?? 'Sessão local ativa',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () {
                   showDialog<void>(
@@ -87,13 +106,17 @@ class _PasswordDialogState extends State<_PasswordDialog> {
 
   @override
   void dispose() {
-    current.dispose(); next.dispose(); super.dispose();
+    current.dispose();
+    next.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
     if (next.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A nova senha deve ter pelo menos 6 caracteres.')),
+        const SnackBar(
+          content: Text('A nova senha deve ter pelo menos 6 caracteres.'),
+        ),
       );
       return;
     }
@@ -106,9 +129,9 @@ class _PasswordDialogState extends State<_PasswordDialog> {
     if (!mounted) return;
     setState(() => loading = false);
     if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senha atual incorreta.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Senha atual incorreta.')));
       return;
     }
     Navigator.pop(context);

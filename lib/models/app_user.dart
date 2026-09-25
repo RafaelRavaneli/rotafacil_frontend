@@ -1,3 +1,7 @@
+import '../utils/role_utils.dart';
+
+String normalizeAppUserRole(String? value) => roleDisplayName(value);
+
 class AppUser {
   AppUser({
     required this.name,
@@ -5,10 +9,10 @@ class AppUser {
     required this.phone,
     required this.city,
     required this.state,
-    required this.role,
+    required String role,
     this.document = '',
     this.profileImageDataUrl,
-  });
+  }) : role = normalizeAppUserRole(role);
 
   String name;
   String email;
@@ -20,15 +24,15 @@ class AppUser {
   String? profileImageDataUrl;
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'city': city,
-        'state': state,
-        'role': role,
-        'document': document,
-        'profileImageDataUrl': profileImageDataUrl,
-      };
+    'name': name,
+    'email': email,
+    'phone': phone,
+    'city': city,
+    'state': state,
+    'role': role,
+    'document': document,
+    'profileImageDataUrl': profileImageDataUrl,
+  };
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
@@ -37,7 +41,7 @@ class AppUser {
       phone: json['phone']?.toString() ?? '',
       city: json['city']?.toString() ?? '',
       state: json['state']?.toString() ?? '',
-      role: json['role']?.toString() ?? 'Turista',
+      role: (json['role'] ?? json['tipo'])?.toString() ?? 'Turista',
       document: json['document']?.toString() ?? '',
       profileImageDataUrl: json['profileImageDataUrl']?.toString(),
     );

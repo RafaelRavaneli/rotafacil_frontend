@@ -40,8 +40,7 @@ class AgencyDashboardTab extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               store.agency.name,
@@ -77,9 +76,7 @@ class AgencyDashboardTab extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  const PersonalDataScreen(
-                                role: 'Agência',
-                              ),
+                                  const PersonalDataScreen(role: 'Agência'),
                             ),
                           );
                         },
@@ -90,14 +87,11 @@ class AgencyDashboardTab extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const NotificationCenterScreen(),
+                              builder: (_) => const NotificationCenterScreen(),
                             ),
                           );
                         },
-                        icon: const Icon(
-                          Icons.notifications_none_rounded,
-                        ),
+                        icon: const Icon(Icons.notifications_none_rounded),
                       ),
                     ],
                   ),
@@ -128,8 +122,7 @@ class AgencyDashboardTab extends StatelessWidget {
                         child: _AgencyStat(
                           value: '${store.bookings.length}',
                           label: 'Agendamentos',
-                          icon:
-                              Icons.calendar_month_outlined,
+                          icon: Icons.calendar_month_outlined,
                         ),
                       ),
                       const SizedBox(width: 7),
@@ -163,8 +156,7 @@ class AgencyDashboardTab extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const GuidesScreen(),
+                              builder: (_) => const GuidesScreen(),
                             ),
                           );
                         },
@@ -178,48 +170,39 @@ class AgencyDashboardTab extends StatelessWidget {
                 child: SizedBox(
                   height: 112,
                   child: ListView.separated(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
                     itemCount: store.agencyGuides.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(width: 8),
                     itemBuilder: (context, index) {
-                      final guide =
-                          store.agencyGuides[index];
+                      final guide = store.agencyGuides[index];
 
                       return Container(
                         width: 108,
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: AppColors.paper,
-                          borderRadius:
-                              BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.border,
-                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const CircleAvatar(
                               radius: 18,
-                              backgroundColor:
-                                  AppColors.green100,
+                              backgroundColor: AppColors.green100,
                               child: Icon(
                                 Icons.person_rounded,
                                 size: 18,
-                                color:
-                                    AppColors.green700,
+                                color: AppColors.green700,
                               ),
                             ),
                             const SizedBox(height: 7),
                             Text(
                               guide.name,
                               maxLines: 1,
-                              overflow:
-                                  TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
@@ -258,11 +241,8 @@ class AgencyDashboardTab extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const Scaffold(
-                                body: TrailsManagementScreen(
-                                  isAgency: true,
-                                ),
+                              builder: (_) => const Scaffold(
+                                body: TrailsManagementScreen(isAgency: true),
                               ),
                             ),
                           );
@@ -276,10 +256,7 @@ class AgencyDashboardTab extends StatelessWidget {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList.separated(
-                  itemCount:
-                      store.trails.length > 3
-                          ? 3
-                          : store.trails.length,
+                  itemCount: store.trails.length > 3 ? 3 : store.trails.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 8),
                   itemBuilder: (context, index) {
@@ -289,11 +266,8 @@ class AgencyDashboardTab extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppColors.paper,
-                        borderRadius:
-                            BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.border,
-                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         children: [
@@ -308,17 +282,14 @@ class AgencyDashboardTab extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   trail.name,
                                   maxLines: 1,
-                                  overflow:
-                                      TextOverflow.ellipsis,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontWeight:
-                                        FontWeight.w900,
+                                    fontWeight: FontWeight.w900,
                                     fontSize: 11.5,
                                   ),
                                 ),
@@ -354,10 +325,7 @@ class AgencyDashboardTab extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const TrailFormScreen(
-                            isAgency: true,
-                          ),
+                          builder: (_) => const TrailFormScreen(isAgency: true),
                         ),
                       );
                     },
@@ -374,20 +342,14 @@ class AgencyDashboardTab extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const Scaffold(
-                            body: BookingsScreen(
-                              role: 'agencia',
-                            ),
+                          builder: (_) => const Scaffold(
+                            body: BookingsScreen(role: 'agencia'),
                           ),
                         ),
                       );
                     },
-                    icon: const Icon(
-                      Icons.calendar_month_outlined,
-                    ),
-                    label:
-                        const Text('Ver agendamentos'),
+                    icon: const Icon(Icons.calendar_month_outlined),
+                    label: const Text('Ver agendamentos'),
                   ),
                 ),
               ),
@@ -414,10 +376,7 @@ class _AgencyStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 91,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 4,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(14),
@@ -438,17 +397,10 @@ class _AgencyStat extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             maxLines: 2,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 8.5,
-            ),
+            style: const TextStyle(color: AppColors.muted, fontSize: 8.5),
           ),
           const Spacer(),
-          Icon(
-            icon,
-            color: AppColors.green700,
-            size: 17,
-          ),
+          Icon(icon, color: AppColors.green700, size: 17),
         ],
       ),
     );

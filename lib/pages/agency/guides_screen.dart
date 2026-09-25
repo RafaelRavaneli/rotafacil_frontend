@@ -32,9 +32,7 @@ class GuidesScreen extends StatelessWidget {
               const SizedBox(height: 10),
               TextField(
                 controller: specialty,
-                decoration: const InputDecoration(
-                  labelText: 'Especialidade',
-                ),
+                decoration: const InputDecoration(labelText: 'Especialidade'),
               ),
             ],
           ),
@@ -46,8 +44,7 @@ class GuidesScreen extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () async {
-              if (name.text.trim().isEmpty ||
-                  email.text.trim().isEmpty) {
+              if (name.text.trim().isEmpty || email.text.trim().isEmpty) {
                 return;
               }
 
@@ -102,9 +99,7 @@ class GuidesScreen extends StatelessWidget {
                         ),
                         FilledButton.icon(
                           onPressed: () => _invite(context),
-                          icon: const Icon(
-                            Icons.person_add_alt_1_rounded,
-                          ),
+                          icon: const Icon(Icons.person_add_alt_1_rounded),
                           label: const Text('Convidar'),
                         ),
                       ],
@@ -118,9 +113,7 @@ class GuidesScreen extends StatelessWidget {
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      return _GuideRow(
-                        guide: store.agencyGuides[index],
-                      );
+                      return _GuideRow(guide: store.agencyGuides[index]);
                     },
                   ),
                 ),
@@ -150,10 +143,7 @@ class _GuideRow extends StatelessWidget {
         children: [
           const CircleAvatar(
             backgroundColor: AppColors.green100,
-            child: Icon(
-              Icons.person_rounded,
-              color: AppColors.green700,
-            ),
+            child: Icon(Icons.person_rounded, color: AppColors.green700),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -187,32 +177,20 @@ class _GuideRow extends StatelessWidget {
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'aprovar') {
-                await AppStore.instance.updateGuideStatus(
-                  guide,
-                  'Ativo',
-                );
+                await AppStore.instance.updateGuideStatus(guide, 'Ativo');
               } else if (value == 'pendente') {
-                await AppStore.instance.updateGuideStatus(
-                  guide,
-                  'Pendente',
-                );
+                await AppStore.instance.updateGuideStatus(guide, 'Pendente');
               } else if (value == 'remover') {
                 await AppStore.instance.removeGuide(guide);
               }
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'aprovar',
-                child: Text('Marcar como ativo'),
-              ),
+              PopupMenuItem(value: 'aprovar', child: Text('Marcar como ativo')),
               PopupMenuItem(
                 value: 'pendente',
                 child: Text('Marcar como pendente'),
               ),
-              PopupMenuItem(
-                value: 'remover',
-                child: Text('Remover guia'),
-              ),
+              PopupMenuItem(value: 'remover', child: Text('Remover guia')),
             ],
           ),
         ],

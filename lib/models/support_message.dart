@@ -16,12 +16,12 @@ class SupportMessage {
   bool get fromSupport => sender == 'support';
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'userRole': userRole,
-        'sender': sender,
-        'text': text,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'userRole': userRole,
+    'sender': sender,
+    'text': text,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   factory SupportMessage.fromJson(Map<String, dynamic> json) {
     return SupportMessage(
@@ -31,7 +31,7 @@ class SupportMessage {
       text: json['text']?.toString() ?? '',
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-              DateTime.now(),
+          DateTime.now(),
     );
   }
 }
