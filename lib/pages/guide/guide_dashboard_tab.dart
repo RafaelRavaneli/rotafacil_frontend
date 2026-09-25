@@ -55,9 +55,7 @@ class GuideDashboardTab extends StatelessWidget {
                                 ),
                               );
                             },
-                            icon: const Icon(
-                              Icons.notifications_none_rounded,
-                            ),
+                            icon: const Icon(Icons.notifications_none_rounded),
                           ),
                           if (store.unreadNotifications > 0)
                             Positioned(
@@ -184,8 +182,7 @@ class GuideDashboardTab extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  const Scaffold(
+                              builder: (_) => const Scaffold(
                                 body: BookingsScreen(role: 'guia'),
                               ),
                             ),
@@ -201,9 +198,7 @@ class GuideDashboardTab extends StatelessWidget {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child: Text(
-                      'Nenhum agendamento ativo.',
-                    ),
+                    child: Text('Nenhum agendamento ativo.'),
                   ),
                 )
               else
@@ -216,20 +211,15 @@ class GuideDashboardTab extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final booking = upcoming[index];
                       final matches = store.trails
-                          .where(
-                            (item) => item.id == booking.trailId,
-                          )
+                          .where((item) => item.id == booking.trailId)
                           .toList();
 
                       return Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: AppColors.paper,
-                          borderRadius:
-                              BorderRadius.circular(14),
-                          border: Border.all(
-                            color: AppColors.border,
-                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           children: [
@@ -245,25 +235,20 @@ class GuideDashboardTab extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         color: AppColors.green100,
                                       ),
-                                      child: Icon(
-                                        Icons.terrain_outlined,
-                                      ),
+                                      child: Icon(Icons.terrain_outlined),
                                     ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     booking.trailName,
                                     maxLines: 1,
-                                    overflow:
-                                        TextOverflow.ellipsis,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                      fontWeight:
-                                          FontWeight.w900,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -300,9 +285,7 @@ class GuideDashboardTab extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              const TrailFormScreen(
-                            isAgency: false,
-                          ),
+                              const TrailFormScreen(isAgency: false),
                         ),
                       );
                     },
@@ -319,18 +302,14 @@ class GuideDashboardTab extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const Scaffold(
-                            body: TrailsManagementScreen(
-                              isAgency: false,
-                            ),
+                          builder: (_) => const Scaffold(
+                            body: TrailsManagementScreen(isAgency: false),
                           ),
                         ),
                       );
                     },
                     icon: const Icon(Icons.settings_outlined),
-                    label:
-                        const Text('Gerenciar minhas trilhas'),
+                    label: const Text('Gerenciar minhas trilhas'),
                   ),
                 ),
               ),
@@ -343,11 +322,7 @@ class GuideDashboardTab extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
+  const _Stat({required this.value, required this.label, required this.icon});
 
   final String value;
   final String label;
@@ -357,10 +332,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 92,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 7,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(14),
@@ -380,17 +352,10 @@ class _Stat extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.muted,
-              fontSize: 9.5,
-            ),
+            style: const TextStyle(color: AppColors.muted, fontSize: 9.5),
           ),
           const Spacer(),
-          Icon(
-            icon,
-            color: AppColors.green700,
-            size: 18,
-          ),
+          Icon(icon, color: AppColors.green700, size: 18),
         ],
       ),
     );

@@ -4,11 +4,7 @@ import '../models/user_role.dart';
 import '../theme/app_colors.dart';
 
 class RoleCard extends StatelessWidget {
-  const RoleCard({
-    super.key,
-    required this.role,
-    required this.onTap,
-  });
+  const RoleCard({super.key, required this.role, required this.onTap});
 
   final UserRole role;
   final VoidCallback onTap;
@@ -17,17 +13,17 @@ class RoleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = switch (role) {
       UserRole.tourist => (
-          Icons.hiking_rounded,
-          'Quero descobrir trilhas e viver novas aventuras.'
-        ),
+        Icons.hiking_rounded,
+        'Quero descobrir trilhas e viver novas aventuras.',
+      ),
       UserRole.guide => (
-          Icons.flag_rounded,
-          'Quero compartilhar meu conhecimento e guiar aventureiros.'
-        ),
+        Icons.flag_rounded,
+        'Quero compartilhar meu conhecimento e guiar aventureiros.',
+      ),
       UserRole.agency => (
-          Icons.apartment_rounded,
-          'Represento uma agência e organizo experiências para grupos.'
-        ),
+        Icons.apartment_rounded,
+        'Represento uma agência e organizo experiências para grupos.',
+      ),
     };
 
     return Material(
@@ -51,11 +47,7 @@ class RoleCard extends StatelessWidget {
                   color: AppColors.green100,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  data.$1,
-                  color: AppColors.green800,
-                  size: 28,
-                ),
+                child: Icon(data.$1, color: AppColors.green800, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(

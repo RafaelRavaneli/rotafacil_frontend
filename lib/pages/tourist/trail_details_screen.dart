@@ -10,10 +10,7 @@ import '../../widgets/network_image_box.dart';
 import 'guide_profile_screen.dart';
 
 class TrailDetailsScreen extends StatelessWidget {
-  const TrailDetailsScreen({
-    super.key,
-    required this.trail,
-  });
+  const TrailDetailsScreen({super.key, required this.trail});
 
   final Trail trail;
 
@@ -51,17 +48,11 @@ class TrailDetailsScreen extends StatelessWidget {
                     color: AppColors.green700,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    trail.date.isEmpty
-                        ? 'Data a combinar'
-                        : trail.date,
-                  ),
+                  Text(trail.date.isEmpty ? 'Data a combinar' : trail.date),
                   const Spacer(),
                   Text(
                     'R\$ ${trail.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
@@ -70,16 +61,11 @@ class TrailDetailsScreen extends StatelessWidget {
                 onPressed: () async {
                   await AppStore.instance.addBooking(
                     LocalBooking(
-                      id: DateTime.now()
-                          .microsecondsSinceEpoch
-                          .toString(),
+                      id: DateTime.now().microsecondsSinceEpoch.toString(),
                       trailId: trail.id,
                       trailName: trail.name,
-                      personName:
-                          AppStore.instance.tourist.name,
-                      date: trail.date.isEmpty
-                          ? 'Data a combinar'
-                          : trail.date,
+                      personName: AppStore.instance.tourist.name,
+                      date: trail.date.isEmpty ? 'Data a combinar' : trail.date,
                       status: 'Confirmado',
                       roleView: 'turista',
                       valuePaid: trail.price,
@@ -103,9 +89,7 @@ class TrailDetailsScreen extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          'Agendamento salvo. Confira a aba Agendamentos.',
-        ),
+        content: Text('Agendamento salvo. Confira a aba Agendamentos.'),
       ),
     );
   }
@@ -133,13 +117,10 @@ class TrailDetailsScreen extends StatelessWidget {
                 leading: Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleAvatar(
-                    backgroundColor:
-                        AppColors.paper.withValues(alpha: .92),
+                    backgroundColor: AppColors.paper.withValues(alpha: .92),
                     child: IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(
-                        Icons.arrow_back_rounded,
-                      ),
+                      icon: const Icon(Icons.arrow_back_rounded),
                     ),
                   ),
                 ),
@@ -147,18 +128,14 @@ class TrailDetailsScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: CircleAvatar(
-                      backgroundColor: AppColors.paper
-                          .withValues(alpha: .92),
+                      backgroundColor: AppColors.paper.withValues(alpha: .92),
                       child: IconButton(
-                        onPressed: () =>
-                            store.toggleFavorite(trail.id),
+                        onPressed: () => store.toggleFavorite(trail.id),
                         icon: Icon(
                           favorite
                               ? Icons.favorite_rounded
                               : Icons.favorite_border_rounded,
-                          color: favorite
-                              ? AppColors.red
-                              : AppColors.ink,
+                          color: favorite ? AppColors.red : AppColors.ink,
                         ),
                       ),
                     ),
@@ -175,12 +152,7 @@ class TrailDetailsScreen extends StatelessWidget {
                 child: Transform.translate(
                   offset: const Offset(0, -20),
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(
-                      22,
-                      22,
-                      22,
-                      120,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(22, 22, 22, 120),
                     decoration: const BoxDecoration(
                       color: AppColors.paper,
                       borderRadius: BorderRadius.vertical(
@@ -188,27 +160,23 @@ class TrailDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding:
-                              const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.green700,
-                            borderRadius:
-                                BorderRadius.circular(99),
+                            borderRadius: BorderRadius.circular(99),
                           ),
                           child: Text(
                             trail.difficulty,
                             style: const TextStyle(
                               color: AppColors.white,
                               fontSize: 11,
-                              fontWeight:
-                                  FontWeight.w800,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ),
@@ -263,8 +231,7 @@ class TrailDetailsScreen extends StatelessWidget {
                           children: [
                             _ChipMetric(
                               icon: Icons.route_rounded,
-                              value:
-                                  '${trail.distanceKm} km',
+                              value: '${trail.distanceKm} km',
                             ),
                             _ChipMetric(
                               icon: Icons.schedule_rounded,
@@ -272,8 +239,7 @@ class TrailDetailsScreen extends StatelessWidget {
                             ),
                             _ChipMetric(
                               icon: Icons.terrain_rounded,
-                              value:
-                                  '${trail.elevation} m',
+                              value: '${trail.elevation} m',
                             ),
                             _ChipMetric(
                               icon: Icons.hiking_rounded,
@@ -302,22 +268,18 @@ class TrailDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (trail.latitude != null &&
-                            trail.longitude != null)
+                        if (trail.latitude != null && trail.longitude != null)
                           Container(
-                            padding:
-                                const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: AppColors.green100,
-                              borderRadius:
-                                  BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14),
                             ),
                             child: Row(
                               children: [
                                 const Icon(
                                   Icons.map_outlined,
-                                  color:
-                                      AppColors.green700,
+                                  color: AppColors.green700,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -415,9 +377,7 @@ class TrailDetailsScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
           decoration: const BoxDecoration(
             color: AppColors.paper,
-            border: Border(
-              top: BorderSide(color: AppColors.border),
-            ),
+            border: Border(top: BorderSide(color: AppColors.border)),
           ),
           child: Row(
             children: [
@@ -448,10 +408,7 @@ class TrailDetailsScreen extends StatelessWidget {
 }
 
 class _ChipMetric extends StatelessWidget {
-  const _ChipMetric({
-    required this.icon,
-    required this.value,
-  });
+  const _ChipMetric({required this.icon, required this.value});
 
   final IconData icon;
   final String value;
@@ -459,10 +416,7 @@ class _ChipMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 9,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: BorderRadius.circular(13),
@@ -471,11 +425,7 @@ class _ChipMetric extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: AppColors.green800,
-            size: 17,
-          ),
+          Icon(icon, color: AppColors.green800, size: 17),
           const SizedBox(width: 6),
           Text(
             value,

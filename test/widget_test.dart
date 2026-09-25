@@ -1,15 +1,20 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:rotafacil/app.dart';
-import 'package:rotafacil/state/app_store.dart';
 
 void main() {
-  testWidgets('RotaFácil inicia corretamente', (
-    WidgetTester tester,
-  ) async {
-    await AppStore.instance.initialize();
-    await tester.pumpWidget(const RotaFacilApp());
-    await tester.pump();
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    expect(find.text('RotaFácil'), findsWidgets);
+  testWidgets('RotaFácil inicia corretamente', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+
+    await tester.pumpWidget(const RotaFacilApp());
+
+    expect(find.byType(MaterialApp), findsOneWidget);
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

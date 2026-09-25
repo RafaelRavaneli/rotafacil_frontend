@@ -46,9 +46,7 @@ class BookingsScreen extends StatelessWidget {
               ),
               if (list.isEmpty)
                 const SliverFillRemaining(
-                  child: Center(
-                    child: Text('Nenhum agendamento encontrado.'),
-                  ),
+                  child: Center(child: Text('Nenhum agendamento encontrado.')),
                 )
               else
                 SliverPadding(
@@ -132,13 +130,11 @@ class _BookingCard extends StatelessWidget {
                     content: Text(booking.trailName),
                     actions: [
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pop(dialogContext, false),
+                        onPressed: () => Navigator.pop(dialogContext, false),
                         child: const Text('Voltar'),
                       ),
                       FilledButton(
-                        onPressed: () =>
-                            Navigator.pop(dialogContext, true),
+                        onPressed: () => Navigator.pop(dialogContext, true),
                         child: const Text('Cancelar'),
                       ),
                     ],

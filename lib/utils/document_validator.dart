@@ -1,3 +1,5 @@
+import 'role_utils.dart';
+
 class DocumentValidator {
   const DocumentValidator._();
 
@@ -65,26 +67,29 @@ class DocumentValidator {
   }
 
   static bool isValidForRole(String role, String value) {
-    final normalized = role.toLowerCase().trim();
+    switch (normalizeRoleKey(role)) {
+      case 'guia':
+        return isValidCpf(value);
 
-    if (normalized == 'guia') {
-      return isValidCpf(value);
+      case 'agencia':
+        return isValidCnpj(value);
+
+      default:
+        return true;
     }
-
-    if (normalized == 'agencia' || normalized == 'agência') {
-      return isValidCnpj(value);
-    }
-
-    return true;
   }
 
   static String labelForRole(String role) {
-    final normalized = role.toLowerCase().trim();
+    switch (normalizeRoleKey(role)) {
+      case 'guia':
+        return 'CPF';
 
-    if (normalized == 'guia') return 'CPF';
-    if (normalized == 'agencia' || normalized == 'agência') return 'CNPJ';
+      case 'agencia':
+        return 'CNPJ';
 
-    return 'Documento';
+      default:
+        return 'Documento';
+    }
   }
 
   static String formatCpf(String value) {
@@ -105,13 +110,15 @@ class DocumentValidator {
   }
 
   static String formatForRole(String role, String value) {
-    final normalized = role.toLowerCase().trim();
+    switch (normalizeRoleKey(role)) {
+      case 'guia':
+        return formatCpf(value);
 
-    if (normalized == 'guia') return formatCpf(value);
-    if (normalized == 'agencia' || normalized == 'agência') {
-      return formatCnpj(value);
+      case 'agencia':
+        return formatCnpj(value);
+
+      default:
+        return value;
     }
-
-    return value;
   }
 }

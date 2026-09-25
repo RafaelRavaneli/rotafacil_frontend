@@ -95,8 +95,7 @@ const trails = <Trail>[
     bestSeason: 'Abr - Ago',
     rating: 4.8,
     reviews: 128,
-    description:
-        'Trilha desafiadora com vistas incríveis da Serra do Mar.',
+    description: 'Trilha desafiadora com vistas incríveis da Serra do Mar.',
     imageUrl: forest,
     guideName: 'Rafael Souza',
     date: '30/09/2026',

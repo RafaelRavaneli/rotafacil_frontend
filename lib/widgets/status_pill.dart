@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class StatusPill extends StatelessWidget {
-  const StatusPill({
-    super.key,
-    required this.label,
-    this.compact = true,
-  });
+  const StatusPill({super.key, required this.label, this.compact = true});
 
   final String label;
   final bool compact;
@@ -19,8 +15,7 @@ class StatusPill extends StatelessWidget {
     Color bg = AppColors.green100;
     Color fg = AppColors.green800;
 
-    if (normalized.contains('pendente') ||
-        normalized.contains('revis')) {
+    if (normalized.contains('pendente') || normalized.contains('revis')) {
       bg = AppColors.amber100;
       fg = AppColors.amber700;
     }

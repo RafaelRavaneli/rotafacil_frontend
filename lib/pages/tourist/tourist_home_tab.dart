@@ -13,19 +13,14 @@ import 'trail_details_screen.dart';
 import 'trail_search_screen.dart';
 
 class TouristHomeTab extends StatelessWidget {
-  const TouristHomeTab({
-    super.key,
-    this.exploreMode = false,
-  });
+  const TouristHomeTab({super.key, this.exploreMode = false});
 
   final bool exploreMode;
 
   void _openTrail(BuildContext context, Trail trail) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => TrailDetailsScreen(trail: trail),
-      ),
+      MaterialPageRoute(builder: (_) => TrailDetailsScreen(trail: trail)),
     );
   }
 
@@ -134,8 +129,7 @@ class TouristHomeTab extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const TrailSearchScreen(),
+                          builder: (_) => const TrailSearchScreen(),
                         ),
                       );
                     },
@@ -145,9 +139,7 @@ class TouristHomeTab extends StatelessWidget {
               ),
               if (trails.isEmpty)
                 const SliverFillRemaining(
-                  child: Center(
-                    child: Text('Nenhuma trilha cadastrada.'),
-                  ),
+                  child: Center(child: Text('Nenhuma trilha cadastrada.')),
                 )
               else ...[
                 const SliverPadding(
@@ -168,12 +160,9 @@ class TouristHomeTab extends StatelessWidget {
                   sliver: SliverToBoxAdapter(
                     child: _FeaturedTrailCard(
                       trail: trails.first,
-                      favorite:
-                          store.isFavorite(trails.first.id),
-                      onFavorite: () =>
-                          store.toggleFavorite(trails.first.id),
-                      onTap: () =>
-                          _openTrail(context, trails.first),
+                      favorite: store.isFavorite(trails.first.id),
+                      onFavorite: () => store.toggleFavorite(trails.first.id),
+                      onTap: () => _openTrail(context, trails.first),
                     ),
                   ),
                 ),
@@ -208,9 +197,8 @@ class TouristHomeTab extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => GuideProfileScreen(
-                                  guide: guide,
-                                ),
+                                builder: (_) =>
+                                    GuideProfileScreen(guide: guide),
                               ),
                             );
                           },
@@ -233,8 +221,7 @@ class TouristHomeTab extends StatelessWidget {
                   ),
                 ),
                 SliverPadding(
-                  padding:
-                      const EdgeInsets.fromLTRB(20, 0, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
                   sliver: SliverList.separated(
                     itemCount: trails.length,
                     separatorBuilder: (context, index) =>
@@ -243,8 +230,7 @@ class TouristHomeTab extends StatelessWidget {
                       final trail = trails[index];
                       return _CompactTrailCard(
                         trail: trail,
-                        onTap: () =>
-                            _openTrail(context, trail),
+                        onTap: () => _openTrail(context, trail),
                       );
                     },
                   ),
@@ -288,19 +274,13 @@ class _FeaturedTrailCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    NetworkImageBox(
-                      url: trail.imageUrl,
-                      borderRadius: 0,
-                    ),
+                    NetworkImageBox(url: trail.imageUrl, borderRadius: 0),
                     const DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Color(0xC5152F20),
-                          ],
+                          colors: [Colors.transparent, Color(0xC5152F20)],
                         ),
                       ),
                     ),
@@ -335,9 +315,7 @@ class _FeaturedTrailCard extends StatelessWidget {
                           favorite
                               ? Icons.favorite_rounded
                               : Icons.favorite_border_rounded,
-                          color: favorite
-                              ? AppColors.red
-                              : AppColors.green900,
+                          color: favorite ? AppColors.red : AppColors.green900,
                         ),
                       ),
                     ),
@@ -371,16 +349,16 @@ class _FeaturedTrailCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '${trail.distanceKm} km',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     Text(
                       '★ ${trail.rating}',
@@ -391,9 +369,7 @@ class _FeaturedTrailCard extends StatelessWidget {
                     ),
                     Text(
                       'R\$ ${trail.price.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                   ],
                 ),
@@ -407,10 +383,7 @@ class _FeaturedTrailCard extends StatelessWidget {
 }
 
 class _CompactTrailCard extends StatelessWidget {
-  const _CompactTrailCard({
-    required this.trail,
-    required this.onTap,
-  });
+  const _CompactTrailCard({required this.trail, required this.onTap});
 
   final Trail trail;
   final VoidCallback onTap;
@@ -430,10 +403,7 @@ class _CompactTrailCard extends StatelessWidget {
               SizedBox(
                 width: 110,
                 height: 86,
-                child: NetworkImageBox(
-                  url: trail.imageUrl,
-                  borderRadius: 13,
-                ),
+                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 13),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -444,9 +414,7 @@ class _CompactTrailCard extends StatelessWidget {
                       trail.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -478,10 +446,7 @@ class _CompactTrailCard extends StatelessWidget {
 }
 
 class _GuideHomeCard extends StatelessWidget {
-  const _GuideHomeCard({
-    required this.guide,
-    required this.onTap,
-  });
+  const _GuideHomeCard({required this.guide, required this.onTap});
 
   final GuideProfile guide;
   final VoidCallback onTap;
@@ -562,4 +527,3 @@ class _GuideHomeCard extends StatelessWidget {
     );
   }
 }
-

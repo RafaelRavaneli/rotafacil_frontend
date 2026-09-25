@@ -7,18 +7,13 @@ import '../../widgets/network_image_box.dart';
 import '../../widgets/profile_avatar.dart';
 
 class MessagesScreen extends StatefulWidget {
-  const MessagesScreen({
-    super.key,
-    required this.role,
-    this.targetGuide,
-  });
+  const MessagesScreen({super.key, required this.role, this.targetGuide});
 
   final String role;
   final GuideProfile? targetGuide;
 
   @override
-  State<MessagesScreen> createState() =>
-      _MessagesScreenState();
+  State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
@@ -72,9 +67,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     if (!mounted) return;
 
-    await Future<void>.delayed(
-      const Duration(milliseconds: 40),
-    );
+    await Future<void>.delayed(const Duration(milliseconds: 40));
 
     if (scrollController.hasClients) {
       await scrollController.animateTo(
@@ -100,9 +93,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
             padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
             decoration: const BoxDecoration(
               color: AppColors.paper,
-              border: Border(
-                bottom: BorderSide(color: AppColors.border),
-              ),
+              border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
             child: Row(
               children: [
@@ -170,9 +161,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         'Nenhuma mensagem com $displayName ainda.\n'
                         'Envie a primeira mensagem.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.muted,
-                        ),
+                        style: const TextStyle(color: AppColors.muted),
                       ),
                     ),
                   );
@@ -184,17 +173,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final sentByMe =
-                        message.senderRole == currentRole;
+                    final sentByMe = message.senderRole == currentRole;
 
                     return Align(
                       alignment: sentByMe
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Container(
-                        constraints: const BoxConstraints(
-                          maxWidth: 320,
-                        ),
+                        constraints: const BoxConstraints(maxWidth: 320),
                         margin: const EdgeInsets.only(bottom: 9),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -207,9 +193,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           borderRadius: BorderRadius.circular(16),
                           border: sentByMe
                               ? null
-                              : Border.all(
-                                  color: AppColors.border,
-                                ),
+                              : Border.all(color: AppColors.border),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,9 +212,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               _timeLabel(message.createdAt),
                               style: TextStyle(
                                 color: sentByMe
-                                    ? AppColors.white.withValues(
-                                        alpha: .75,
-                                      )
+                                    ? AppColors.white.withValues(alpha: .75)
                                     : AppColors.muted,
                                 fontSize: 9,
                               ),
@@ -250,9 +232,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
               decoration: const BoxDecoration(
                 color: AppColors.paper,
-                border: Border(
-                  top: BorderSide(color: AppColors.border),
-                ),
+                border: Border(top: BorderSide(color: AppColors.border)),
               ),
               child: Row(
                 children: [

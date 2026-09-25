@@ -11,9 +11,7 @@ class ProfileChoiceScreen extends StatelessWidget {
   void _choose(BuildContext context, UserRole role) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => LoginScreen(role: role),
-      ),
+      MaterialPageRoute(builder: (_) => LoginScreen(role: role)),
     );
   }
 
@@ -42,10 +40,7 @@ class ProfileChoiceScreen extends StatelessWidget {
             const Text(
               'Escolha o tipo de perfil que mais combina com você.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.muted,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 28),
             RoleCard(
@@ -66,10 +61,7 @@ class ProfileChoiceScreen extends StatelessWidget {
             const Text(
               'Você poderá alterar seu perfil depois nas configurações.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.muted,
-                fontSize: 11.5,
-              ),
+              style: TextStyle(color: AppColors.muted, fontSize: 11.5),
             ),
           ],
         ),

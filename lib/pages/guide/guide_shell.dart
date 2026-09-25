@@ -22,21 +22,13 @@ class _GuideShellState extends State<GuideShell> {
       case 0:
         return const GuideDashboardTab();
       case 1:
-        return const TrailsManagementScreen(
-          isAgency: false,
-        );
+        return const TrailsManagementScreen(isAgency: false);
       case 2:
-        return const BookingsScreen(
-          role: 'guia',
-        );
+        return const BookingsScreen(role: 'guia');
       case 3:
-        return const MessagesScreen(
-          role: 'guia',
-        );
+        return const MessagesScreen(role: 'guia');
       case 4:
-        return const ProfileTab(
-          role: 'Guia',
-        );
+        return const ProfileTab(role: 'Guia');
       default:
         return const GuideDashboardTab();
     }
@@ -52,10 +44,7 @@ class _GuideShellState extends State<GuideShell> {
       // IndexedStack construía TODAS as abas ao mesmo tempo,
       // inclusive telas escondidas com listas, imagens e listeners.
       // Agora apenas a aba selecionada é montada.
-      body: KeyedSubtree(
-        key: ValueKey<int>(index),
-        child: _currentPage(),
-      ),
+      body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
@@ -78,30 +67,18 @@ class _GuideShellState extends State<GuideShell> {
             label: 'Trilhas',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.calendar_month_outlined,
-            ),
-            selectedIcon: Icon(
-              Icons.calendar_month_rounded,
-            ),
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month_rounded),
             label: 'Agenda',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.chat_bubble_outline_rounded,
-            ),
-            selectedIcon: Icon(
-              Icons.chat_bubble_rounded,
-            ),
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            selectedIcon: Icon(Icons.chat_bubble_rounded),
             label: 'Mensagens',
           ),
           NavigationDestination(
-            icon: Icon(
-              Icons.person_outline_rounded,
-            ),
-            selectedIcon: Icon(
-              Icons.person_rounded,
-            ),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',
           ),
         ],

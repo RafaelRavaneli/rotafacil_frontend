@@ -11,11 +11,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 
 class TrailFormScreen extends StatefulWidget {
-  const TrailFormScreen({
-    super.key,
-    required this.isAgency,
-    this.existing,
-  });
+  const TrailFormScreen({super.key, required this.isAgency, this.existing});
 
   final bool isAgency;
   final Trail? existing;
@@ -35,6 +31,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   String difficulty = 'Moderada';
   String modality = 'Trekking';
   String? guideName;
+  String? guideId;
   DateTime? date;
   Uint8List? imageBytes;
   String? existingImageUrl;
@@ -58,6 +55,16 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       difficulty = trail.difficulty;
       modality = trail.modality;
       guideName = trail.guideName;
+      guideId = trail.guideId.isEmpty ? null : trail.guideId;
+
+      if (guideId == null && guideName != null) {
+        for (final guide in AppStore.instance.agencyGuides) {
+          if (guide.name == guideName) {
+            guideId = guide.id;
+            break;
+          }
+        }
+      }
       existingImageUrl = trail.imageUrl;
       latitude = trail.latitude;
       longitude = trail.longitude;
@@ -139,9 +146,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) setState(() => locating = false);
     }
@@ -176,38 +183,31 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
         descriptionController.text.trim().isEmpty ||
         cityController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha nome, descrição e cidade.'),
-        ),
+        const SnackBar(content: Text('Preencha nome, descrição e cidade.')),
       );
       return;
     }
 
     setState(() => saving = true);
 
-    final distance = double.tryParse(
-          distanceController.text.replaceAll(',', '.'),
-        ) ??
-        0;
+    final distance =
+        double.tryParse(distanceController.text.replaceAll(',', '.')) ?? 0;
 
-    final price = double.tryParse(
-          priceController.text.replaceAll(',', '.'),
-        ) ??
-        0;
+    final price =
+        double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0;
 
-    String imageUrl = existingImageUrl ??
+    String imageUrl =
+        existingImageUrl ??
         'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80';
 
     if (imageBytes != null) {
-      imageUrl =
-          'data:image/jpeg;base64,${base64Encode(imageBytes!)}';
+      imageUrl = 'data:image/jpeg;base64,${base64Encode(imageBytes!)}';
     }
 
     final current = widget.existing;
 
     final trail = Trail(
-      id: current?.id ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
+      id: current?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: nameController.text.trim(),
       city: cityController.text.trim(),
       state: stateController.text.trim().toUpperCase(),
@@ -221,6 +221,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       description: descriptionController.text.trim(),
       imageUrl: imageUrl,
       guideName: guideName ?? AppStore.instance.guide.name,
+      guideId: guideId ?? current?.guideId ?? '',
       date: dateLabel,
       price: price,
       status: current?.status ?? 'Ativa',
@@ -281,41 +282,36 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                       ),
                     )
                   : existingImageUrl != null
-                      ? NetworkImageBox(
-                          url: existingImageUrl!,
-                          borderRadius: 18,
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.green100,
-                            borderRadius: BorderRadius.circular(18),
+                  ? NetworkImageBox(url: existingImageUrl!, borderRadius: 18)
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.green100,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_a_photo_outlined,
+                            color: AppColors.green700,
+                            size: 38,
                           ),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo_outlined,
-                                color: AppColors.green700,
-                                size: 38,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'Adicionar foto da trilha',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Text(
-                                'Escolher da galeria',
-                                style: TextStyle(
-                                  color: AppColors.muted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                          SizedBox(height: 8),
+                          Text(
+                            'Adicionar foto da trilha',
+                            style: TextStyle(fontWeight: FontWeight.w900),
                           ),
-                        ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Escolher da galeria',
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 10),
@@ -365,22 +361,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: difficulty,
-            decoration: const InputDecoration(
-              labelText: 'Dificuldade',
-            ),
+            decoration: const InputDecoration(labelText: 'Dificuldade'),
             items: const [
-              DropdownMenuItem(
-                value: 'Fácil',
-                child: Text('Fácil'),
-              ),
-              DropdownMenuItem(
-                value: 'Moderada',
-                child: Text('Moderada'),
-              ),
-              DropdownMenuItem(
-                value: 'Difícil',
-                child: Text('Difícil'),
-              ),
+              DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
+              DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
+              DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -391,22 +376,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: modality,
-            decoration: const InputDecoration(
-              labelText: 'Modalidade',
-            ),
+            decoration: const InputDecoration(labelText: 'Modalidade'),
             items: const [
-              DropdownMenuItem(
-                value: 'Trekking',
-                child: Text('Trekking'),
-              ),
-              DropdownMenuItem(
-                value: 'Hiking',
-                child: Text('Hiking'),
-              ),
-              DropdownMenuItem(
-                value: 'Caminhada',
-                child: Text('Caminhada'),
-              ),
+              DropdownMenuItem(value: 'Trekking', child: Text('Trekking')),
+              DropdownMenuItem(value: 'Hiking', child: Text('Hiking')),
+              DropdownMenuItem(value: 'Caminhada', child: Text('Caminhada')),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -417,9 +391,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: distanceController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Distância do percurso (km)',
             ),
@@ -427,9 +399,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: priceController,
-            keyboardType: const TextInputType.numberWithOptions(
-              decimal: true,
-            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Valor por pessoa (R\$)',
             ),
@@ -440,9 +410,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
             child: InputDecorator(
               decoration: const InputDecoration(
                 labelText: 'Data da atividade',
-                prefixIcon: Icon(
-                  Icons.calendar_month_outlined,
-                ),
+                prefixIcon: Icon(Icons.calendar_month_outlined),
               ),
               child: Text(dateLabel),
             ),
@@ -474,8 +442,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed:
-                      locating ? null : _useCurrentLocation,
+                  onPressed: locating ? null : _useCurrentLocation,
                   icon: const Icon(Icons.my_location_rounded),
                   label: Text(
                     locating
@@ -489,14 +456,10 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           if (widget.isAgency) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: guides.any(
-                (guide) => guide.name == guideName,
-              )
+              initialValue: guides.any((guide) => guide.name == guideName)
                   ? guideName
                   : null,
-              decoration: const InputDecoration(
-                labelText: 'Guia responsável',
-              ),
+              decoration: const InputDecoration(labelText: 'Guia responsável'),
               items: guides
                   .map(
                     (guide) => DropdownMenuItem(
@@ -506,7 +469,21 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                   )
                   .toList(),
               onChanged: (value) {
-                setState(() => guideName = value);
+                String? selectedGuideId;
+
+                if (value != null) {
+                  for (final guide in guides) {
+                    if (guide.name == value) {
+                      selectedGuideId = guide.id;
+                      break;
+                    }
+                  }
+                }
+
+                setState(() {
+                  guideName = value;
+                  guideId = selectedGuideId;
+                });
               },
             ),
           ],
@@ -522,8 +499,8 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               saving
                   ? 'Salvando...'
                   : widget.existing == null
-                      ? 'Adicionar trilha'
-                      : 'Salvar alterações',
+                  ? 'Adicionar trilha'
+                  : 'Salvar alterações',
             ),
           ),
         ),

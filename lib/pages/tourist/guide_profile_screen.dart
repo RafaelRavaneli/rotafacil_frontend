@@ -9,10 +9,7 @@ import '../common/messages_screen.dart';
 import 'trail_details_screen.dart';
 
 class GuideProfileScreen extends StatelessWidget {
-  const GuideProfileScreen({
-    super.key,
-    required this.guide,
-  });
+  const GuideProfileScreen({super.key, required this.guide});
 
   final GuideProfile guide;
 
@@ -34,8 +31,7 @@ class GuideProfileScreen extends StatelessWidget {
           final guideTrails = store.trails
               .where(
                 (trail) =>
-                    trail.guideName.toLowerCase() ==
-                    guide.name.toLowerCase(),
+                    trail.guideName.toLowerCase() == guide.name.toLowerCase(),
               )
               .toList();
 
@@ -128,9 +124,7 @@ class GuideProfileScreen extends StatelessWidget {
                         appBar: AppBar(
                           title: Text(
                             'Mensagem para ${guide.name}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w900),
                           ),
                         ),
                         body: MessagesScreen(
@@ -190,9 +184,7 @@ class GuideProfileScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => TrailDetailsScreen(
-                              trail: trail,
-                            ),
+                            builder: (_) => TrailDetailsScreen(trail: trail),
                           ),
                         );
                       },
@@ -247,10 +239,7 @@ class _GuideHeader extends StatelessWidget {
           SizedBox(
             width: 82,
             height: 82,
-            child: NetworkImageBox(
-              url: guide.imageUrl,
-              borderRadius: 44,
-            ),
+            child: NetworkImageBox(url: guide.imageUrl, borderRadius: 44),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -377,10 +366,7 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _GuideTrailCard extends StatelessWidget {
-  const _GuideTrailCard({
-    required this.trail,
-    required this.onTap,
-  });
+  const _GuideTrailCard({required this.trail, required this.onTap});
 
   final Trail trail;
   final VoidCallback onTap;
@@ -400,10 +386,7 @@ class _GuideTrailCard extends StatelessWidget {
               SizedBox(
                 width: 96,
                 height: 76,
-                child: NetworkImageBox(
-                  url: trail.imageUrl,
-                  borderRadius: 12,
-                ),
+                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 12),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -414,9 +397,7 @@ class _GuideTrailCard extends StatelessWidget {
                       trail.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -448,10 +429,7 @@ class _GuideTrailCard extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({
-    required this.name,
-    required this.text,
-  });
+  const _ReviewCard({required this.name, required this.text});
 
   final String name;
   final String text;
@@ -470,19 +448,11 @@ class _ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
               const Spacer(),
               const Text(
                 '★★★★★',
-                style: TextStyle(
-                  color: AppColors.gold,
-                  letterSpacing: 1,
-                ),
+                style: TextStyle(color: AppColors.gold, letterSpacing: 1),
               ),
             ],
           ),

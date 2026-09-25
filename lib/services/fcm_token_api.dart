@@ -23,8 +23,6 @@ class FcmTokenApi {
   Future<void> remove() async {
     if (!canSync) return;
 
-    await ApiClient.instance.delete(
-      AppConfig.fcmTokenPath,
-    );
+    await ApiClient.instance.delete(AppConfig.fcmTokenPath);
   }
 }

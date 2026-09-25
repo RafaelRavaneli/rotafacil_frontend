@@ -1,8 +1,4 @@
-enum UserRole {
-  tourist,
-  guide,
-  agency,
-}
+enum UserRole { tourist, guide, agency }
 
 extension UserRoleX on UserRole {
   String get title {

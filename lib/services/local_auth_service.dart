@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/document_validator.dart';
+import '../utils/role_utils.dart';
 
 class LocalAuthService {
   LocalAuthService._();
@@ -12,14 +13,7 @@ class LocalAuthService {
 
   static const _accountsKey = 'local_accounts_v4';
 
-  String _roleKey(String role) {
-    final value = role.toLowerCase().trim();
-
-    if (value == 'agência') return 'agencia';
-    if (value == 'usuario') return 'turista';
-
-    return value;
-  }
+  String _roleKey(String role) => normalizeRoleKey(role);
 
   String _hash(String password) {
     return sha256.convert(utf8.encode(password)).toString();
@@ -31,9 +25,7 @@ class LocalAuthService {
 
     if (raw != null && raw.isNotEmpty) {
       try {
-        return Map<String, dynamic>.from(
-          jsonDecode(raw) as Map,
-        );
+        return Map<String, dynamic>.from(jsonDecode(raw) as Map);
       } catch (_) {}
     }
 
@@ -55,10 +47,7 @@ class LocalAuthService {
       },
     };
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(seeded),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(seeded));
 
     return seeded;
   }
@@ -75,22 +64,19 @@ class LocalAuthService {
 
     if (rawAccount is! Map) return false;
 
-    final account =
-        Map<String, dynamic>.from(rawAccount);
+    final account = Map<String, dynamic>.from(rawAccount);
 
     final credentialsMatch =
         account['email']?.toString().toLowerCase() ==
-                email.trim().toLowerCase() &&
-            account['passwordHash'] == _hash(password);
+            email.trim().toLowerCase() &&
+        account['passwordHash'] == _hash(password);
 
     if (!credentialsMatch) return false;
 
     if (key == 'guia' || key == 'agencia') {
-      final normalizedDocument =
-          DocumentValidator.digitsOnly(document);
+      final normalizedDocument = DocumentValidator.digitsOnly(document);
 
-      final savedDocument =
-          DocumentValidator.digitsOnly(
+      final savedDocument = DocumentValidator.digitsOnly(
         account['document']?.toString() ?? '',
       );
 
@@ -114,14 +100,10 @@ class LocalAuthService {
     accounts[key] = {
       'email': email.trim(),
       'passwordHash': _hash(password),
-      'document':
-          DocumentValidator.digitsOnly(document),
+      'document': DocumentValidator.digitsOnly(document),
     };
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(accounts),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
   }
 
   Future<void> updateEmail({
@@ -135,16 +117,12 @@ class LocalAuthService {
 
     if (rawAccount is! Map) return;
 
-    final account =
-        Map<String, dynamic>.from(rawAccount);
+    final account = Map<String, dynamic>.from(rawAccount);
 
     account['email'] = newEmail.trim();
     accounts[key] = account;
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(accounts),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
   }
 
   Future<void> updateDocument({
@@ -158,18 +136,13 @@ class LocalAuthService {
 
     if (rawAccount is! Map) return;
 
-    final account =
-        Map<String, dynamic>.from(rawAccount);
+    final account = Map<String, dynamic>.from(rawAccount);
 
-    account['document'] =
-        DocumentValidator.digitsOnly(document);
+    account['document'] = DocumentValidator.digitsOnly(document);
 
     accounts[key] = account;
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(accounts),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
   }
 
   Future<bool> changePassword({
@@ -184,21 +157,16 @@ class LocalAuthService {
 
     if (rawAccount is! Map) return false;
 
-    final account =
-        Map<String, dynamic>.from(rawAccount);
+    final account = Map<String, dynamic>.from(rawAccount);
 
-    if (account['passwordHash'] !=
-        _hash(currentPassword)) {
+    if (account['passwordHash'] != _hash(currentPassword)) {
       return false;
     }
 
     account['passwordHash'] = _hash(newPassword);
     accounts[key] = account;
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(accounts),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
 
     return true;
   }
@@ -217,22 +185,16 @@ class LocalAuthService {
       throw StateError('Conta não encontrada.');
     }
 
-    final account =
-        Map<String, dynamic>.from(rawAccount);
+    final account = Map<String, dynamic>.from(rawAccount);
 
     if (account['email']?.toString().toLowerCase() !=
         email.trim().toLowerCase()) {
-      throw StateError(
-        'E-mail não encontrado para este perfil.',
-      );
+      throw StateError('E-mail não encontrado para este perfil.');
     }
 
     account['passwordHash'] = _hash(newPassword);
     accounts[key] = account;
 
-    await prefs.setString(
-      _accountsKey,
-      jsonEncode(accounts),
-    );
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
   }
 }

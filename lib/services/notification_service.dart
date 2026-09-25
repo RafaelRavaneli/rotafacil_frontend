@@ -12,9 +12,7 @@ import '../state/app_store.dart';
 import 'fcm_token_api.dart';
 
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(
-  RemoteMessage message,
-) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (Firebase.apps.isEmpty) {
       if (FirebaseRuntimeOptions.isConfigured) {
@@ -34,8 +32,7 @@ Future<void> firebaseMessagingBackgroundHandler(
 class NotificationService extends ChangeNotifier {
   NotificationService._();
 
-  static final NotificationService instance =
-      NotificationService._();
+  static final NotificationService instance = NotificationService._();
 
   bool firebaseReady = false;
   bool initializing = false;
@@ -85,26 +82,27 @@ class NotificationService extends ChangeNotifier {
 
       firebaseReady = true;
 
-      _foregroundSubscription ??=
-          FirebaseMessaging.onMessage.listen(_handleForeground);
-
-      _openedSubscription ??=
-          FirebaseMessaging.onMessageOpenedApp.listen(_handleOpened);
-
-      _tokenSubscription ??=
-          FirebaseMessaging.instance.onTokenRefresh.listen(
-        (newToken) async {
-          token = newToken;
-          notifyListeners();
-
-          try {
-            await FcmTokenApi.instance.register(newToken);
-          } catch (_) {}
-        },
+      _foregroundSubscription ??= FirebaseMessaging.onMessage.listen(
+        _handleForeground,
       );
 
-      final initialMessage =
-          await FirebaseMessaging.instance.getInitialMessage();
+      _openedSubscription ??= FirebaseMessaging.onMessageOpenedApp.listen(
+        _handleOpened,
+      );
+
+      _tokenSubscription ??= FirebaseMessaging.instance.onTokenRefresh.listen((
+        newToken,
+      ) async {
+        token = newToken;
+        notifyListeners();
+
+        try {
+          await FcmTokenApi.instance.register(newToken);
+        } catch (_) {}
+      });
+
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
 
       if (initialMessage != null) {
         await _saveMessage(initialMessage);
@@ -122,8 +120,7 @@ class NotificationService extends ChangeNotifier {
 
     if (!firebaseReady) return null;
 
-    final settings =
-        await FirebaseMessaging.instance.requestPermission(
+    final settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -133,8 +130,7 @@ class NotificationService extends ChangeNotifier {
       provisional: false,
     );
 
-    permissionLabel =
-        _permissionName(settings.authorizationStatus);
+    permissionLabel = _permissionName(settings.authorizationStatus);
 
     notifyListeners();
     return settings;
@@ -162,10 +158,8 @@ class NotificationService extends ChangeNotifier {
     if (settings == null) return;
 
     final allowed =
-        settings.authorizationStatus ==
-            AuthorizationStatus.authorized ||
-        settings.authorizationStatus ==
-            AuthorizationStatus.provisional;
+        settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
 
     if (!allowed) return;
 
@@ -198,23 +192,18 @@ class NotificationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _handleForeground(
-    RemoteMessage message,
-  ) async {
+  Future<void> _handleForeground(RemoteMessage message) async {
     await _saveMessage(message);
 
     final notification = message.notification;
-    final title =
-        notification?.title ?? 'Nova notificação do RotaFácil';
-    final body = notification?.body ??
+    final title = notification?.title ?? 'Nova notificação do RotaFácil';
+    final body =
+        notification?.body ??
         message.data['body']?.toString() ??
         'Você recebeu uma nova atualização.';
 
     appScaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Text('$title\n$body'),
-
-      ),
+      SnackBar(content: Text('$title\n$body')),
     );
   }
 
@@ -226,9 +215,9 @@ class NotificationService extends ChangeNotifier {
     final notification = message.notification;
 
     await AppStore.instance.addNotification(
-      title:
-          notification?.title ?? 'Notificação do RotaFácil',
-      body: notification?.body ??
+      title: notification?.title ?? 'Notificação do RotaFácil',
+      body:
+          notification?.body ??
           message.data['body']?.toString() ??
           message.data.toString(),
     );

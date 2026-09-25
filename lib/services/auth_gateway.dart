@@ -15,6 +15,22 @@ class AuthLoginResult {
   final String? name;
 }
 
+class AuthRegisterResult {
+  const AuthRegisterResult({
+    required this.role,
+    required this.name,
+    required this.email,
+    required this.fromBackend,
+    this.userId,
+  });
+
+  final String role;
+  final String name;
+  final String email;
+  final String? userId;
+  final bool fromBackend;
+}
+
 class AuthGateway {
   AuthGateway._();
 
@@ -74,7 +90,7 @@ class AuthGateway {
       throw StateError('A API não retornou o token JWT.');
     }
 
-    final userId = _jwtClaim(token, 'id')?.toString();
+    final userId = _extractUserId(data, token);
 
     await SessionService.instance.save(
       authToken: token,
@@ -86,7 +102,7 @@ class AuthGateway {
     return AuthLoginResult(role: role, email: email, name: name);
   }
 
-  Future<void> register({
+  Future<AuthRegisterResult> register({
     required UserRole role,
     required String name,
     required String email,
@@ -104,7 +120,12 @@ class AuthGateway {
         document: document,
       );
 
-      return;
+      return AuthRegisterResult(
+        role: role.title,
+        name: name.trim(),
+        email: email.trim(),
+        fromBackend: false,
+      );
     }
 
     final body = <String, dynamic>{
@@ -125,7 +146,44 @@ class AuthGateway {
       body['cnpj'] = DocumentValidator.digitsOnly(document);
     }
 
-    await ApiClient.instance.post('/api/usuarios/', auth: false, body: body);
+    final data = await ApiClient.instance.post(
+      '/api/usuarios/',
+      auth: false,
+      body: body,
+    );
+
+    if (data is! Map) {
+      return AuthRegisterResult(
+        role: role.apiValue,
+        name: name.trim(),
+        email: email.trim(),
+        fromBackend: true,
+      );
+    }
+
+    final responseId = data['id'] ?? data['id_usuario'] ?? data['usuario_id'];
+
+    final responseName = (data['nome'] ?? data['name'])?.toString().trim();
+
+    final responseEmail = data['email']?.toString().trim();
+
+    final responseRole = (data['tipo'] ?? data['role'])?.toString().trim();
+
+    return AuthRegisterResult(
+      role: responseRole == null || responseRole.isEmpty
+          ? role.apiValue
+          : responseRole,
+      name: responseName == null || responseName.isEmpty
+          ? name.trim()
+          : responseName,
+      email: responseEmail == null || responseEmail.isEmpty
+          ? email.trim()
+          : responseEmail,
+      userId: responseId == null || responseId.toString().trim().isEmpty
+          ? null
+          : responseId.toString(),
+      fromBackend: true,
+    );
   }
 
   Future<void> resetPassword({
@@ -160,6 +218,32 @@ class AuthGateway {
         'tipo': role.apiValue,
       },
     );
+  }
+
+  String? _extractUserId(Map<dynamic, dynamic> data, String token) {
+    final responseId = data['id'] ?? data['id_usuario'] ?? data['usuario_id'];
+
+    if (responseId != null && responseId.toString().trim().isNotEmpty) {
+      return responseId.toString();
+    }
+
+    const possibleClaims = <String>[
+      'id',
+      'id_usuario',
+      'usuario_id',
+      'user_id',
+      'sub',
+    ];
+
+    for (final claim in possibleClaims) {
+      final value = _jwtClaim(token, claim);
+
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+
+    return null;
   }
 
   dynamic _jwtClaim(String token, String key) {

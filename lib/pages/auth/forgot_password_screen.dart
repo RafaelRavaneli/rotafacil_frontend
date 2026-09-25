@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../models/user_role.dart';
-import '../../services/local_auth_service.dart';
+import '../../services/auth_gateway.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/auth_error_message.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key, required this.role});
@@ -16,6 +17,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
+
   bool loading = false;
 
   @override
@@ -26,7 +28,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _reset() async {
-    if (email.text.trim().isEmpty || password.text.length < 6) {
+    final normalizedEmail = email.text.trim();
+
+    if (normalizedEmail.isEmpty || password.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -34,15 +38,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
       );
+
       return;
     }
 
     setState(() => loading = true);
 
     try {
-      await LocalAuthService.instance.resetPassword(
-        role: widget.role.title,
-        email: email.text,
+      await AuthGateway.instance.resetPassword(
+        role: widget.role,
+        email: normalizedEmail,
         newPassword: password.text,
       );
 
@@ -58,9 +63,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
@@ -81,7 +88,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'No modo local, a senha é atualizada neste dispositivo.',
+            'Informe seu e-mail e escolha uma nova senha.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 24),

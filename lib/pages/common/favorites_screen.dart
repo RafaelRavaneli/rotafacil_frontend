@@ -12,14 +12,19 @@ class FavoritesScreen extends StatelessWidget {
     final store = AppStore.instance;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trilhas favoritas', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Trilhas favoritas',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
       ),
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
           final trails = store.favoriteTrails;
           if (trails.isEmpty) {
-            return const Center(child: Text('Você ainda não favoritou nenhuma trilha.'));
+            return const Center(
+              child: Text('Você ainda não favoritou nenhuma trilha.'),
+            );
           }
           return ListView.separated(
             padding: const EdgeInsets.all(20),
@@ -29,22 +34,32 @@ class FavoritesScreen extends StatelessWidget {
               final trail = trails[index];
               return ListTile(
                 tileColor: AppColors.paper,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 leading: SizedBox(
                   width: 64,
                   height: 54,
                   child: NetworkImageBox(url: trail.imageUrl, borderRadius: 10),
                 ),
-                title: Text(trail.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+                title: Text(
+                  trail.name,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
                 subtitle: Text(trail.location),
                 trailing: IconButton(
                   onPressed: () => store.toggleFavorite(trail.id),
-                  icon: const Icon(Icons.favorite_rounded, color: AppColors.red),
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.red,
+                  ),
                 ),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => TrailDetailsScreen(trail: trail)),
+                    MaterialPageRoute(
+                      builder: (_) => TrailDetailsScreen(trail: trail),
+                    ),
                   );
                 },
               );
