@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/run_action.dart';
 import '../../models/local_booking.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
@@ -141,8 +142,11 @@ class _BookingCard extends StatelessWidget {
                   ),
                 );
 
-                if (confirm == true) {
-                  await AppStore.instance.cancelBooking(booking);
+                if (confirm == true && context.mounted) {
+                  await runAction(
+                    context,
+                    () => AppStore.instance.cancelBooking(booking),
+                  );
                 }
               },
               icon: const Icon(Icons.cancel_outlined),

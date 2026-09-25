@@ -129,7 +129,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => LoginScreen(role: widget.role)),
+      MaterialPageRoute(
+        builder: (_) => LoginScreen(initialEmail: registration.email),
+      ),
     );
   }
 

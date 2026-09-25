@@ -52,39 +52,29 @@ class LocalAuthService {
     return seeded;
   }
 
-  Future<bool> login({
-    required String role,
+  String? _accountKey(Map<String, dynamic> accounts, String email) {
+    final normalized = email.trim().toLowerCase();
+    final matches = accounts.entries
+        .where(
+          (entry) =>
+              entry.value is Map &&
+              (entry.value as Map)['email']?.toString().trim().toLowerCase() ==
+                  normalized,
+        )
+        .toList();
+    // Contas antigas com e-mails repetidos não podem selecionar um perfil arbitrário.
+    return matches.length == 1 ? matches.single.key : null;
+  }
+
+  Future<String?> login({
     required String email,
     required String password,
-    String document = '',
   }) async {
     final accounts = await _accounts();
-    final key = _roleKey(role);
-    final rawAccount = accounts[key];
-
-    if (rawAccount is! Map) return false;
-
-    final account = Map<String, dynamic>.from(rawAccount);
-
-    final credentialsMatch =
-        account['email']?.toString().toLowerCase() ==
-            email.trim().toLowerCase() &&
-        account['passwordHash'] == _hash(password);
-
-    if (!credentialsMatch) return false;
-
-    if (key == 'guia' || key == 'agencia') {
-      final normalizedDocument = DocumentValidator.digitsOnly(document);
-
-      final savedDocument = DocumentValidator.digitsOnly(
-        account['document']?.toString() ?? '',
-      );
-
-      return normalizedDocument.isNotEmpty &&
-          normalizedDocument == savedDocument;
-    }
-
-    return true;
+    final key = _accountKey(accounts, email);
+    if (key == null) return null;
+    final account = Map<String, dynamic>.from(accounts[key] as Map);
+    return account['passwordHash'] == _hash(password) ? key : null;
   }
 
   Future<void> register({
@@ -97,6 +87,15 @@ class LocalAuthService {
     final accounts = await _accounts();
     final key = _roleKey(role);
 
+    if (accounts.entries.any(
+      (entry) =>
+          entry.key != key &&
+          entry.value is Map &&
+          (entry.value as Map)['email']?.toString().trim().toLowerCase() ==
+              email.trim().toLowerCase(),
+    )) {
+      throw StateError('E-mail já cadastrado. Faça login com sua conta.');
+    }
     accounts[key] = {
       'email': email.trim(),
       'passwordHash': _hash(password),
@@ -172,13 +171,13 @@ class LocalAuthService {
   }
 
   Future<void> resetPassword({
-    required String role,
     required String email,
     required String newPassword,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final accounts = await _accounts();
-    final key = _roleKey(role);
+    final key = _accountKey(accounts, email);
+    if (key == null) throw StateError('Conta não encontrada.');
     final rawAccount = accounts[key];
 
     if (rawAccount is! Map) {
@@ -189,7 +188,7 @@ class LocalAuthService {
 
     if (account['email']?.toString().toLowerCase() !=
         email.trim().toLowerCase()) {
-      throw StateError('E-mail não encontrado para este perfil.');
+      throw StateError('E-mail não encontrado.');
     }
 
     account['passwordHash'] = _hash(newPassword);

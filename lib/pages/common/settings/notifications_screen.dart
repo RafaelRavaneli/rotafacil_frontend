@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/fcm_token_api.dart';
+import '../../../utils/auth_error_message.dart';
 import '../../../state/app_store.dart';
 import '../../../theme/app_colors.dart';
 import '../notification_center_screen.dart';
@@ -10,7 +12,10 @@ class NotificationsScreen extends StatelessWidget {
   Future<void> _togglePush(BuildContext context, bool value) async {
     final store = AppStore.instance;
     await store.setPushNotifications(value);
-    if (!value) return;
+    if (!value) {
+      await NotificationService.instance.unregisterOnLogout();
+      return;
+    }
 
     final settings = await NotificationService.instance.requestPermission();
     if (!context.mounted) return;
@@ -72,6 +77,36 @@ class NotificationsScreen extends StatelessWidget {
                   'Sugestões de novas trilhas e experiências.',
                 ),
               ),
+              if (store.useBackend)
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.send_outlined),
+                  label: const Text('Testar recebimento de notificação'),
+                  onPressed: store.pushNotifications
+                      ? () async {
+                          try {
+                            final result = await FcmTokenApi.instance.test();
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result['enviados'] == 0
+                                      ? 'Nenhum envio confirmado. Ative as notificações e tente novamente.'
+                                      : 'Teste enviado. Confira o recebimento no dispositivo.',
+                                ),
+                              ),
+                            );
+                          } catch (error) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(authErrorMessage(error)),
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      : null,
+                ),
               const Divider(height: 30),
               ListTile(
                 contentPadding: EdgeInsets.zero,

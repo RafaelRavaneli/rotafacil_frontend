@@ -6,6 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../models/trail.dart';
+import '../../utils/run_action.dart';
+import '../../services/session_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
@@ -220,8 +222,17 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       reviews: current?.reviews ?? 0,
       description: descriptionController.text.trim(),
       imageUrl: imageUrl,
-      guideName: guideName ?? AppStore.instance.guide.name,
-      guideId: guideId ?? current?.guideId ?? '',
+      guideName:
+          guideName ??
+          AppStore.instance
+              .userForRole(SessionService.instance.role ?? 'guia')
+              .name,
+      guideId:
+          guideId ??
+          current?.guideId ??
+          (AppStore.instance.useBackend
+              ? SessionService.instance.userId ?? ''
+              : ''),
       date: dateLabel,
       price: price,
       status: current?.status ?? 'Ativa',
@@ -230,11 +241,15 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       longitude: longitude,
     );
 
-    if (current == null) {
-      await AppStore.instance.addTrail(trail);
-    } else {
-      await AppStore.instance.updateTrail(trail);
-    }
+    final saved = await runAction(context, () async {
+      if (current == null) {
+        await AppStore.instance.addTrail(trail);
+      } else {
+        await AppStore.instance.updateTrail(trail);
+      }
+    });
+    if (mounted) setState(() => saving = false);
+    if (!saved) return;
 
     if (!mounted) return;
 
@@ -456,33 +471,33 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           if (widget.isAgency) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              initialValue: guides.any((guide) => guide.name == guideName)
-                  ? guideName
+              initialValue: guides.any((guide) => guide.id == guideId)
+                  ? guideId
                   : null,
               decoration: const InputDecoration(labelText: 'Guia responsável'),
               items: guides
                   .map(
                     (guide) => DropdownMenuItem(
-                      value: guide.name,
+                      value: guide.id,
                       child: Text(guide.name),
                     ),
                   )
                   .toList(),
               onChanged: (value) {
-                String? selectedGuideId;
+                String? selectedGuideName;
 
                 if (value != null) {
                   for (final guide in guides) {
-                    if (guide.name == value) {
-                      selectedGuideId = guide.id;
+                    if (guide.id == value) {
+                      selectedGuideName = guide.name;
                       break;
                     }
                   }
                 }
 
                 setState(() {
-                  guideName = value;
-                  guideId = selectedGuideId;
+                  guideName = selectedGuideName;
+                  guideId = value;
                 });
               },
             ),

@@ -36,14 +36,15 @@ class AppUser {
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
-      name: json['name']?.toString() ?? '',
+      name: (json['name'] ?? json['nome'])?.toString() ?? '',
       email: json['email']?.toString() ?? '',
-      phone: json['phone']?.toString() ?? '',
-      city: json['city']?.toString() ?? '',
-      state: json['state']?.toString() ?? '',
+      phone: (json['phone'] ?? json['telefone'])?.toString() ?? '',
+      city: (json['city'] ?? json['cidade'])?.toString() ?? '',
+      state: (json['state'] ?? json['estado'])?.toString() ?? '',
       role: (json['role'] ?? json['tipo'])?.toString() ?? 'Turista',
-      document: json['document']?.toString() ?? '',
-      profileImageDataUrl: json['profileImageDataUrl']?.toString(),
+      document: (json['document'] ?? json['documento'])?.toString() ?? '',
+      profileImageDataUrl: (json['profileImageDataUrl'] ?? json['foto_url'])
+          ?.toString(),
     );
   }
 }

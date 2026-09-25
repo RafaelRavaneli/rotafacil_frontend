@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_role.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/role_card.dart';
-import 'login_screen.dart';
+import 'register_screen.dart';
 
 class ProfileChoiceScreen extends StatelessWidget {
   const ProfileChoiceScreen({super.key});
@@ -11,7 +11,7 @@ class ProfileChoiceScreen extends StatelessWidget {
   void _choose(BuildContext context, UserRole role) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => LoginScreen(role: role)),
+      MaterialPageRoute(builder: (_) => RegisterScreen(role: role)),
     );
   }
 
@@ -26,7 +26,7 @@ class ProfileChoiceScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 18),
             const Text(
-              'Como você deseja\ncontinuar?',
+              'Qual é o seu\nperfil?',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.green900,
@@ -38,7 +38,7 @@ class ProfileChoiceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Escolha o tipo de perfil que mais combina com você.',
+              'Escolha um perfil para criar sua conta.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
@@ -59,7 +59,7 @@ class ProfileChoiceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 38),
             const Text(
-              'Você poderá alterar seu perfil depois nas configurações.',
+              'Guia: CPF obrigatório. Agência: CNPJ obrigatório.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 11.5),
             ),

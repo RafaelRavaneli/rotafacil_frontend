@@ -21,16 +21,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// O SDK já exibe mensagens com notification em segundo plano.
+// Exibição manual somente para mensagens que contêm apenas data.
+// https://firebase.google.com/docs/cloud-messaging/web/receive-messages
 messaging.onBackgroundMessage((payload) => {
-  const title =
-    payload.notification?.title || 'RotaFácil';
-
-  const options = {
-    body:
-      payload.notification?.body ||
-      'Você recebeu uma nova atualização.',
+  if (payload.notification) return;
+  return self.registration.showNotification(payload.data?.title || 'RotaFácil', {
+    body: payload.data?.body || 'Você recebeu uma nova atualização.',
     icon: '/icons/Icon-192.png',
-  };
-
-  self.registration.showNotification(title, options);
+  });
 });

@@ -61,16 +61,15 @@ class NotificationService extends ChangeNotifier {
 
     try {
       if (Firebase.apps.isEmpty) {
-        try {
-          await Firebase.initializeApp();
-        } catch (_) {
-          if (!FirebaseRuntimeOptions.isConfigured) {
-            rethrow;
-          }
-
+        if (FirebaseRuntimeOptions.isConfigured) {
           await Firebase.initializeApp(
             options: FirebaseRuntimeOptions.currentPlatform,
           );
+        } else if (kIsWeb) {
+          // A configuração web deve ser explícita; não atrasa o login sem ela.
+          return;
+        } else {
+          await Firebase.initializeApp();
         }
       }
 
@@ -97,7 +96,9 @@ class NotificationService extends ChangeNotifier {
         notifyListeners();
 
         try {
-          await FcmTokenApi.instance.register(newToken);
+          if (AppStore.instance.pushNotifications) {
+            await FcmTokenApi.instance.register(newToken);
+          }
         } catch (_) {}
       });
 
@@ -178,14 +179,12 @@ class NotificationService extends ChangeNotifier {
   }
 
   Future<void> unregisterOnLogout() async {
-    if (!firebaseReady) return;
-
     try {
       await FcmTokenApi.instance.remove();
     } catch (_) {}
 
     try {
-      await FirebaseMessaging.instance.deleteToken();
+      if (firebaseReady) await FirebaseMessaging.instance.deleteToken();
     } catch (_) {}
 
     token = null;

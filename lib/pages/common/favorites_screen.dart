@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/run_action.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
@@ -48,7 +49,8 @@ class FavoritesScreen extends StatelessWidget {
                 ),
                 subtitle: Text(trail.location),
                 trailing: IconButton(
-                  onPressed: () => store.toggleFavorite(trail.id),
+                  onPressed: () =>
+                      runAction(context, () => store.toggleFavorite(trail.id)),
                   icon: const Icon(
                     Icons.favorite_rounded,
                     color: AppColors.red,

@@ -32,49 +32,33 @@ class AuthRegisterResult {
 }
 
 class AuthGateway {
-  AuthGateway._();
+  AuthGateway({ApiClient? api}) : _api = api ?? ApiClient.instance;
 
-  static final AuthGateway instance = AuthGateway._();
+  final ApiClient _api;
+
+  static final AuthGateway instance = AuthGateway();
 
   Future<AuthLoginResult?> login({
-    required UserRole selectedRole,
     required String email,
     required String password,
-    String document = '',
   }) async {
     if (!AppConfig.useBackend) {
-      final ok = await LocalAuthService.instance.login(
-        role: selectedRole.title,
+      final localRole = await LocalAuthService.instance.login(
         email: email,
         password: password,
-        document: document,
       );
 
-      if (!ok) return null;
+      if (localRole == null) return null;
+      final role = localRole == 'turista' ? 'usuario' : localRole;
 
-      await SessionService.instance.save(
-        selectedRole: selectedRole.apiValue,
-        userEmail: email,
-      );
+      await SessionService.instance.save(selectedRole: role, userEmail: email);
 
-      return AuthLoginResult(role: selectedRole.apiValue, email: email);
+      return AuthLoginResult(role: role, email: email);
     }
 
     final body = <String, dynamic>{'email': email, 'senha': password};
 
-    if (selectedRole == UserRole.guide) {
-      body['cpf'] = DocumentValidator.digitsOnly(document);
-    }
-
-    if (selectedRole == UserRole.agency) {
-      body['cnpj'] = DocumentValidator.digitsOnly(document);
-    }
-
-    final data = await ApiClient.instance.post(
-      '/api/auth/login',
-      auth: false,
-      body: body,
-    );
+    final data = await _api.post('/api/auth/login', auth: false, body: body);
 
     if (data is! Map) {
       throw StateError('Resposta inválida do login.');
@@ -82,7 +66,10 @@ class AuthGateway {
 
     final token = data['token']?.toString();
 
-    final role = data['tipo']?.toString() ?? selectedRole.apiValue;
+    final role = data['tipo']?.toString().trim().toLowerCase();
+    if (!{'usuario', 'guia', 'agencia'}.contains(role)) {
+      throw StateError('A conta retornou um perfil não suportado.');
+    }
 
     final name = data['nome']?.toString();
 
@@ -94,7 +81,7 @@ class AuthGateway {
 
     await SessionService.instance.save(
       authToken: token,
-      selectedRole: role,
+      selectedRole: role!,
       userEmail: email,
       id: userId,
     );
@@ -139,18 +126,14 @@ class AuthGateway {
     };
 
     if (role == UserRole.guide) {
-      body['cpf'] = DocumentValidator.digitsOnly(document);
+      body['documento'] = DocumentValidator.digitsOnly(document);
     }
 
     if (role == UserRole.agency) {
-      body['cnpj'] = DocumentValidator.digitsOnly(document);
+      body['documento'] = DocumentValidator.digitsOnly(document);
     }
 
-    final data = await ApiClient.instance.post(
-      '/api/usuarios/',
-      auth: false,
-      body: body,
-    );
+    final data = await _api.post('/api/usuarios/', auth: false, body: body);
 
     if (data is! Map) {
       return AuthRegisterResult(
@@ -187,15 +170,14 @@ class AuthGateway {
   }
 
   Future<void> resetPassword({
-    required UserRole role,
     required String email,
     required String newPassword,
+    String token = '',
   }) async {
     final normalizedEmail = email.trim();
 
     if (!AppConfig.useBackend) {
       await LocalAuthService.instance.resetPassword(
-        role: role.title,
         email: normalizedEmail,
         newPassword: newPassword,
       );
@@ -203,20 +185,22 @@ class AuthGateway {
       return;
     }
 
-    if (AppConfig.resetPasswordPath.trim().isEmpty) {
-      throw StateError(
-        'O endpoint de redefinição de senha do backend não foi configurado.',
-      );
+    if (token.trim().isEmpty) {
+      throw StateError('Informe o código de redefinição recebido por e-mail.');
     }
 
-    await ApiClient.instance.post(
-      AppConfig.resetPasswordPath,
+    await _api.post(
+      '/api/auth/senha/redefinir',
       auth: false,
-      body: {
-        'email': normalizedEmail,
-        'senha': newPassword,
-        'tipo': role.apiValue,
-      },
+      body: {'token': token.trim(), 'nova_senha': newPassword},
+    );
+  }
+
+  Future<void> requestPasswordReset(String email) async {
+    await _api.post(
+      '/api/auth/senha/solicitar',
+      auth: false,
+      body: {'email': email.trim()},
     );
   }
 

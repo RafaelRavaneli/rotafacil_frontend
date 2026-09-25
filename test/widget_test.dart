@@ -15,6 +15,8 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
+    expect(find.text('RotaFácil'), findsWidgets);
+    expect(tester.takeException(), isNull);
   });
 }

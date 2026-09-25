@@ -17,9 +17,12 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
-  ApiClient._();
+  ApiClient({http.Client? client}) : _client = client ?? http.Client();
 
-  static final ApiClient instance = ApiClient._();
+  final http.Client _client;
+  static const timeout = Duration(seconds: 20);
+
+  static final ApiClient instance = ApiClient();
 
   Uri _uri(String path) {
     final baseUrl = AppConfig.apiBaseUrl.endsWith('/')
@@ -70,50 +73,57 @@ class ApiClient {
       uri = uri.replace(queryParameters: queryParameters);
     }
 
-    final response = await http.get(uri, headers: _headers(auth: auth));
+    final response = await _client
+        .get(uri, headers: _headers(auth: auth))
+        .timeout(timeout);
 
     return _decode(response);
   }
 
   // POST - criar/enviar dados
   Future<dynamic> post(String path, {Object? body, bool auth = true}) async {
-    final response = await http.post(
-      _uri(path),
-      headers: _headers(auth: auth),
-      body: body == null ? null : jsonEncode(body),
-    );
+    final response = await _client
+        .post(
+          _uri(path),
+          headers: _headers(auth: auth),
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(timeout);
 
     return _decode(response);
   }
 
   // PUT - substituir/atualizar dados
   Future<dynamic> put(String path, {Object? body, bool auth = true}) async {
-    final response = await http.put(
-      _uri(path),
-      headers: _headers(auth: auth),
-      body: body == null ? null : jsonEncode(body),
-    );
+    final response = await _client
+        .put(
+          _uri(path),
+          headers: _headers(auth: auth),
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(timeout);
 
     return _decode(response);
   }
 
   // PATCH - atualizar somente alguns campos
   Future<dynamic> patch(String path, {Object? body, bool auth = true}) async {
-    final response = await http.patch(
-      _uri(path),
-      headers: _headers(auth: auth),
-      body: body == null ? null : jsonEncode(body),
-    );
+    final response = await _client
+        .patch(
+          _uri(path),
+          headers: _headers(auth: auth),
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(timeout);
 
     return _decode(response);
   }
 
   // DELETE - excluir dados
   Future<dynamic> delete(String path, {bool auth = true}) async {
-    final response = await http.delete(
-      _uri(path),
-      headers: _headers(auth: auth),
-    );
+    final response = await _client
+        .delete(_uri(path), headers: _headers(auth: auth))
+        .timeout(timeout);
 
     return _decode(response);
   }
@@ -123,7 +133,7 @@ class ApiClient {
     String path, {
     required Uint8List bytes,
     required String fileName,
-    String fieldName = 'file',
+    String fieldName = 'image',
     Map<String, String>? fields,
     bool auth = true,
     String method = 'POST',
@@ -140,9 +150,11 @@ class ApiClient {
       http.MultipartFile.fromBytes(fieldName, bytes, filename: fileName),
     );
 
-    final streamedResponse = await request.send();
+    final streamedResponse = await _client.send(request).timeout(timeout);
 
-    final response = await http.Response.fromStream(streamedResponse);
+    final response = await http.Response.fromStream(
+      streamedResponse,
+    ).timeout(timeout);
 
     return _decode(response);
   }
@@ -153,12 +165,15 @@ class ApiClient {
     try {
       data = response.body.isEmpty
           ? <String, dynamic>{}
-          : jsonDecode(response.body);
+          : jsonDecode(utf8.decode(response.bodyBytes));
     } catch (_) {
       data = <String, dynamic>{'erro': response.body};
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (data is Map && data.containsKey('erro')) {
+        throw ApiException(data['erro'].toString(), response.statusCode);
+      }
       return data;
     }
 

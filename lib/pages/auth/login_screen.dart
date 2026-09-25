@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../models/user_role.dart';
+import '../../config/app_config.dart';
 import '../../services/auth_gateway.dart';
 import '../../services/notification_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
-import '../../utils/document_validator.dart';
 import '../agency/agency_shell.dart';
 import '../guide/guide_shell.dart';
 import '../tourist/tourist_shell.dart';
 import 'forgot_password_screen.dart';
-import 'register_screen.dart';
+import 'profile_choice_screen.dart';
 import '../../utils/auth_error_message.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.role});
+  const LoginScreen({super.key, this.initialEmail = ''});
 
-  final UserRole role;
+  final String initialEmail;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -25,47 +24,27 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final documentController = TextEditingController();
 
   bool obscure = true;
   bool loading = false;
-
-  bool get needsDocument {
-    return widget.role == UserRole.guide || widget.role == UserRole.agency;
-  }
-
-  String get documentLabel {
-    return widget.role == UserRole.guide ? 'CPF' : 'CNPJ';
-  }
 
   @override
   void initState() {
     super.initState();
 
-    final user = AppStore.instance.userForRole(widget.role.title);
-
-    emailController.text = user.email;
-
-    if (needsDocument) {
-      documentController.text = DocumentValidator.formatForRole(
-        widget.role.title,
-        user.document,
-      );
-    }
+    emailController.text = widget.initialEmail;
   }
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
-    documentController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
-    final document = documentController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(
@@ -75,30 +54,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (needsDocument &&
-        !DocumentValidator.isValidForRole(widget.role.title, document)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '$documentLabel inválido. '
-            'Informe um $documentLabel válido para entrar.',
-          ),
-        ),
-      );
-
-      return;
-    }
-
     setState(() => loading = true);
 
-    String resolvedRole = widget.role.apiValue;
+    late String resolvedRole;
 
     try {
       final result = await AuthGateway.instance.login(
-        selectedRole: widget.role,
         email: email,
         password: password,
-        document: document,
       );
 
       if (!mounted) return;
@@ -106,22 +69,21 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result == null) {
         setState(() => loading = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              needsDocument
-                  ? 'E-mail, senha ou $documentLabel incorretos.'
-                  : 'E-mail ou senha inválidos.',
-            ),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('E-mail ou senha inválidos.')));
 
         return;
       }
 
       resolvedRole = result.role.toLowerCase().trim();
 
-      await NotificationService.instance.registerAfterLogin();
+      await AppStore.instance.refreshBackend();
+      try {
+        await NotificationService.instance.registerAfterLogin();
+      } catch (_) {
+        // Notificações opcionais não impedem o acesso à conta.
+      }
     } catch (error) {
       if (!mounted) return;
 
@@ -139,7 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final Widget destination = switch (resolvedRole) {
       'guia' => const GuideShell(),
       'agencia' => const AgencyShell(),
-      _ => const TouristShell(),
+      'usuario' => const TouristShell(),
+      _ => throw StateError('Perfil não suportado.'),
     };
 
     Navigator.pushAndRemoveUntil(
@@ -149,20 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  String get demoText {
-    if (widget.role == UserRole.guide) {
-      return 'Demonstração: senha 123456 • '
-          'CPF 529.982.247-25';
-    }
-
-    if (widget.role == UserRole.agency) {
-      return 'Demonstração: senha 123456 • '
-          'CNPJ 11.222.333/0001-81';
-    }
-
-    return 'Demonstração: use o e-mail preenchido '
-        'e a senha 123456.';
-  }
+  String get demoText =>
+      'Demonstração: thiago@email.com (turista), guia@email.com (guia) ou contato@aventuraprime.com (agência). Senha: 123456.';
 
   @override
   Widget build(BuildContext context) {
@@ -184,33 +135,26 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              'Entre para continuar como '
-              '${widget.role.title.toLowerCase()}.',
-              style: const TextStyle(color: AppColors.muted, fontSize: 13.5),
+            const Text(
+              'Entre com seu e-mail e senha para continuar.',
+              style: TextStyle(color: AppColors.muted, fontSize: 13.5),
             ),
             const SizedBox(height: 30),
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-            ),
-            if (needsDocument) ...[
-              const SizedBox(height: 14),
-              TextField(
-                controller: documentController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: documentLabel,
-                  helperText: '$documentLabel obrigatório para o acesso.',
-                  prefixIcon: const Icon(Icons.badge_outlined),
-                ),
+              autofillHints: const [AutofillHints.username],
+              decoration: const InputDecoration(
+                labelText: 'E-mail',
+                hintText: 'Seu e-mail cadastrado',
               ),
-            ],
+            ),
+
             const SizedBox(height: 14),
             TextField(
               controller: passwordController,
               obscureText: obscure,
+              autofillHints: const [AutofillHints.password],
               decoration: InputDecoration(
                 labelText: 'Senha',
                 suffixIcon: IconButton(
@@ -232,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ForgotPasswordScreen(role: widget.role),
+                      builder: (_) => const ForgotPasswordScreen(),
                     ),
                   );
                 },
@@ -260,21 +204,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   : const Text('Entrar'),
             ),
             const SizedBox(height: 18),
-            Container(
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: AppColors.green100,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                demoText,
-                style: const TextStyle(
-                  color: AppColors.green900,
-                  fontSize: 11.5,
-                  height: 1.4,
+            if (!AppConfig.useBackend)
+              Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  color: AppColors.green100,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  demoText,
+                  style: const TextStyle(
+                    color: AppColors.green900,
+                    fontSize: 11.5,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -288,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => RegisterScreen(role: widget.role),
+                        builder: (_) => const ProfileChoiceScreen(),
                       ),
                     );
                   },

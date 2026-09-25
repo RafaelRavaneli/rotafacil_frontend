@@ -1,3 +1,4 @@
+import '../remote_conversations_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../../state/app_store.dart';
@@ -141,6 +142,10 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (AppStore.instance.useBackend) {
+      return const RemoteConversationsScreen(support: true);
+    }
+
     final store = AppStore.instance;
 
     return Scaffold(
