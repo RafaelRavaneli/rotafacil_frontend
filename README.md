@@ -1,83 +1,111 @@
-# RotaFácil V4 — correções e fluxos completos
+# RotaFácil — Frontend
 
-Esta versão inclui as correções solicitadas depois do teste da V3.
+Aplicativo Flutter para descoberta, planejamento e agendamento de trilhas. O frontend atende turistas, guias e agências e pode funcionar com dados locais de demonstração ou conectado à API Flask do RotaFácil.
 
-## Corrigido
-- Aba **Trilhas** de Guia/Agência reescrita com `Column + ListView`, evitando a tela branca observada.
-- Correção do `AuthorizationStatus.deniedPermanently` do Firebase Messaging.
+## Fluxo de acesso
 
-## Perfil
-- Foto de perfil pela galeria.
-- Pré-visualização da foto.
-- Remover/trocar foto.
-- Foto persistida localmente.
-- Foto aparece no Perfil e nos painéis de Guia/Agência.
-- Nome, e-mail, telefone, cidade e estado editáveis.
-- CPF editável/obrigatório para Guia.
-- CNPJ editável/obrigatório para Agência.
+- **Fazer login:** solicita somente e-mail e senha. O backend informa o tipo da conta e o aplicativo abre a home correspondente.
+- **Criar conta:** solicita primeiro a escolha entre turista, guia e agência.
+- **Documentos:** CPF e CNPJ são validados somente no cadastro do perfil correspondente, nunca no login.
 
-## Autenticação
-### Turista
-- e-mail + senha.
+## Tecnologias
 
-### Guia
-- e-mail + CPF + senha.
-- CPF é obrigatório e passa por validação dos dígitos verificadores.
+- Flutter e Dart
+- `http` para a API REST
+- `shared_preferences` para sessão e dados locais
+- `firebase_core` e `firebase_messaging` para notificações
+- `geolocator` para localização
+- `image_picker` para seleção de imagens
 
-Conta de demonstração:
-- e-mail: `guia@email.com`
-- CPF: `529.982.247-25`
-- senha: `123456`
+## Estrutura principal
 
-### Agência
-- e-mail + CNPJ + senha.
-- CNPJ é obrigatório e passa por validação dos dígitos verificadores.
+```text
+lib/
+├── config/       # Configuração do aplicativo e Firebase
+├── data/         # Dados de demonstração
+├── models/       # Modelos do domínio
+├── pages/        # Telas por área e perfil
+├── services/     # API, autenticação, sessão e notificações
+├── state/        # Estado global
+├── theme/        # Tema visual
+├── utils/        # Validadores e tratamento de erros
+└── widgets/      # Componentes reutilizáveis
+```
 
-Conta de demonstração:
-- e-mail: `contato@aventuraprime.com`
-- CNPJ: `11.222.333/0001-81`
-- senha: `123456`
+## Modos de execução
 
-## Mensagens Turista ↔ Guia
-A conversa agora é compartilhada:
-- Turista envia para Guia.
-- Guia envia para Turista.
-- As mensagens ficam persistidas.
-- Para testar os dois lados, envie como Turista, faça logout e entre como Guia.
+### Modo local
 
-## Ajuda e suporte
-- Usuário envia mensagem ao suporte.
-- Histórico fica salvo.
-- Existe um botão de **atendente** no canto superior para **Responder como suporte** em modo de demonstração.
-- A resposta aparece na mesma conversa.
-- A resposta do suporte também gera notificação.
-
-## Para rodar
-Se necessário:
+Utiliza dados fictícios e persistência local. Não exige que o backend esteja ativo.
 
 ```powershell
-flutter create .
 flutter pub get
-flutter analyze
 flutter run -d chrome
 ```
 
-Como esta V4 altera o modelo local de autenticação, as contas demonstrativas usam os dados listados acima.
+Contas de demonstração:
 
-## V5 — Guias clicáveis
-- Os cards em **Guias disponíveis** agora são clicáveis.
-- Cursor muda para mãozinha no Chrome/Web.
-- Tela pública do guia com foto, verificação, nota, avaliações, especialidades, experiência, trilhas concluídas e quilômetros guiados.
-- Botão **Conversar com o guia** abre uma conversa vinculada ao guia selecionado.
-- As conversas com guias diferentes ficam separadas localmente.
-- As trilhas daquele guia aparecem dentro do perfil e são clicáveis.
-- Em **Detalhes da trilha**, o bloco **Guia responsável** também abre o perfil do guia.
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Turista | `thiago@email.com` | `123456` |
+| Guia | `guia@email.com` | `123456` |
+| Agência | `contato@aventuraprime.com` | `123456` |
 
+### Modo conectado
 
-## V6 — Correção de congelamento
+Utiliza autenticação JWT, persistência e serviços da API real. Inicie antes o repositório `rotafacil_backend`.
 
-- Removido `IndexedStack` das três shells.
-- Apenas a aba visível é construída.
-- Cache de imagens Base64 durante a vida do widget.
-- Fotos novas são reduzidas antes de persistir.
-- Foco especial no congelamento observado em Guia e Agência no Chrome.
+```powershell
+flutter pub get
+flutter run -d chrome --web-port=8080 --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=http://127.0.0.1:5000
+```
+
+Variáveis aceitas por `--dart-define`:
+
+| Variável | Padrão | Finalidade |
+|---|---|---|
+| `USE_BACKEND` | `false` | Habilita a integração com a API |
+| `API_BASE_URL` | `http://127.0.0.1:5000` | Endereço base do backend |
+| `FIREBASE_WEB_VAPID_KEY` | vazio | Chave pública necessária ao push web |
+
+Para configurar Firebase Web e VAPID, siga `CONFIGURAR_FIREBASE_FCM.md` ou execute `CONFIGURAR_FIREBASE_WEB.ps1`. Os arquivos locais gerados são ignorados pelo Git.
+
+## Recursos conectados à API
+
+- cadastro e login por e-mail e senha;
+- recuperação de senha;
+- sessão por JWT;
+- consulta, criação, edição e desativação de trilhas;
+- agendamento e cancelamento;
+- favoritos;
+- atualização de perfil e upload de imagens;
+- catálogo de guias e convites entre agência e guia;
+- conversas entre turista e guia;
+- atendimento de suporte;
+- registro, remoção e teste do dispositivo para push;
+- indicadores de agendamentos fornecidos pela API.
+
+## Verificações
+
+```powershell
+flutter analyze
+flutter test
+flutter test --dart-define=USE_BACKEND=true
+flutter build web --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=http://127.0.0.1:5000
+```
+
+Os testes automatizados não substituem a validação com Firebase, e-mail, ImgBB e contas reais de homologação.
+
+## Limitações conhecidas
+
+- conversas são atualizadas manualmente e mantêm somente as mensagens mais recentes;
+- o suporte pode ser respondido por administrador pela API, mas ainda não possui painel administrativo no aplicativo;
+- convites não possuem reenvio ou revogação;
+- push possui registro e envio de teste, mas o recebimento real precisa ser homologado no navegador;
+- avaliações, planejamento completo da trilha, contato de emergência e verificação administrativa ainda não formam fluxos completos na interface;
+- não existe publicação pública de produção confirmada.
+
+## Repositórios relacionados
+
+- Backend: https://github.com/RafaelRavaneli/rotafacil_backend
+- Documentação: https://github.com/RafaelRavaneli/rotafacil_docs

@@ -49,3 +49,7 @@ app.*.map.json
 # Arquivos temporários
 *.tmp
 *.bak
+
+/firebase-web.local.json
+
+/web/firebase-messaging-sw.js

@@ -1,3 +1,4 @@
+import 'remote_guides_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/local_guide.dart';
 import '../../state/app_store.dart';
@@ -72,6 +73,10 @@ class GuidesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (AppStore.instance.useBackend) {
+      return const RemoteGuidesScreen();
+    }
+
     final store = AppStore.instance;
 
     return SafeArea(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/run_action.dart';
 
 import '../../data/demo_data.dart' show guides;
 import '../../models/guide.dart';
@@ -32,7 +33,9 @@ class TouristHomeTab extends StatelessWidget {
       child: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
-          final trails = store.trails;
+          final trails = store.trails
+              .where((trail) => TrailStatus.isActive(trail.status))
+              .toList();
 
           return CustomScrollView(
             slivers: [
@@ -142,71 +145,77 @@ class TouristHomeTab extends StatelessWidget {
                   child: Center(child: Text('Nenhuma trilha cadastrada.')),
                 )
               else ...[
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 10),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      'Destaque da semana',
-                      style: TextStyle(
-                        color: AppColors.ink,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
+                if (!store.useBackend)
+                  const SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 10),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        'Destaque da semana',
+                        style: TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverToBoxAdapter(
                     child: _FeaturedTrailCard(
                       trail: trails.first,
                       favorite: store.isFavorite(trails.first.id),
-                      onFavorite: () => store.toggleFavorite(trails.first.id),
+                      onFavorite: () => runAction(
+                        context,
+                        () => store.toggleFavorite(trails.first.id),
+                      ),
                       onTap: () => _openTrail(context, trails.first),
                     ),
                   ),
                 ),
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 10),
-                  sliver: SliverToBoxAdapter(
-                    child: Text(
-                      'Guias disponíveis',
-                      style: TextStyle(
-                        color: AppColors.ink,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
+                if (!store.useBackend)
+                  const SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 10),
+                    sliver: SliverToBoxAdapter(
+                      child: Text(
+                        'Guias disponíveis',
+                        style: TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 142,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: guides.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final guide = guides[index];
+                if (!store.useBackend)
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 142,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: guides.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final guide = guides[index];
 
-                        return _GuideHomeCard(
-                          guide: guide,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    GuideProfileScreen(guide: guide),
-                              ),
-                            );
-                          },
-                        );
-                      },
+                          return _GuideHomeCard(
+                            guide: guide,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      GuideProfileScreen(guide: guide),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
                 const SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 22, 20, 10),
                   sliver: SliverToBoxAdapter(

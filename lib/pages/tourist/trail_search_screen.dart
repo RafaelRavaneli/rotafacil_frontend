@@ -127,6 +127,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     final results = <_TrailResult>[];
 
     for (final trail in AppStore.instance.trails) {
+      if (!TrailStatus.isActive(trail.status)) continue;
       final cityMatch =
           cityTerm.isEmpty || trail.city.toLowerCase().contains(cityTerm);
 

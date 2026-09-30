@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/run_action.dart';
 
 import '../../models/trail.dart';
 import '../../state/app_store.dart';
@@ -75,7 +76,7 @@ class TrailsManagementScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          '${store.trails.length} trilha(s) cadastrada(s)',
+                          '${store.managedTrails.length} trilha(s) cadastrada(s)',
                           style: const TextStyle(
                             color: AppColors.green900,
                             fontWeight: FontWeight.w800,
@@ -88,7 +89,7 @@ class TrailsManagementScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Expanded(
-                child: store.trails.isEmpty
+                child: store.managedTrails.isEmpty
                     ? _EmptyTrails(
                         onAdd: () {
                           _openForm(context);
@@ -97,12 +98,12 @@ class TrailsManagementScreen extends StatelessWidget {
                     : ListView.separated(
                         primary: false,
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                        itemCount: store.trails.length,
+                        itemCount: store.managedTrails.length,
                         separatorBuilder: (context, index) {
                           return const SizedBox(height: 10);
                         },
                         itemBuilder: (context, index) {
-                          final trail = store.trails[index];
+                          final trail = store.managedTrails[index];
 
                           return _TrailRow(
                             trail: trail,
@@ -159,16 +160,26 @@ class TrailsManagementScreen extends StatelessWidget {
       },
     );
 
-    if (confirm == true) {
-      await AppStore.instance.removeTrail(trail);
+    if (confirm == true && context.mounted) {
+      final saved = await runAction(
+        context,
+        () => AppStore.instance.removeTrail(trail),
+      );
+      if (!saved) return;
 
       if (!context.mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('${trail.name} foi excluída.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppStore.instance.useBackend
+                ? '${trail.name} foi desativada.'
+                : '${trail.name} foi excluída.',
+          ),
+        ),
+      );
     }
   }
 }

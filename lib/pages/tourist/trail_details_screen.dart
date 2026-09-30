@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/run_action.dart';
 
 import '../../data/demo_data.dart' show guideByName;
 
@@ -16,6 +17,7 @@ class TrailDetailsScreen extends StatelessWidget {
 
   Future<void> _book(BuildContext context) async {
     bool confirmed = false;
+    bool submitting = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -59,19 +61,28 @@ class TrailDetailsScreen extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () async {
-                  await AppStore.instance.addBooking(
-                    LocalBooking(
-                      id: DateTime.now().microsecondsSinceEpoch.toString(),
-                      trailId: trail.id,
-                      trailName: trail.name,
-                      personName: AppStore.instance.tourist.name,
-                      date: trail.date.isEmpty ? 'Data a combinar' : trail.date,
-                      status: 'Confirmado',
-                      roleView: 'turista',
-                      valuePaid: trail.price,
+                  if (submitting) return;
+                  submitting = true;
+                  final saved = await runAction(
+                    sheetContext,
+                    () => AppStore.instance.addBooking(
+                      LocalBooking(
+                        id: DateTime.now().microsecondsSinceEpoch.toString(),
+                        trailId: trail.id,
+                        trailName: trail.name,
+                        personName: AppStore.instance.tourist.name,
+                        date: trail.date.isEmpty
+                            ? 'Data a combinar'
+                            : trail.date,
+                        status: 'Confirmado',
+                        roleView: 'turista',
+                        valuePaid: trail.price,
+                      ),
                     ),
                   );
 
+                  submitting = false;
+                  if (!saved) return;
                   confirmed = true;
 
                   if (!sheetContext.mounted) return;
@@ -97,7 +108,9 @@ class TrailDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = AppStore.instance;
-    final responsibleGuide = guideByName(trail.guideName);
+    final responsibleGuide = store.useBackend
+        ? null
+        : guideByName(trail.guideName);
 
     return Scaffold(
       backgroundColor: AppColors.paper,
@@ -130,7 +143,10 @@ class TrailDetailsScreen extends StatelessWidget {
                     child: CircleAvatar(
                       backgroundColor: AppColors.paper.withValues(alpha: .92),
                       child: IconButton(
-                        onPressed: () => store.toggleFavorite(trail.id),
+                        onPressed: () => runAction(
+                          context,
+                          () => store.toggleFavorite(trail.id),
+                        ),
                         icon: Icon(
                           favorite
                               ? Icons.favorite_rounded

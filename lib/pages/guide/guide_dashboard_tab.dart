@@ -138,7 +138,7 @@ class GuideDashboardTab extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _Stat(
-                          value: '${store.trails.length}',
+                          value: '${store.managedTrails.length}',
                           label: 'Trilhas',
                           icon: Icons.terrain_outlined,
                         ),
@@ -210,7 +210,7 @@ class GuideDashboardTab extends StatelessWidget {
                         const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final booking = upcoming[index];
-                      final matches = store.trails
+                      final matches = store.managedTrails
                           .where((item) => item.id == booking.trailId)
                           .toList();
 

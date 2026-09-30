@@ -62,6 +62,7 @@ class Trail {
     required this.imageUrl,
     required this.guideName,
     this.guideId = '',
+    this.createdBy = '',
     required this.date,
     this.price = 189,
     this.status = TrailStatus.active,
@@ -89,6 +90,7 @@ class Trail {
 
   /// Identificador do guia usado na integração com o backend.
   final String guideId;
+  final String createdBy;
 
   final String date;
   final double price;
@@ -115,6 +117,7 @@ class Trail {
     'imageUrl': imageUrl,
     'guideName': guideName,
     'guideId': guideId,
+    'createdBy': createdBy,
     'date': date,
     'price': price,
     'status': status,
@@ -126,7 +129,7 @@ class Trail {
   factory Trail.fromJson(Map<String, dynamic> json) {
     final rawDistance = json['distanceKm'] ?? json['distancia_km'];
 
-    final rawPrice = json['price'];
+    final rawPrice = json['price'] ?? json['preco'];
 
     final rawElevation = json['elevation'];
 
@@ -159,19 +162,24 @@ class Trail {
       imageUrl: (json['imageUrl'] ?? json['imagem_url'])?.toString() ?? '',
 
       // Nome e ID agora são campos separados.
-      guideName: json['guideName']?.toString() ?? 'Guia responsável',
+      guideName:
+          (json['guideName'] ?? json['nome_guia'])?.toString() ??
+          'Guia responsável',
 
       guideId: (json['guideId'] ?? json['id_guia'])?.toString() ?? '',
+      createdBy: (json['createdBy'] ?? json['criado_por'])?.toString() ?? '',
 
       date: (json['date'] ?? json['data_atividade'])?.toString() ?? '',
       price: rawPrice is num
           ? rawPrice.toDouble()
           : double.tryParse(rawPrice?.toString() ?? '') ?? 0,
-      status: TrailStatus.normalize(json['status']?.toString()),
+      status: json['ativo'] == false
+          ? TrailStatus.inactive
+          : TrailStatus.normalize(json['status']?.toString()),
       modality:
           (json['modality'] ?? json['modalidade'])?.toString() ?? 'Trekking',
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      latitude: double.tryParse(json['latitude']?.toString() ?? ''),
+      longitude: double.tryParse(json['longitude']?.toString() ?? ''),
     );
   }
 }

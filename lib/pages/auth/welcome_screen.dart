@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/app_logo.dart';
 import 'profile_choice_screen.dart';
+import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -97,7 +98,7 @@ class WelcomeScreen extends StatelessWidget {
                           color: AppColors.white.withValues(alpha: .42),
                         ),
                       ),
-                      child: const Text('Começar'),
+                      child: const Text('Criar conta'),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -105,13 +106,11 @@ class WelcomeScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const ProfileChoiceScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                     child: const Text(
-                      'Já tem uma conta? Entrar',
+                      'Fazer login',
                       style: TextStyle(
                         color: AppColors.white,
                         fontWeight: FontWeight.w700,

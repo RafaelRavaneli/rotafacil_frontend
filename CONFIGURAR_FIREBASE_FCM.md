@@ -8,9 +8,9 @@ O código desta versão já implementa o fluxo solicitado ao time Flutter:
 4. Atualização automática quando o token muda (`onTokenRefresh`).
 5. Registro opcional após o login:
    - `POST /api/usuarios/fcm-token`
-   - JSON: `{"token":"TOKEN_DO_DISPOSITIVO"}`
+   - JSON: `{"token":"TOKEN_DO_DISPOSITIVO","dispositivo_id":"ID_DA_INSTALACAO"}`
 6. Remoção no logout:
-   - `DELETE /api/usuarios/fcm-token`
+   - `DELETE /api/usuarios/fcm-token?dispositivo_id=ID_DA_INSTALACAO`
 7. Primeiro plano:
    - `FirebaseMessaging.onMessage`
    - mensagem salva na central de notificações
@@ -99,7 +99,7 @@ USE_BACKEND=false
 
 Assim toda a demonstração funciona localmente.
 
-Quando o login JWT e o endpoint de FCM do time estiverem disponíveis, rode com:
+O login JWT e os endpoints de registro/remoção e teste FCM estão implementados. Para usá-los, rode com:
 
 ```powershell
 flutter run -d chrome `
@@ -110,3 +110,18 @@ flutter run -d chrome `
 
 Nesse modo, o token do Firebase é enviado pelo `FcmTokenApi` usando o Bearer token
 guardado na sessão.
+
+## Preparação automática da configuração Web
+
+O script `CONFIGURAR_FIREBASE_WEB.ps1` agora recebe também `-WebVapidKey` e gera tanto o service worker quanto `firebase-web.local.json`, evitando configurar projetos diferentes no Flutter e no worker. Execute no PowerShell usando os valores públicos do Firebase Console:
+
+```powershell
+.\CONFIGURAR_FIREBASE_WEB.ps1 -ApiKey 'VALOR_PUBLICO' -AuthDomain 'DOMINIO' -ProjectId 'PROJETO' -StorageBucket 'BUCKET' -MessagingSenderId 'REMETENTE' -AppId 'APP_ID' -WebVapidKey 'VAPID_PUBLICA'
+flutter run -d chrome --web-port=8080 --dart-define-from-file=firebase-web.local.json
+```
+
+O arquivo gerado inclui `USE_BACKEND=true` e o endereço local da API. Configure `-ApiBaseUrl` para usar outro endereço. Reinicie o Flutter após mudar os valores. O JSON é configuração pública do cliente, nunca uma chave de conta de serviço; não coloque chaves privadas nesses arquivos. O JSON local e o worker gerado ficam ignorados pelo Git.
+
+Para testar: faça login, abra Perfil → Notificações, ative a permissão e use “Testar recebimento de notificação”. O retorno da API conta envios aceitos pelo FCM, não confirma entrega. Confira o recebimento com a aba em foco e em segundo plano. O exemplo do worker evita exibir duas vezes mensagens que já contêm `notification`, seguindo o [contrato do Firebase](https://firebase.google.com/docs/cloud-messaging/web/receive-messages).
+
+Validação real ainda pendente. Registro, rotação, remoção e envio simulado estão cobertos por testes. Nenhum envio automático para eventos de reserva/chat está ativado.

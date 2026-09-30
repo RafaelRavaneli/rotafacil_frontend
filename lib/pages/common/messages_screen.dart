@@ -1,3 +1,4 @@
+import 'remote_conversations_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/guide.dart';
@@ -80,6 +81,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (AppStore.instance.useBackend) {
+      return const RemoteConversationsScreen();
+    }
+
     final store = AppStore.instance;
     final counterpart = store.userForRole(counterpartRole);
     final selectedGuide = widget.targetGuide;

@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
+import '../services/api_client.dart';
+import '../services/backend_repository.dart';
+import '../services/session_service.dart';
 import '../data/demo_data.dart' as demo;
 import '../models/app_notification.dart';
 import '../models/app_user.dart';
@@ -306,6 +309,69 @@ class AppStore extends ChangeNotifier {
     }
   }
 
+  List<Trail> get managedTrails {
+    if (!useBackend) return trails;
+    final session = SessionService.instance;
+    final owners = {session.userId, session.email}
+      ..removeWhere((id) => id == null || id.isEmpty);
+    return trails
+        .where(
+          (trail) =>
+              owners.contains(trail.guideId) ||
+              owners.contains(trail.createdBy),
+        )
+        .toList();
+  }
+
+  void syncAgencyGuides(List<Map<String, dynamic>> invitations) {
+    agencyGuides
+      ..clear()
+      ..addAll(
+        invitations
+            .where((item) => item['status'] == 'aceito')
+            .map(
+              (item) => LocalGuide(
+                id: item['id_guia'].toString(),
+                name: item['nome_guia']?.toString() ?? 'Guia',
+                email: '',
+                specialty: '',
+                status: 'Ativo',
+              ),
+            ),
+      );
+    notifyListeners();
+  }
+
+  final _backend = BackendRepository();
+
+  Future<void> refreshBackend() async {
+    if (!useBackend) return;
+    final snapshot = await _backend.load();
+    agencyGuides
+      ..clear()
+      ..addAll(snapshot.guides);
+    switch (normalizeRole(snapshot.user.role)) {
+      case 'guia':
+        guide = snapshot.user;
+        break;
+      case 'agencia':
+        agency = snapshot.user;
+        break;
+      default:
+        tourist = snapshot.user;
+    }
+    trails
+      ..clear()
+      ..addAll(snapshot.trails);
+    bookings
+      ..clear()
+      ..addAll(snapshot.bookings);
+    favoriteTrailIds
+      ..clear()
+      ..addAll(snapshot.favorites);
+    notifyListeners();
+  }
+
   Future<void> updateUser(
     String role, {
     required String name,
@@ -317,7 +383,33 @@ class AppStore extends ChangeNotifier {
     String? profileImageDataUrl,
     bool updateProfileImage = false,
   }) async {
-    _requireLocalBusinessMode('Atualização de perfil');
+    if (useBackend) {
+      final session = SessionService.instance;
+      final body = <String, dynamic>{
+        'nome': name,
+        'email': email,
+        'telefone': phone,
+        'cidade': city,
+        'estado': state,
+        if (document != null && document.isNotEmpty) 'documento': document,
+        if (updateProfileImage)
+          'foto_url': profileImageDataUrl == null
+              ? null
+              : await _backend.uploadImage(profileImageDataUrl),
+      };
+      await ApiClient.instance.put(
+        '/api/usuarios/${Uri.encodeComponent(session.userId!)}',
+        body: body,
+      );
+      await session.save(
+        authToken: session.token,
+        selectedRole: session.role!,
+        userEmail: email,
+        id: session.userId,
+      );
+      await refreshBackend();
+      return;
+    }
 
     final user = userForRole(role);
 
@@ -388,7 +480,11 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> addTrail(Trail trail) async {
-    _requireLocalBusinessMode('Cadastro de trilha');
+    if (useBackend) {
+      await _backend.saveTrail(trail, create: true);
+      await refreshBackend();
+      return;
+    }
 
     trails.insert(0, trail);
 
@@ -403,7 +499,11 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> updateTrail(Trail trail) async {
-    _requireLocalBusinessMode('Atualização de trilha');
+    if (useBackend) {
+      await _backend.saveTrail(trail, create: false);
+      await refreshBackend();
+      return;
+    }
 
     final index = trails.indexWhere((item) => item.id == trail.id);
 
@@ -419,7 +519,13 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> removeTrail(Trail trail) async {
-    _requireLocalBusinessMode('Exclusão de trilha');
+    if (useBackend) {
+      await ApiClient.instance.delete(
+        '/api/trilhas/${Uri.encodeComponent(trail.id)}',
+      );
+      await refreshBackend();
+      return;
+    }
 
     trails.removeWhere((item) => item.id == trail.id);
 
@@ -431,7 +537,18 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> addBooking(LocalBooking booking) async {
-    _requireLocalBusinessMode('Criação de agendamento');
+    if (useBackend) {
+      await ApiClient.instance.post(
+        '/api/agendamentos/',
+        body: {
+          'id_trilha': booking.trailId,
+          'data_agendada': BackendRepository.apiDate(booking.date),
+          'valor_pago': booking.valuePaid,
+        },
+      );
+      await refreshBackend();
+      return;
+    }
 
     bookings.insert(0, booking);
 
@@ -448,7 +565,13 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> cancelBooking(LocalBooking booking) async {
-    _requireLocalBusinessMode('Cancelamento de agendamento');
+    if (useBackend) {
+      await ApiClient.instance.put(
+        '/api/agendamentos/${Uri.encodeComponent(booking.id)}/cancelar',
+      );
+      await refreshBackend();
+      return;
+    }
 
     booking.status = BookingStatus.cancelled;
 
@@ -465,7 +588,18 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> toggleFavorite(String trailId) async {
-    _requireLocalBusinessMode('Alteração de favoritos');
+    if (useBackend) {
+      if (favoriteTrailIds.contains(trailId)) {
+        await ApiClient.instance.delete(
+          '/api/favoritos/${Uri.encodeComponent(trailId)}',
+        );
+      } else {
+        await ApiClient.instance.post(
+          '/api/favoritos/',
+          body: {'id_trilha': trailId},
+        );
+      }
+    }
 
     if (favoriteTrailIds.contains(trailId)) {
       favoriteTrailIds.remove(trailId);
@@ -711,11 +845,17 @@ class AppStore extends ChangeNotifier {
 
   Future<void> _persistAll() async {
     // Perfis/cache local.
-    await _prefs.setString('user_tourist', jsonEncode(tourist.toJson()));
+    if (!useBackend) {
+      await _prefs.setString('user_tourist', jsonEncode(tourist.toJson()));
+    }
 
-    await _prefs.setString('user_guide', jsonEncode(guide.toJson()));
+    if (!useBackend) {
+      await _prefs.setString('user_guide', jsonEncode(guide.toJson()));
+    }
 
-    await _prefs.setString('user_agency', jsonEncode(agency.toJson()));
+    if (!useBackend) {
+      await _prefs.setString('user_agency', jsonEncode(agency.toJson()));
+    }
 
     // Dados de negócio só são persistidos no
     // SharedPreferences quando o aplicativo está

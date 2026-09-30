@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../models/user_role.dart';
+import '../../config/app_config.dart';
 import '../../services/auth_gateway.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/auth_error_message.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key, required this.role});
-
-  final UserRole role;
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -18,10 +16,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
 
+  final code = TextEditingController();
+  bool requested = false;
   bool loading = false;
 
   @override
   void dispose() {
+    code.dispose();
     email.dispose();
     password.dispose();
     super.dispose();
@@ -30,6 +31,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _reset() async {
     final normalizedEmail = email.text.trim();
 
+    if (AppConfig.useBackend && !requested) {
+      if (normalizedEmail.isEmpty) return;
+      setState(() => loading = true);
+      try {
+        await AuthGateway.instance.requestPasswordReset(normalizedEmail);
+        if (!mounted) return;
+        setState(() => requested = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Se o e-mail estiver cadastrado, você receberá um código.',
+            ),
+          ),
+        );
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        }
+      } finally {
+        if (mounted) setState(() => loading = false);
+      }
+      return;
+    }
     if (normalizedEmail.isEmpty || password.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -46,9 +72,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       await AuthGateway.instance.resetPassword(
-        role: widget.role,
         email: normalizedEmail,
         newPassword: password.text,
+        token: code.text,
       );
 
       if (!mounted) return;
@@ -88,7 +114,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Informe seu e-mail e escolha uma nova senha.',
+            AppConfig.useBackend
+                ? 'Solicite o código por e-mail e use-o para definir sua nova senha.'
+                : 'Informe seu e-mail e escolha uma nova senha.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 24),
@@ -98,15 +126,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             decoration: const InputDecoration(labelText: 'E-mail'),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: password,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Nova senha'),
-          ),
+          if (AppConfig.useBackend)
+            TextField(
+              controller: code,
+              decoration: const InputDecoration(
+                labelText: 'Código recebido por e-mail',
+              ),
+            ),
+          if (!AppConfig.useBackend || requested)
+            TextField(
+              controller: password,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Nova senha'),
+            ),
+          if (AppConfig.useBackend && !requested)
+            TextButton(
+              onPressed: () => setState(() => requested = true),
+              child: const Text('Já tenho um código'),
+            ),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: loading ? null : _reset,
-            child: Text(loading ? 'Salvando...' : 'Redefinir senha'),
+            child: Text(
+              loading
+                  ? 'Aguarde...'
+                  : AppConfig.useBackend && !requested
+                  ? 'Enviar código'
+                  : 'Redefinir senha',
+            ),
           ),
         ],
       ),

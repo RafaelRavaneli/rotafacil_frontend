@@ -7,6 +7,8 @@ import '../../theme/app_colors.dart';
 import '../../utils/document_validator.dart';
 import '../../widgets/profile_avatar.dart';
 import '../auth/welcome_screen.dart';
+import '../agency/remote_guides_screen.dart';
+import '../../utils/role_utils.dart';
 import 'favorites_screen.dart';
 import 'notification_center_screen.dart';
 import 'settings/help_support_screen.dart';
@@ -106,6 +108,12 @@ class ProfileTab extends StatelessWidget {
                 subtitle: 'Converse com a equipe RotaFácil',
                 onTap: () => _open(context, HelpSupportScreen(role: role)),
               ),
+              if (store.useBackend && normalizeRoleKey(role) == 'guia')
+                _ProfileItem(
+                  icon: Icons.business_outlined,
+                  title: 'Convites de agências',
+                  onTap: () => _open(context, const RemoteGuidesScreen()),
+                ),
               const SizedBox(height: 18),
               OutlinedButton.icon(
                 onPressed: () async {

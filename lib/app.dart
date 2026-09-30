@@ -6,6 +6,7 @@ import 'pages/auth/welcome_screen.dart';
 import 'pages/guide/guide_shell.dart';
 import 'pages/tourist/tourist_shell.dart';
 import 'services/session_service.dart';
+import 'services/api_client.dart';
 import 'state/app_store.dart';
 import 'theme/app_theme.dart';
 
@@ -76,6 +77,8 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
         }
       }
 
+      if (AppConfig.useBackend) await AppStore.instance.refreshBackend();
+
       switch (role) {
         case 'turista':
         case 'usuario':
@@ -98,10 +101,11 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
 
           return const WelcomeScreen();
       }
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) await SessionService.instance.clear();
+      rethrow;
     } catch (_) {
-      // Se houver problema ao restaurar a sessão,
-      // o aplicativo continua abrindo normalmente.
-      return const WelcomeScreen();
+      rethrow;
     }
   }
 
@@ -116,6 +120,37 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
           );
         }
 
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Não foi possível carregar sua conta.'),
+                  FilledButton(
+                    onPressed: () => setState(() {
+                      _bootstrapFuture = _resolveInitialScreen();
+                    }),
+                    child: const Text('Tentar novamente'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await SessionService.instance.clear();
+                      if (mounted) {
+                        setState(() {
+                          _bootstrapFuture = Future.value(
+                            const WelcomeScreen(),
+                          );
+                        });
+                      }
+                    },
+                    child: const Text('Voltar ao login'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
         return snapshot.data ?? const WelcomeScreen();
       },
     );

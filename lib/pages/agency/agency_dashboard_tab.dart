@@ -112,7 +112,7 @@ class AgencyDashboardTab extends StatelessWidget {
                       const SizedBox(width: 7),
                       Expanded(
                         child: _AgencyStat(
-                          value: '${store.trails.length}',
+                          value: '${store.managedTrails.length}',
                           label: 'Trilhas',
                           icon: Icons.terrain_outlined,
                         ),
@@ -256,11 +256,13 @@ class AgencyDashboardTab extends StatelessWidget {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 sliver: SliverList.separated(
-                  itemCount: store.trails.length > 3 ? 3 : store.trails.length,
+                  itemCount: store.managedTrails.length > 3
+                      ? 3
+                      : store.managedTrails.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 8),
                   itemBuilder: (context, index) {
-                    final trail = store.trails[index];
+                    final trail = store.managedTrails[index];
 
                     return Container(
                       padding: const EdgeInsets.all(8),

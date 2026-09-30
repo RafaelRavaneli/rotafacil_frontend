@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../services/local_auth_service.dart';
+import '../../../utils/run_action.dart';
 import '../../../state/app_store.dart';
 import '../../../theme/app_colors.dart';
 import '../../../utils/document_validator.dart';
@@ -134,33 +135,37 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     final normalizedDocument = DocumentValidator.digitsOnly(document.text);
 
-    await AppStore.instance.updateUser(
-      widget.role,
-      name: name.text.trim(),
-      email: newEmail,
-      phone: phone.text.trim(),
-      city: city.text.trim(),
-      state: state.text.trim().toUpperCase(),
-      document: needsDocument ? normalizedDocument : null,
-      profileImageDataUrl: previewDataUrl,
-      updateProfileImage: true,
-    );
-
-    await LocalAuthService.instance.updateEmail(
-      role: widget.role,
-      newEmail: newEmail,
-    );
-
-    if (needsDocument) {
-      await LocalAuthService.instance.updateDocument(
-        role: widget.role,
-        document: normalizedDocument,
+    final saved = await runAction(context, () async {
+      await AppStore.instance.updateUser(
+        widget.role,
+        name: name.text.trim(),
+        email: newEmail,
+        phone: phone.text.trim(),
+        city: city.text.trim(),
+        state: state.text.trim().toUpperCase(),
+        document: needsDocument ? normalizedDocument : null,
+        profileImageDataUrl: previewDataUrl,
+        updateProfileImage: true,
       );
-    }
 
+      if (!AppStore.instance.useBackend) {
+        await LocalAuthService.instance.updateEmail(
+          role: widget.role,
+          newEmail: newEmail,
+        );
+
+        if (needsDocument) {
+          await LocalAuthService.instance.updateDocument(
+            role: widget.role,
+            document: normalizedDocument,
+          );
+        }
+      }
+    });
     if (!mounted) return;
 
     setState(() => saving = false);
+    if (!saved) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Perfil atualizado com sucesso.')),
