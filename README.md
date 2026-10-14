@@ -1,6 +1,6 @@
 # RotaFácil — Frontend
 
-Aplicativo Flutter para descoberta, planejamento e agendamento de trilhas. O frontend atende turistas, guias e agências e pode funcionar com dados locais de demonstração ou conectado à API Flask do RotaFácil.
+Aplicativo Flutter para descoberta e agendamento de trilhas. O frontend atende turistas, guias e agências e pode funcionar com dados locais de demonstração ou conectado à API Flask do RotaFácil.
 
 ## Fluxo de acesso
 
@@ -16,6 +16,7 @@ Aplicativo Flutter para descoberta, planejamento e agendamento de trilhas. O fro
 - `firebase_core` e `firebase_messaging` para notificações
 - `geolocator` para localização
 - `image_picker` para seleção de imagens
+- `flutter_map` e `latlong2` para o mapa dos resultados filtrados
 
 ## Estrutura principal
 
@@ -80,10 +81,18 @@ Para configurar Firebase Web e VAPID, siga `CONFIGURAR_FIREBASE_FCM.md` ou execu
 - favoritos;
 - atualização de perfil e upload de imagens;
 - catálogo de guias e convites entre agência e guia;
-- conversas entre turista e guia;
-- atendimento de suporte;
 - registro, remoção e teste do dispositivo para push;
 - indicadores de agendamentos fornecidos pela API.
+
+## Guias e convites
+
+No modo conectado, a agência consulta o catálogo de guias e envia convites usando o identificador do guia. O catálogo não representa a equipe da agência: somente convites aceitos formam vínculos. O guia consulta os convites recebidos pela opção "Convites de agências" no Perfil.
+
+Envio, aceite e recusa possuem confirmação. As telas mostram carregamento, ausência de resultados, erro e tentativa novamente. Enquanto uma ação está em andamento, novas ações ficam bloqueadas. Convites existentes não oferecem reenvio ou revogação, pois essas operações não estão implementadas no backend.
+
+No modo local, a agência pode adicionar e gerenciar registros demonstrativos neste dispositivo. Essa operação não envia um convite real e não simula uma resposta de outro usuário.
+
+Os testes de convites utilizam respostas HTTP simuladas. Ainda é necessário validar o fluxo completo com contas de agência e guia no backend real.
 
 ## Verificações
 
@@ -98,8 +107,7 @@ Os testes automatizados não substituem a validação com Firebase, e-mail, ImgB
 
 ## Limitações conhecidas
 
-- conversas são atualizadas manualmente e mantêm somente as mensagens mais recentes;
-- o suporte pode ser respondido por administrador pela API, mas ainda não possui painel administrativo no aplicativo;
+- a ajuda atual é orientativa; chat e atendimento por conversas estão fora da navegação do aplicativo;
 - convites não possuem reenvio ou revogação;
 - push possui registro e envio de teste, mas o recebimento real precisa ser homologado no navegador;
 - avaliações, planejamento completo da trilha, contato de emergência e verificação administrativa ainda não formam fluxos completos na interface;

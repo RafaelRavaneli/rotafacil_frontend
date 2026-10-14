@@ -1,205 +1,265 @@
-import 'remote_guides_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/local_guide.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/run_action.dart';
+import '../../widgets/guide_catalog_card.dart';
+import 'remote_guides_screen.dart';
 
 class GuidesScreen extends StatelessWidget {
   const GuidesScreen({super.key});
 
-  Future<void> _invite(BuildContext context) async {
-    final name = TextEditingController();
-    final email = TextEditingController();
-    final specialty = TextEditingController();
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Convidar guia'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: name,
-                decoration: const InputDecoration(labelText: 'Nome'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'E-mail'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: specialty,
-                decoration: const InputDecoration(labelText: 'Especialidade'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (name.text.trim().isEmpty || email.text.trim().isEmpty) {
-                return;
-              }
-
-              await AppStore.instance.addGuide(
-                name: name.text.trim(),
-                email: email.text.trim(),
-                specialty: specialty.text.trim().isEmpty
-                    ? 'Ecoturismo'
-                    : specialty.text.trim(),
-              );
-
-              if (!dialogContext.mounted) return;
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Convidar'),
-          ),
-        ],
-      ),
-    );
-
-    name.dispose();
-    email.dispose();
-    specialty.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (AppStore.instance.useBackend) {
-      return const RemoteGuidesScreen();
-    }
-
     final store = AppStore.instance;
-
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.cream,
-        body: AnimatedBuilder(
-          animation: store,
-          builder: (context, _) {
-            return CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Guias da agência',
-                            style: TextStyle(
-                              color: AppColors.green900,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        FilledButton.icon(
-                          onPressed: () => _invite(context),
-                          icon: const Icon(Icons.person_add_alt_1_rounded),
-                          label: const Text('Convidar'),
-                        ),
-                      ],
-                    ),
+    if (store.useBackend) return const RemoteGuidesScreen();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Guias da agência')),
+      body: AnimatedBuilder(
+        animation: store,
+        builder: (context, _) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                const Text(
+                  'Organize sua equipe',
+                  style: TextStyle(
+                    color: AppColors.forest,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 90),
-                  sliver: SliverList.separated(
-                    itemCount: store.agencyGuides.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      return _GuideRow(guide: store.agencyGuides[index]);
-                    },
+                const SizedBox(height: 8),
+                const Text(
+                  'Consulte os guias e suas situações.',
+                  style: TextStyle(color: AppColors.muted),
+                ),
+                const SizedBox(height: 20),
+                const GuideCollectionNotice(
+                  title: 'Demonstração local',
+                  message:
+                      'Os registros desta tela ficam neste dispositivo. Convites reais e respostas de guias estão disponíveis no modo conectado ao backend.',
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => const _LocalGuideDialog(),
+                  ),
+                  icon: const Icon(Icons.person_add_outlined),
+                  label: const Text('Adicionar guia'),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  '${store.agencyGuides.length} guia(s)',
+                  style: const TextStyle(
+                    color: AppColors.forest,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (store.agencyGuides.isEmpty)
+                  const GuideCollectionNotice(
+                    title: 'Nenhum guia registrado',
+                    message:
+                        'Adicione um guia para experimentar a organização da equipe.',
+                  ),
+                ...store.agencyGuides.map(
+                  (guide) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _LocalGuideCard(guide: guide),
                   ),
                 ),
               ],
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _GuideRow extends StatelessWidget {
-  const _GuideRow({required this.guide});
+class _LocalGuideCard extends StatelessWidget {
+  const _LocalGuideCard({required this.guide});
   final LocalGuide guide;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            backgroundColor: AppColors.green100,
-            child: Icon(Icons.person_rounded, color: AppColors.green700),
+  Future<void> _remove(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remover guia local?'),
+        content: Text(guide.name),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Voltar'),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  guide.name,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  guide.email,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 11.5,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${guide.specialty} • ${guide.status}',
-                  style: const TextStyle(
-                    color: AppColors.green700,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'aprovar') {
-                await AppStore.instance.updateGuideStatus(guide, 'Ativo');
-              } else if (value == 'pendente') {
-                await AppStore.instance.updateGuideStatus(guide, 'Pendente');
-              } else if (value == 'remover') {
-                await AppStore.instance.removeGuide(guide);
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: 'aprovar', child: Text('Marcar como ativo')),
-              PopupMenuItem(
-                value: 'pendente',
-                child: Text('Marcar como pendente'),
-              ),
-              PopupMenuItem(value: 'remover', child: Text('Remover guia')),
-            ],
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remover'),
           ),
         ],
       ),
     );
+    if (confirmed == true && context.mounted) {
+      await runAction(context, () => AppStore.instance.removeGuide(guide));
+    }
   }
+
+  @override
+  Widget build(BuildContext context) => GuideCatalogCard(
+    name: guide.name,
+    subtitle: [
+      guide.email,
+      guide.specialty,
+    ].where((value) => value.isNotEmpty).join('\n'),
+    status: guide.status,
+    actions: [
+      Align(
+        alignment: Alignment.centerRight,
+        child: PopupMenuButton<String>(
+          tooltip: 'Gerenciar guia local',
+          onSelected: (value) async {
+            if (value == 'remover') {
+              await _remove(context);
+              return;
+            }
+            await runAction(
+              context,
+              () => AppStore.instance.updateGuideStatus(guide, value),
+            );
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'Ativo', child: Text('Marcar como ativo')),
+            PopupMenuItem(
+              value: 'Pendente',
+              child: Text('Marcar como pendente'),
+            ),
+            PopupMenuItem(value: 'remover', child: Text('Remover guia')),
+          ],
+          child: const Padding(
+            padding: EdgeInsets.all(12),
+            child: Text(
+              'Gerenciar registro',
+              style: TextStyle(
+                color: AppColors.forest,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+class _LocalGuideDialog extends StatefulWidget {
+  const _LocalGuideDialog();
+  @override
+  State<_LocalGuideDialog> createState() => _LocalGuideDialogState();
+}
+
+class _LocalGuideDialogState extends State<_LocalGuideDialog> {
+  final form = GlobalKey<FormState>();
+  final name = TextEditingController();
+  final email = TextEditingController();
+  final specialty = TextEditingController();
+  bool saving = false;
+
+  @override
+  void dispose() {
+    name.dispose();
+    email.dispose();
+    specialty.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (saving || !form.currentState!.validate()) return;
+    setState(() => saving = true);
+    final saved = await runAction(
+      context,
+      () => AppStore.instance.addGuide(
+        name: name.text.trim(),
+        email: email.text.trim(),
+        specialty: specialty.text.trim().isEmpty
+            ? 'Ecoturismo'
+            : specialty.text.trim(),
+      ),
+    );
+    if (!mounted) return;
+    if (saved) {
+      Navigator.pop(context);
+    } else {
+      setState(() => saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Adicionar guia local'),
+    content: SizedBox(
+      width: 420,
+      child: SingleChildScrollView(
+        child: Form(
+          key: form,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Registro demonstrativo; não envia convite para outra pessoa.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: name,
+                enabled: !saving,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(labelText: 'Nome'),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Informe o nome.'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: email,
+                enabled: !saving,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'E-mail'),
+                validator: (value) =>
+                    value == null ||
+                        !RegExp(
+                          r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                        ).hasMatch(value.trim())
+                    ? 'Informe um e-mail válido.'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: specialty,
+                enabled: !saving,
+                decoration: const InputDecoration(
+                  labelText: 'Especialidade (opcional)',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: saving ? null : () => Navigator.pop(context),
+        child: const Text('Voltar'),
+      ),
+      FilledButton(
+        onPressed: saving ? null : _save,
+        child: Text(saving ? 'Salvando...' : 'Salvar guia'),
+      ),
+    ],
+  );
 }
