@@ -1,3 +1,4 @@
+import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/user_role.dart';
@@ -137,9 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(),
+    return AuthScaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),

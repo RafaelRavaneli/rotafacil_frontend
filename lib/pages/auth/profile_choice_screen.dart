@@ -1,3 +1,4 @@
+import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/user_role.dart';
@@ -17,9 +18,7 @@ class ProfileChoiceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(),
+    return AuthScaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),

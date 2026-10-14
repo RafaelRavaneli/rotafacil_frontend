@@ -1,3 +1,4 @@
+import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
 import '../../config/app_config.dart';
@@ -99,8 +100,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
+    return AuthScaffold(
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [

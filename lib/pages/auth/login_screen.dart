@@ -1,3 +1,4 @@
+import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
 import '../../config/app_config.dart';
@@ -117,9 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(),
+    return AuthScaffold(
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
