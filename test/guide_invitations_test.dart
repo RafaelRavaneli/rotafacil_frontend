@@ -326,4 +326,40 @@ void main() {
     },
     skip: AppConfig.useBackend,
   );
+  testWidgets('Atualizar convites traz aceite remoto ao seletor de guias', (
+    tester,
+  ) async {
+    await SessionService.instance.save(
+      selectedRole: 'agencia',
+      userEmail: 'a@example.test',
+      id: 'a',
+    );
+    var accepted = false;
+    final api = CommunityApi(
+      api: ApiClient(
+        client: MockClient((request) async {
+          final result = request.url.path == '/api/guias'
+              ? <Map<String, dynamic>>[]
+              : [
+                  {
+                    'id': 'invite',
+                    'id_guia': 'g',
+                    'nome_guia': 'Guia Ana',
+                    'status': accepted ? 'aceito' : 'pendente',
+                  },
+                ];
+          return http.Response(jsonEncode(result), 200);
+        }),
+      ),
+    );
+    await tester.pumpWidget(MaterialApp(home: RemoteGuidesScreen(api: api)));
+    await tester.pumpAndSettle();
+    expect(AppStore.instance.agencyGuides, isEmpty);
+    accepted = true;
+    await tester.tap(find.byTooltip('Atualizar'));
+    await tester.pumpAndSettle();
+    expect(AppStore.instance.agencyGuides.single.id, 'g');
+    expect(AppStore.instance.agencyGuides.single.name, 'Guia Ana');
+    AppStore.instance.agencyGuides.clear();
+  });
 }

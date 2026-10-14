@@ -77,14 +77,14 @@ Depois de executar `flutter create .`, adicione ao arquivo:
 android/app/src/main/AndroidManifest.xml
 ```
 
-as permissões descritas em `ANDROID_MANIFEST_PERMISSIONS.txt`.
+as permissões descritas na seção "Permissões Android" deste documento.
 
 Para um projeto Firebase Android de produção, registre o applicationId no Firebase
 e conclua a configuração nativa conforme o console do Firebase.
 
 ## iOS
 
-Veja `IOS_INFO_PLIST_KEYS.txt`. No Xcode habilite:
+Veja a seção "Configuração iOS" deste documento. No Xcode habilite:
 
 - Push Notifications
 - Background Modes > Remote notifications
@@ -113,10 +113,10 @@ guardado na sessão.
 
 ## Preparação automática da configuração Web
 
-O script `CONFIGURAR_FIREBASE_WEB.ps1` agora recebe também `-WebVapidKey` e gera tanto o service worker quanto `firebase-web.local.json`, evitando configurar projetos diferentes no Flutter e no worker. Execute no PowerShell usando os valores públicos do Firebase Console:
+O script `scripts/CONFIGURAR_FIREBASE_WEB.ps1` agora recebe também `-WebVapidKey` e gera tanto o service worker quanto `firebase-web.local.json`, evitando configurar projetos diferentes no Flutter e no worker. Execute no PowerShell usando os valores públicos do Firebase Console:
 
 ```powershell
-.\CONFIGURAR_FIREBASE_WEB.ps1 -ApiKey 'VALOR_PUBLICO' -AuthDomain 'DOMINIO' -ProjectId 'PROJETO' -StorageBucket 'BUCKET' -MessagingSenderId 'REMETENTE' -AppId 'APP_ID' -WebVapidKey 'VAPID_PUBLICA'
+.\scripts/CONFIGURAR_FIREBASE_WEB.ps1 -ApiKey 'VALOR_PUBLICO' -AuthDomain 'DOMINIO' -ProjectId 'PROJETO' -StorageBucket 'BUCKET' -MessagingSenderId 'REMETENTE' -AppId 'APP_ID' -WebVapidKey 'VAPID_PUBLICA'
 flutter run -d chrome --web-port=8080 --dart-define-from-file=firebase-web.local.json
 ```
 
@@ -124,4 +124,51 @@ O arquivo gerado inclui `USE_BACKEND=true` e o endereço local da API. Configure
 
 Para testar: faça login, abra Perfil → Notificações, ative a permissão e use “Testar recebimento de notificação”. O retorno da API conta envios aceitos pelo FCM, não confirma entrega. Confira o recebimento com a aba em foco e em segundo plano. O exemplo do worker evita exibir duas vezes mensagens que já contêm `notification`, seguindo o [contrato do Firebase](https://firebase.google.com/docs/cloud-messaging/web/receive-messages).
 
-Validação real ainda pendente. Registro, rotação, remoção e envio simulado estão cobertos por testes. Nenhum envio automático para eventos de reserva/chat está ativado.
+Validação real ainda pendente. Registro, rotação, remoção e envio simulado estão cobertos por testes. Nenhum envio automático para eventos de reserva está ativado.
+
+
+## Permissões Android
+
+```text
+Depois de executar `flutter create .`, abra:
+
+android/app/src/main/AndroidManifest.xml
+
+Adicione dentro de <manifest ...>, ANTES de <application>:
+
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+Essas permissões atendem:
+- notificações Android 13+
+- busca por GPS
+- localização ao criar uma trilha
+```
+
+## Configuração iOS
+
+```text
+Depois de executar `flutter create .`, adicione em:
+
+ios/Runner/Info.plist
+
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>O RotaFácil usa sua localização para buscar trilhas próximas e definir o ponto da trilha.</string>
+
+<key>NSPhotoLibraryUsageDescription</key>
+<string>O RotaFácil acessa suas fotos para selecionar a imagem da trilha.</string>
+
+<key>UIBackgroundModes</key>
+<array>
+    <string>remote-notification</string>
+</array>
+
+No Xcode:
+1. Signing & Capabilities
+2. + Capability > Push Notifications
+3. Background Modes > Remote notifications
+```
+
+As pastas Android/iOS ainda não estão presentes neste repositório. Esses passos são preparação para futuras plataformas; não são necessários para testar no Chrome. Recebimento real de push permanece pendente de homologação.

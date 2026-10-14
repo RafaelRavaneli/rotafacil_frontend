@@ -54,11 +54,11 @@ Contas de demonstração:
 
 ### Modo conectado
 
-Utiliza autenticação JWT, persistência e serviços da API real. Inicie antes o repositório `rotafacil_backend`.
+Utiliza autenticação JWT, persistência e serviços da API real. Para testar com a API publicada, não é necessário instalar o backend nem configurar um .env no frontend. Use contas reais de homologação; contas demonstrativas só existem no modo local.
 
 ```powershell
 flutter pub get
-flutter run -d chrome --web-port=8080 --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=http://127.0.0.1:5000
+flutter run -d chrome --web-port=8080 --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=https://rotafacil-backend-woad.vercel.app
 ```
 
 Variáveis aceitas por `--dart-define`:
@@ -69,12 +69,12 @@ Variáveis aceitas por `--dart-define`:
 | `API_BASE_URL` | `http://127.0.0.1:5000` | Endereço base do backend |
 | `FIREBASE_WEB_VAPID_KEY` | vazio | Chave pública necessária ao push web |
 
-Para configurar Firebase Web e VAPID, siga `CONFIGURAR_FIREBASE_FCM.md` ou execute `CONFIGURAR_FIREBASE_WEB.ps1`. Os arquivos locais gerados são ignorados pelo Git.
+Para configurar Firebase Web e VAPID, siga [docs/FIREBASE.md](docs/FIREBASE.md) ou execute `scripts/CONFIGURAR_FIREBASE_WEB.ps1`. Os arquivos locais gerados são ignorados pelo Git.
 
 ## Recursos conectados à API
 
 - cadastro e login por e-mail e senha;
-- recuperação de senha;
+- interface de recuperação de senha (entrega de e-mail adiada);
 - sessão por JWT;
 - consulta, criação, edição e desativação de trilhas;
 - agendamento e cancelamento;
@@ -100,20 +100,30 @@ Os testes de convites utilizam respostas HTTP simuladas. Ainda é necessário va
 flutter analyze
 flutter test
 flutter test --dart-define=USE_BACKEND=true
-flutter build web --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=http://127.0.0.1:5000
+flutter build web --dart-define=USE_BACKEND=true --dart-define=API_BASE_URL=https://rotafacil-backend-woad.vercel.app
 ```
 
 Os testes automatizados não substituem a validação com Firebase, e-mail, ImgBB e contas reais de homologação.
 
 ## Limitações conhecidas
 
-- a ajuda atual é orientativa; chat e atendimento por conversas estão fora da navegação do aplicativo;
+- a ajuda é orientativa; o código de chat e atendimento por conversas foi removido;
 - convites não possuem reenvio ou revogação;
 - push possui registro e envio de teste, mas o recebimento real precisa ser homologado no navegador;
 - avaliações, planejamento completo da trilha, contato de emergência e verificação administrativa ainda não formam fluxos completos na interface;
-- não existe publicação pública de produção confirmada.
+- backend publicado no Vercel; frontend público e homologação completa ainda pendentes. Não confundir build/testes simulados com aprovação dos fluxos reais.
 
 ## Repositórios relacionados
 
 - Backend: https://github.com/RafaelRavaneli/rotafacil_backend
 - Documentação: https://github.com/RafaelRavaneli/rotafacil_docs
+
+## Documentação e ferramentas
+
+- [Integração e contratos](docs/INTEGRACAO.md): modos de execução, endpoints e limites.
+- [Firebase e plataformas](docs/FIREBASE.md): configuração web, permissões Android/iOS e testes de push.
+- [Histórico](docs/HISTORICO.md): registros antigos V2–V6, sem validade como instrução atual.
+- `scripts/CONFIGURAR_FIREBASE_WEB.ps1`: gera a configuração pública local e o service worker.
+- `scripts/SETUP_PROJETO.ps1`: preparação opcional de plataformas; não executar para testar o web já existente. Execute a partir da raiz do frontend.
+
+Os arquivos de referência PDF e imagem em docs foram preservados. build, .dart_tool e configurações locais são gerados/ignorados e não integram o código versionado. pubspec.lock, configuração web e arquivos de testes são necessários e permanecem separados por responsabilidade.

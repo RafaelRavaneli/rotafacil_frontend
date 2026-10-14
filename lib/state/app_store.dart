@@ -10,10 +10,8 @@ import '../services/session_service.dart';
 import '../data/demo_data.dart' as demo;
 import '../models/app_notification.dart';
 import '../models/app_user.dart';
-import '../models/chat_message.dart';
 import '../models/local_booking.dart';
 import '../models/local_guide.dart';
-import '../models/support_message.dart';
 import '../models/trail.dart';
 import '../utils/role_utils.dart';
 
@@ -60,9 +58,6 @@ class AppStore extends ChangeNotifier {
   final List<LocalBooking> bookings = <LocalBooking>[];
 
   final List<AppNotificationItem> notifications = <AppNotificationItem>[];
-
-  final List<ChatMessage> messages = <ChatMessage>[];
-  final List<SupportMessage> supportMessages = <SupportMessage>[];
 
   final Set<String> favoriteTrailIds = <String>{};
 
@@ -182,30 +177,6 @@ class AppStore extends ChangeNotifier {
         ],
       );
 
-      _loadList<ChatMessage>(
-        key: 'messages',
-        target: messages,
-        decoder: ChatMessage.fromJson,
-        fallback: [
-          ChatMessage(
-            id: 'welcome-chat',
-            senderRole: 'guia',
-            recipientRole: 'turista',
-            guideName: guide.name,
-            text:
-                'Olá! Se tiver alguma dúvida sobre a trilha, pode falar comigo por aqui.',
-            createdAt: DateTime.now(),
-          ),
-        ],
-      );
-
-      _loadList<SupportMessage>(
-        key: 'support_messages',
-        target: supportMessages,
-        decoder: SupportMessage.fromJson,
-        fallback: [],
-      );
-
       favoriteTrailIds
         ..clear()
         ..addAll(_prefs.getStringList('favorites') ?? []);
@@ -220,8 +191,6 @@ class AppStore extends ChangeNotifier {
       trails.clear();
       agencyGuides.clear();
       bookings.clear();
-      messages.clear();
-      supportMessages.clear();
       favoriteTrailIds.clear();
     }
 
@@ -665,144 +634,6 @@ class AppStore extends ChangeNotifier {
     return notifications.where((item) => !item.read).length;
   }
 
-  Future<void> sendDirectMessage({
-    required String senderRole,
-    required String recipientRole,
-    required String text,
-    String? guideName,
-  }) async {
-    _requireLocalBusinessMode('Envio de mensagem');
-
-    final trimmed = text.trim();
-
-    if (trimmed.isEmpty) {
-      return;
-    }
-
-    final channelGuide = guideName == null || guideName.trim().isEmpty
-        ? guide.name
-        : guideName.trim();
-
-    messages.add(
-      ChatMessage(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        senderRole: normalizeRole(senderRole),
-        recipientRole: normalizeRole(recipientRole),
-        guideName: channelGuide,
-        text: trimmed,
-        createdAt: DateTime.now(),
-      ),
-    );
-
-    await _persistAll();
-
-    notifyListeners();
-  }
-
-  List<ChatMessage> conversationBetween(
-    String roleA,
-    String roleB, {
-    String? guideName,
-  }) {
-    final first = normalizeRole(roleA);
-
-    final second = normalizeRole(roleB);
-
-    final channelGuide = guideName == null || guideName.trim().isEmpty
-        ? guide.name
-        : guideName.trim();
-
-    final result = messages.where((message) {
-      final roleMatch =
-          (message.senderRole == first && message.recipientRole == second) ||
-          (message.senderRole == second && message.recipientRole == first);
-
-      if (!roleMatch) {
-        return false;
-      }
-
-      if (message.guideName.trim().isEmpty) {
-        return channelGuide == guide.name;
-      }
-
-      return message.guideName.toLowerCase() == channelGuide.toLowerCase();
-    }).toList();
-
-    result.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    return result;
-  }
-
-  Future<void> sendSupportMessage({
-    required String userRole,
-    required String text,
-  }) async {
-    _requireLocalBusinessMode('Envio de mensagem ao suporte');
-
-    final trimmed = text.trim();
-
-    if (trimmed.isEmpty) {
-      return;
-    }
-
-    final role = normalizeRole(userRole);
-
-    supportMessages.add(
-      SupportMessage(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        userRole: role,
-        sender: 'user',
-        text: trimmed,
-        createdAt: DateTime.now(),
-      ),
-    );
-
-    await _persistAll();
-
-    notifyListeners();
-  }
-
-  Future<void> replyAsSupport({
-    required String userRole,
-    required String text,
-  }) async {
-    _requireLocalBusinessMode('Resposta do suporte');
-
-    final trimmed = text.trim();
-
-    if (trimmed.isEmpty) {
-      return;
-    }
-
-    supportMessages.add(
-      SupportMessage(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        userRole: normalizeRole(userRole),
-        sender: 'support',
-        text: trimmed,
-        createdAt: DateTime.now(),
-      ),
-    );
-
-    await addNotification(title: 'Resposta do suporte', body: trimmed);
-
-    await _persistAll();
-
-    notifyListeners();
-  }
-
-  List<SupportMessage> supportConversationForRole(String userRole) {
-    final role = normalizeRole(userRole);
-
-    final result = supportMessages
-        .where((message) => message.userRole == role)
-        .toList();
-
-    result.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    return result;
-  }
-
   Future<void> setPushNotifications(bool value) async {
     pushNotifications = value;
 
@@ -874,16 +705,6 @@ class AppStore extends ChangeNotifier {
       await _prefs.setString(
         'bookings',
         jsonEncode(bookings.map((item) => item.toJson()).toList()),
-      );
-
-      await _prefs.setString(
-        'messages',
-        jsonEncode(messages.map((item) => item.toJson()).toList()),
-      );
-
-      await _prefs.setString(
-        'support_messages',
-        jsonEncode(supportMessages.map((item) => item.toJson()).toList()),
       );
 
       await _prefs.setStringList('favorites', favoriteTrailIds.toList());

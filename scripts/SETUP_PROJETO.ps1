@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "=== RotaFacil V3 - Setup ===" -ForegroundColor Green
+Write-Host "=== RotaFacil - Setup de plataformas ===" -ForegroundColor Green
 
 if (-not (Test-Path ".\pubspec.yaml")) {
     throw "Execute este script na pasta que contem o pubspec.yaml."

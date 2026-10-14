@@ -1,3 +1,5 @@
+import 'package:rotafacil/utils/document_validator.dart';
+import 'package:rotafacil/utils/role_utils.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -140,5 +142,24 @@ void main() {
       ),
       'guia',
     );
+  });
+  test('Aliases compartilham normalização e validação de cadastro', () {
+    for (final role in ['Agência', 'agencia', 'agency']) {
+      expect(normalizeRoleKey(role), 'agencia');
+      expect(DocumentValidator.labelForRole(role), 'CNPJ');
+      expect(
+        DocumentValidator.isValidForRole(role, '11.222.333/0001-81'),
+        isTrue,
+      );
+      expect(DocumentValidator.isValidForRole(role, '52998224725'), isFalse);
+    }
+    for (final role in ['Guia', 'guide']) {
+      expect(normalizeRoleKey(role), 'guia');
+      expect(DocumentValidator.isValidForRole(role, '52998224725'), isTrue);
+      expect(DocumentValidator.isValidForRole(role, '11111111111'), isFalse);
+    }
+    for (final role in ['usuario', 'turista', 'tourist']) {
+      expect(normalizeRoleKey(role), 'turista');
+    }
   });
 }

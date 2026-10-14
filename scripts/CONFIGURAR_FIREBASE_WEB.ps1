@@ -9,9 +9,10 @@ param(
     [string]$ApiBaseUrl = 'http://127.0.0.1:5000'
 )
 $ErrorActionPreference = 'Stop'
-$template = Join-Path $PSScriptRoot 'web/firebase-messaging-sw.js.example'
-$target = Join-Path $PSScriptRoot 'web/firebase-messaging-sw.js'
-$configPath = Join-Path $PSScriptRoot 'firebase-web.local.json'
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$template = Join-Path $projectRoot 'web/firebase-messaging-sw.js.example'
+$target = Join-Path $projectRoot 'web/firebase-messaging-sw.js'
+$configPath = Join-Path $projectRoot 'firebase-web.local.json'
 if (-not (Test-Path -LiteralPath $template)) { throw 'Modelo do service worker não encontrado.' }
 $firebase = [ordered]@{
     apiKey=$ApiKey; authDomain=$AuthDomain; projectId=$ProjectId
