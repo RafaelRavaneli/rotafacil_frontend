@@ -101,43 +101,48 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
+      title: 'Recuperar senha',
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
         children: [
-          const Text(
-            'Redefinir senha',
-            style: TextStyle(
-              color: AppColors.green900,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
           const SizedBox(height: 8),
           const Text(
             AppConfig.useBackend
                 ? 'Solicite o código por e-mail e use-o para definir sua nova senha.'
                 : 'Informe seu e-mail e escolha uma nova senha.',
-            style: TextStyle(color: AppColors.muted),
+            style: TextStyle(color: AppColors.paper),
           ),
           const SizedBox(height: 24),
-          TextField(
-            controller: email,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(labelText: 'E-mail'),
+          AuthLabeledField(
+            label: 'E-mail',
+            child: TextField(
+              style: const TextStyle(color: AppColors.ink),
+              controller: email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(),
+            ),
           ),
           const SizedBox(height: 12),
           if (AppConfig.useBackend)
-            TextField(
-              controller: code,
-              decoration: const InputDecoration(
-                labelText: 'Código recebido por e-mail',
+            AuthLabeledField(
+              label: 'Código recebido por e-mail',
+              child: TextField(
+                style: const TextStyle(color: AppColors.ink),
+                controller: code,
+                decoration: const InputDecoration(),
               ),
             ),
           if (!AppConfig.useBackend || requested)
-            TextField(
-              controller: password,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Nova senha'),
+            AuthLabeledField(
+              label: 'Nova senha',
+              child: TextField(
+                style: const TextStyle(color: AppColors.ink),
+                controller: password,
+                obscureText: true,
+                decoration: const InputDecoration(),
+              ),
             ),
           if (AppConfig.useBackend && !requested)
             TextButton(

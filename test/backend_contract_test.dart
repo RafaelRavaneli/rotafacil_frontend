@@ -191,4 +191,93 @@ void main() {
       );
     },
   );
+  for (final role in ['guia', 'agencia']) {
+    test('Agenda de $role usa somente ID autenticado no carregamento', () async {
+      await SessionService.instance.save(
+        authToken: 'jwt',
+        selectedRole: role,
+        userEmail: 'guia@example.test',
+        id: 'g1',
+      );
+      final paths = <String>[];
+      final repository = BackendRepository(
+        api: ApiClient(
+          client: MockClient((request) async {
+            paths.add(request.url.path);
+            expect(request.headers['Authorization'], 'Bearer jwt');
+            if (request.url.path.startsWith('/api/agendamentos/guia/') &&
+                request.url.path != '/api/agendamentos/guia/g1') {
+              return http.Response(
+                '{"erro":"Acesso negado. Você só pode acessar sua própria agenda."}',
+                403,
+              );
+            }
+            final Object data = switch (request.url.path) {
+              '/api/usuarios/g1' => {
+                'id': 'g1',
+                'nome': 'Guia',
+                'tipo': role,
+                'email': 'guia@example.test',
+              },
+              '/api/trilhas/' => [
+                {'id': 't1', 'nome': 'Trilha'},
+              ],
+              '/api/agendamentos/guia/g1' => [
+                {
+                  'id': 'b1',
+                  'id_trilha': 't1',
+                  'id_usuario': 't1',
+                  'status': 'agendado',
+                },
+                {
+                  'id': 'b2',
+                  'id_trilha': 't1',
+                  'id_usuario': 't2',
+                  'status': 'agendado',
+                  'id_guia': 'guia@example.test',
+                },
+              ],
+              '/api/favoritos/' ||
+              '/api/agendamentos/usuario/g1' ||
+              '/api/convites-guias' => [],
+              _ => throw StateError('Rota inesperada: ${request.url}'),
+            };
+            return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
+          }),
+        ),
+      );
+      final snapshot = await repository.load();
+      expect(snapshot.bookings.map((b) => b.id).toSet(), {'b1', 'b2'});
+      expect(paths.where((p) => p.startsWith('/api/agendamentos/guia/')), [
+        '/api/agendamentos/guia/g1',
+      ]);
+    });
+  }
+  test('Agenda mantém bloqueio real de autorização pelo ID', () async {
+    await SessionService.instance.save(
+      authToken: 'jwt',
+      selectedRole: 'guia',
+      userEmail: 'guia@example.test',
+      id: 'g1',
+    );
+    final repository = BackendRepository(
+      api: ApiClient(
+        client: MockClient((request) async {
+          if (request.url.path == '/api/agendamentos/guia/g1') {
+            return http.Response('{"erro":"Agenda negada"}', 403);
+          }
+          return http.Response(
+            request.url.path.startsWith('/api/usuarios/')
+                ? '{"id":"g1","nome":"Guia"}'
+                : '[]',
+            200,
+          );
+        }),
+      ),
+    );
+    await expectLater(
+      repository.load(),
+      throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 403)),
+    );
+  });
 }

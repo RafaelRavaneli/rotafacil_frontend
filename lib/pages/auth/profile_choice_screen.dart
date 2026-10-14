@@ -19,27 +19,19 @@ class ProfileChoiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
+      title: 'Criar conta',
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 24),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
           children: [
             const SizedBox(height: 18),
-            const Text(
-              'Qual é o seu\nperfil?',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.green900,
-                fontSize: 29,
-                height: 1.05,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -.8,
-              ),
-            ),
             const SizedBox(height: 8),
             const Text(
               'Escolha um perfil para criar sua conta.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.muted, fontSize: 13),
+              style: TextStyle(color: AppColors.paper, fontSize: 13),
             ),
             const SizedBox(height: 28),
             RoleCard(
@@ -60,7 +52,7 @@ class ProfileChoiceScreen extends StatelessWidget {
             const Text(
               'Guia: CPF obrigatório. Agência: CNPJ obrigatório.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.muted, fontSize: 11.5),
+              style: TextStyle(color: AppColors.paper, fontSize: 11.5),
             ),
           ],
         ),

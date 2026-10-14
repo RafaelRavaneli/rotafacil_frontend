@@ -30,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool acceptTerms = false;
   bool obscure = true;
   bool loading = false;
+  bool credentialsStep = false;
 
   bool get needsDocument {
     return widget.role == UserRole.guide || widget.role == UserRole.agency;
@@ -136,119 +137,204 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _continue() {
+    if (nameController.text.trim().isEmpty ||
+        (needsDocument &&
+            !DocumentValidator.isValidForRole(
+              widget.role.title,
+              documentController.text,
+            ))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            needsDocument
+                ? 'Informe o nome e um $documentLabel válido para continuar.'
+                : 'Informe seu nome para continuar.',
+          ),
+        ),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => credentialsStep = true);
+  }
+
+  Widget _field(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    TextInputType? keyboard,
+    bool secret = false,
+    int? maxLength,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFFD2FA87), fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            enabled: !loading,
+            keyboardType: keyboard,
+            maxLength: maxLength,
+            textCapitalization: maxLength == 2
+                ? TextCapitalization.characters
+                : TextCapitalization.none,
+            obscureText: secret && obscure,
+            style: const TextStyle(color: AppColors.ink, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: hint,
+              counterText: '',
+              filled: true,
+              fillColor: const Color(0xFFFFFEF7),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+                borderSide: const BorderSide(color: Color(0xFFCFD5C4)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+                borderSide: const BorderSide(color: Color(0xFFCFD5C4)),
+              ),
+              suffixIcon: secret
+                  ? IconButton(
+                      tooltip: obscure ? 'Mostrar senha' : 'Ocultar senha',
+                      onPressed: loading
+                          ? null
+                          : () => setState(() => obscure = !obscure),
+                      icon: Icon(
+                        obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
-          children: [
-            const Text(
-              'Criar sua conta',
-              style: TextStyle(
-                color: AppColors.green900,
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-              ),
+      title: 'Cadastro • ${widget.role.title}',
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!credentialsStep) ...[
+            _field(
+              widget.role == UserRole.agency ? 'Razão Social' : 'Nome completo',
+              nameController,
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Perfil: ${widget.role.title}',
-              style: const TextStyle(color: AppColors.muted),
+            _field(
+              'Telefone',
+              phoneController,
+              hint: '(00) 00000-0000',
+              keyboard: TextInputType.phone,
             ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome completo'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-            ),
-            if (needsDocument) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: documentController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: documentLabel,
-                  helperText:
-                      '$documentLabel obrigatório para ${widget.role.title.toLowerCase()}.',
-                  prefixIcon: const Icon(Icons.badge_outlined),
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'Telefone'),
-            ),
-            const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   flex: 3,
-                  child: TextField(
-                    controller: cityController,
-                    decoration: const InputDecoration(labelText: 'Cidade'),
-                  ),
+                  child: _field('Cidade', cityController, hint: 'Maringá'),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: TextField(
-                    controller: stateController,
+                  child: _field(
+                    'UF',
+                    stateController,
+                    hint: 'PR',
                     maxLength: 2,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: 'UF',
-                      counterText: '',
-                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: passwordController,
-              obscureText: obscure,
-              decoration: InputDecoration(
-                labelText: 'Senha',
-                helperText: 'Mínimo de 6 caracteres.',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    setState(() => obscure = !obscure);
-                  },
-                  icon: Icon(
-                    obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
+            if (needsDocument)
+              _field(
+                documentLabel,
+                documentController,
+                hint: widget.role == UserRole.guide
+                    ? '000.000.000-00'
+                    : '00.000.000/0000-00',
+                keyboard: TextInputType.number,
+              ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: 100,
+                height: 42,
+                child: FilledButton(
+                  onPressed: _continue,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F682B),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward,
+                    semanticLabel: 'Continuar',
                   ),
                 ),
               ),
+            ),
+          ] else ...[
+            _field(
+              'E-mail',
+              emailController,
+              keyboard: TextInputType.emailAddress,
+            ),
+            _field(
+              'Senha',
+              passwordController,
+              hint: 'Mínimo de 6 caracteres',
+              secret: true,
             ),
             CheckboxListTile(
               value: acceptTerms,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
-              activeColor: AppColors.green700,
+              activeColor: const Color(0xFF4F682B),
+              side: const BorderSide(color: Color(0xFFD2FA87)),
               title: const Text(
-                'Aceito os Termos de Uso '
-                'e Política de Privacidade',
-                style: TextStyle(fontSize: 12),
+                'Aceito os Termos de Uso e Política de Privacidade',
+                style: TextStyle(fontSize: 12, color: Color(0xFFFFFEF7)),
               ),
-              onChanged: (value) {
-                setState(() => acceptTerms = value ?? false);
-              },
+              onChanged: loading
+                  ? null
+                  : (value) => setState(() => acceptTerms = value ?? false),
             ),
+            const SizedBox(height: 18),
             FilledButton(
               onPressed: loading ? null : _create,
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF4F682B),
+              ),
               child: Text(loading ? 'Criando...' : 'Criar conta'),
             ),
+            TextButton(
+              onPressed: loading
+                  ? null
+                  : () => setState(() => credentialsStep = false),
+              child: const Text(
+                'Voltar aos dados',
+                style: TextStyle(color: Color(0xFFD2FA87)),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -92,3 +92,8 @@ Os testes usam clientes HTTP e banco simulados. Cobrem contratos, UTF-8, autenti
 Esta organização não publica nem cria commits automaticamente. Os registros antigos do frontend foram consolidados em HISTORICO.md. A documentação de rotafacil_docs foi preservada.
 
 Contratos de guias e convites: `CONTRATOS_COMUNIDADE.md` no repositório do backend. Swagger: https://rotafacil-backend-woad.vercel.app/docs.
+
+
+## Identificação da agenda de guia e agência
+
+O frontend consulta a agenda por ID da sessão autenticada, sem repetir a chamada usando o e-mail. No backend atualizado, a mesma consulta reúne registros pelo ID e pelo e-mail atual do responsável, preservando agendamentos antigos sem duplicar resultados. A regra de autorização da rota permanece em vigor; falhas de acesso à agenda por ID continuam sendo exibidas. Essa compatibilidade depende de executar/publicar também a atualização de services/agendamentos.py no backend.

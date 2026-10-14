@@ -16,7 +16,7 @@ void main() {
 
     await tester.pump();
     await tester.pumpAndSettle();
-    expect(find.bySemanticsLabel('RotaFácil'), findsOneWidget);
+    expect(find.text('RotaFácil'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

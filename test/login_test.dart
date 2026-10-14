@@ -162,4 +162,38 @@ void main() {
       expect(normalizeRoleKey(role), 'turista');
     }
   });
+  testWidgets(
+    'Cadastro valida documento antes de avançar e preserva dados ao voltar',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(home: RegisterScreen(role: UserRole.agency)),
+      );
+      await tester.enterText(find.byType(TextField).at(0), 'Agência de teste');
+      await tester.enterText(find.byType(TextField).at(4), '11111111111111');
+      await tester.ensureVisible(find.byIcon(Icons.arrow_forward));
+      await tester.tap(find.byIcon(Icons.arrow_forward));
+      await tester.pumpAndSettle();
+      expect(find.text('CNPJ'), findsOneWidget);
+      expect(find.text('E-mail'), findsNothing);
+      await tester.enterText(
+        find.byType(TextField).at(4),
+        '11.222.333/0001-81',
+      );
+      await tester.tap(find.byIcon(Icons.arrow_forward));
+      await tester.pumpAndSettle();
+      expect(find.text('E-mail'), findsOneWidget);
+      expect(find.text('Senha'), findsOneWidget);
+      await tester.ensureVisible(find.text('Voltar aos dados'));
+      await tester.tap(find.text('Voltar aos dados'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+        'Agência de teste',
+      );
+      expect(
+        tester.widget<TextField>(find.byType(TextField).at(4)).controller!.text,
+        '11.222.333/0001-81',
+      );
+    },
+  );
 }

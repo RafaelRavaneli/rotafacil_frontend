@@ -44,10 +44,6 @@ class BackendRepository {
       api.get('/api/agendamentos/usuario/${Uri.encodeComponent(id)}'),
       if (role == 'guia' || role == 'agencia')
         api.get('/api/agendamentos/guia/${Uri.encodeComponent(id)}'),
-      if ((role == 'guia' || role == 'agencia') && session.email != null)
-        api.get(
-          '/api/agendamentos/guia/${Uri.encodeComponent(session.email!)}',
-        ),
     ]);
     final user = AppUser.fromJson(Map<String, dynamic>.from(result[0] as Map));
     final trails = records(result[1]).map(Trail.fromJson).toList();
