@@ -31,7 +31,7 @@ class WelcomeScreen extends StatelessWidget {
                 colors: [
                   Color(0x66FFFFFF),
                   Color(0x22000000),
-                  Color(0xD91A3E2A),
+                  Color(0xD914532D),
                 ],
                 stops: [0, .5, 1],
               ),
@@ -72,7 +72,7 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const _Benefit(
                     icon: Icons.group_outlined,
-                    text: 'Conecte-se com guias e outros aventureiros',
+                    text: 'Encontre atividades com guias responsáveis',
                   ),
                   const SizedBox(height: 12),
                   const _Benefit(

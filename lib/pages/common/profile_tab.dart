@@ -104,8 +104,8 @@ class ProfileTab extends StatelessWidget {
               ),
               _ProfileItem(
                 icon: Icons.help_outline_rounded,
-                title: 'Ajuda e suporte',
-                subtitle: 'Converse com a equipe RotaFácil',
+                title: 'Ajuda',
+                subtitle: 'Orientações para usar o aplicativo',
                 onTap: () => _open(context, HelpSupportScreen(role: role)),
               ),
               if (store.useBackend && normalizeRoleKey(role) == 'guia')

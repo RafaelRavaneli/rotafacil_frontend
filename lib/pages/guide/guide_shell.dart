@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../common/bookings_screen.dart';
-import '../common/messages_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
 import 'guide_dashboard_tab.dart';
@@ -26,8 +25,6 @@ class _GuideShellState extends State<GuideShell> {
       case 2:
         return const BookingsScreen(role: 'guia');
       case 3:
-        return const MessagesScreen(role: 'guia');
-      case 4:
         return const ProfileTab(role: 'Guia');
       default:
         return const GuideDashboardTab();
@@ -70,11 +67,6 @@ class _GuideShellState extends State<GuideShell> {
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month_rounded),
             label: 'Agenda',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Mensagens',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

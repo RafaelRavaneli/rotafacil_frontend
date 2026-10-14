@@ -20,104 +20,103 @@ class TrailsManagementScreen extends StatelessWidget {
       child: AnimatedBuilder(
         animation: store,
         builder: (context, child) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Trilhas',
-                            style: TextStyle(
-                              color: AppColors.green900,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                            ),
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1040),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Minhas trilhas',
+                          style: TextStyle(
+                            color: AppColors.forest,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Gerencie suas trilhas e experiências',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 12,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Gerencie suas trilhas e experiências',
+                          style: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: () => _openForm(context),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Nova trilha'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.green100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.terrain_rounded,
+                            color: AppColors.green700,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${store.managedTrails.length} trilha(s) cadastrada(s)',
+                              style: const TextStyle(
+                                color: AppColors.green900,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    FilledButton.icon(
-                      onPressed: () {
-                        _openForm(context);
-                      },
-                      icon: const Icon(Icons.add_rounded),
-                      label: const Text('Adicionar'),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.green100,
-                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.terrain_rounded,
-                        color: AppColors.green700,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '${store.managedTrails.length} trilha(s) cadastrada(s)',
-                          style: const TextStyle(
-                            color: AppColors.green900,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Expanded(
-                child: store.managedTrails.isEmpty
-                    ? _EmptyTrails(
-                        onAdd: () {
-                          _openForm(context);
-                        },
-                      )
-                    : ListView.separated(
-                        primary: false,
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                        itemCount: store.managedTrails.length,
-                        separatorBuilder: (context, index) {
-                          return const SizedBox(height: 10);
-                        },
-                        itemBuilder: (context, index) {
-                          final trail = store.managedTrails[index];
+                  const SizedBox(height: 14),
+                  Expanded(
+                    child: store.managedTrails.isEmpty
+                        ? _EmptyTrails(
+                            onAdd: () {
+                              _openForm(context);
+                            },
+                          )
+                        : ListView.separated(
+                            primary: false,
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                            itemCount: store.managedTrails.length,
+                            separatorBuilder: (context, index) {
+                              return const SizedBox(height: 10);
+                            },
+                            itemBuilder: (context, index) {
+                              final trail = store.managedTrails[index];
 
-                          return _TrailRow(
-                            trail: trail,
-                            onEdit: () {
-                              _openForm(context, existing: trail);
+                              return _TrailRow(
+                                trail: trail,
+                                onEdit: () {
+                                  _openForm(context, existing: trail);
+                                },
+                                onDelete: () {
+                                  _delete(context, trail);
+                                },
+                              );
                             },
-                            onDelete: () {
-                              _delete(context, trail);
-                            },
-                          );
-                        },
-                      ),
+                          ),
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
@@ -140,8 +139,16 @@ class TrailsManagementScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Excluir trilha?'),
-          content: Text('Tem certeza que deseja excluir "${trail.name}"?'),
+          title: Text(
+            AppStore.instance.useBackend
+                ? 'Desativar trilha?'
+                : 'Excluir trilha?',
+          ),
+          content: Text(
+            AppStore.instance.useBackend
+                ? 'A trilha "${trail.name}" deixará de aparecer na busca.'
+                : 'Tem certeza que deseja excluir "${trail.name}"?',
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -153,7 +160,9 @@ class TrailsManagementScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text('Excluir'),
+              child: Text(
+                AppStore.instance.useBackend ? 'Desativar' : 'Excluir',
+              ),
             ),
           ],
         );
@@ -201,14 +210,14 @@ class _TrailRow extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           SizedBox(
             width: 100,
-            height: 82,
+            height: 132,
             child: NetworkImageBox(url: trail.imageUrl, borderRadius: 14),
           ),
           const SizedBox(width: 12),
@@ -218,12 +227,12 @@ class _TrailRow extends StatelessWidget {
               children: [
                 Text(
                   trail.name,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.ink,
                     fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -238,7 +247,7 @@ class _TrailRow extends StatelessWidget {
                     Expanded(
                       child: Text(
                         trail.location,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppColors.muted,
@@ -248,6 +257,22 @@ class _TrailRow extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 7),
+                Text(
+                  'R\$ ${trail.price.toStringAsFixed(2).replaceAll('.', ',')} por pessoa',
+                  style: const TextStyle(
+                    color: AppColors.forest,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (trail.date.isNotEmpty)
+                  Text(
+                    trail.date,
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                    ),
+                  ),
                 const SizedBox(height: 7),
                 Wrap(
                   spacing: 6,
@@ -273,8 +298,8 @@ class _TrailRow extends StatelessWidget {
               }
             },
             itemBuilder: (context) {
-              return const [
-                PopupMenuItem(
+              return [
+                const PopupMenuItem(
                   value: 'editar',
                   child: Row(
                     children: [
@@ -290,7 +315,9 @@ class _TrailRow extends StatelessWidget {
                     children: [
                       Icon(Icons.delete_outline),
                       SizedBox(width: 8),
-                      Text('Excluir'),
+                      Text(
+                        AppStore.instance.useBackend ? 'Desativar' : 'Excluir',
+                      ),
                     ],
                   ),
                 ),
@@ -321,7 +348,7 @@ class _MiniChip extends StatelessWidget {
         style: const TextStyle(
           color: AppColors.green700,
           fontSize: 9.5,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -361,7 +388,7 @@ class _EmptyTrails extends StatelessWidget {
               style: TextStyle(
                 color: AppColors.green900,
                 fontSize: 18,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 6),
@@ -372,6 +399,7 @@ class _EmptyTrails extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
               onPressed: onAdd,
               icon: const Icon(Icons.add_rounded),
               label: const Text('Adicionar trilha'),

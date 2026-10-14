@@ -3,20 +3,28 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const green900 = Color(0xFF173E2A);
-  static const green800 = Color(0xFF214D35);
-  static const green700 = Color(0xFF2E603E);
-  static const green600 = Color(0xFF3F744E);
-  static const green100 = Color(0xFFE8F0E8);
-  static const cream = Color(0xFFF8F6F0);
-  static const paper = Color(0xFFFEFDF9);
+  // Paleta principal aprovada para o RotaFácil.
+  static const forest = Color(0xFF14532D);
+  static const leaf = Color(0xFF2F855A);
+  static const sage = Color(0xFFB7CDB4);
+  static const sand = Color(0xFFF7EDE2);
+  static const earth = Color(0xFFA67C52);
+
+  // Aliases preservam a compatibilidade com as telas existentes.
+  static const green900 = forest;
+  static const green800 = forest;
+  static const green700 = leaf;
+  static const green600 = leaf;
+  static const green100 = sage;
+  static const cream = sand;
+  static const paper = Color(0xFFFFFCF7);
   static const white = Color(0xFFFFFFFF);
-  static const ink = Color(0xFF1C241E);
-  static const muted = Color(0xFF687169);
-  static const border = Color(0xFFE4E4DD);
-  static const gold = Color(0xFFE8B02A);
-  static const amber100 = Color(0xFFFFF1C7);
-  static const amber700 = Color(0xFFB37700);
-  static const red = Color(0xFFD84A3A);
-  static const shadow = Color(0x16000000);
+  static const ink = Color(0xFF173E2A);
+  static const muted = Color(0xFF526453);
+  static const border = Color(0xFFD5DFCD);
+  static const gold = earth;
+  static const amber100 = Color(0xFFF0DFC9);
+  static const amber700 = Color(0xFF76512F);
+  static const red = Color(0xFFB9382E);
+  static const shadow = Color(0x1414532D);
 }

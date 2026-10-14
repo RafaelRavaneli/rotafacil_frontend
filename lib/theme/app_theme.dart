@@ -10,7 +10,13 @@ class AppTheme {
       seedColor: AppColors.green700,
       brightness: Brightness.light,
       primary: AppColors.green700,
-      secondary: AppColors.gold,
+      secondary: AppColors.earth,
+      onPrimary: AppColors.white,
+      onSecondary: AppColors.forest,
+      onSurface: AppColors.ink,
+      primaryContainer: AppColors.sage,
+      onPrimaryContainer: AppColors.forest,
+      error: AppColors.red,
       surface: AppColors.paper,
     );
 
@@ -21,22 +27,22 @@ class AppTheme {
       textTheme: const TextTheme(
         displaySmall: TextStyle(
           color: AppColors.green900,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
           height: 1.05,
           letterSpacing: -1.0,
         ),
         headlineMedium: TextStyle(
           color: AppColors.green900,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
         titleLarge: TextStyle(
           color: AppColors.ink,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
         ),
         titleMedium: TextStyle(
           color: AppColors.ink,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
         ),
         bodyLarge: TextStyle(color: AppColors.ink, height: 1.45),
         bodyMedium: TextStyle(color: AppColors.muted, height: 1.4),
@@ -45,6 +51,8 @@ class AppTheme {
         backgroundColor: AppColors.cream,
         foregroundColor: AppColors.ink,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -76,7 +84,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -87,15 +95,49 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
         backgroundColor: AppColors.paper,
-        indicatorColor: AppColors.green100,
+        indicatorColor: AppColors.sage,
+        height: 76,
+        elevation: 0,
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
         ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.paper,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: AppColors.border),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.forest,
+          minimumSize: const Size(44, 48),
+          side: const BorderSide(color: AppColors.border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.forest),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.forest,
+        contentTextStyle: TextStyle(color: AppColors.white),
+        behavior: SnackBarBehavior.floating,
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.paper,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
       ),
       dividerColor: AppColors.border,
     );

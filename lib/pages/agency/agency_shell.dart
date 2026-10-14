@@ -22,9 +22,9 @@ class _AgencyShellState extends State<AgencyShell> {
       case 0:
         return const AgencyDashboardTab();
       case 1:
-        return const GuidesScreen();
-      case 2:
         return const TrailsManagementScreen(isAgency: true);
+      case 2:
+        return const GuidesScreen();
       case 3:
         return const BookingsScreen(role: 'agencia');
       case 4:
@@ -60,19 +60,19 @@ class _AgencyShellState extends State<AgencyShell> {
             label: 'Painel',
           ),
           NavigationDestination(
-            icon: Icon(Icons.groups_2_outlined),
-            selectedIcon: Icon(Icons.groups_2_rounded),
-            label: 'Guias',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.terrain_outlined),
             selectedIcon: Icon(Icons.terrain_rounded),
             label: 'Trilhas',
           ),
           NavigationDestination(
+            icon: Icon(Icons.groups_2_outlined),
+            selectedIcon: Icon(Icons.groups_2_rounded),
+            label: 'Guias',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month_rounded),
-            label: 'Agendamentos',
+            label: 'Reservas',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

@@ -121,133 +121,147 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.cream,
       appBar: AppBar(),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-          children: [
-            const SizedBox(height: 14),
-            const Text(
-              'Bem-vindo de volta! 👋',
-              style: TextStyle(
-                color: AppColors.green900,
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -.7,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Entre com seu e-mail e senha para continuar.',
-              style: TextStyle(color: AppColors.muted, fontSize: 13.5),
-            ),
-            const SizedBox(height: 30),
-            TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.username],
-              decoration: const InputDecoration(
-                labelText: 'E-mail',
-                hintText: 'Seu e-mail cadastrado',
-              ),
-            ),
-
-            const SizedBox(height: 14),
-            TextField(
-              controller: passwordController,
-              obscureText: obscure,
-              autofillHints: const [AutofillHints.password],
-              decoration: InputDecoration(
-                labelText: 'Senha',
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    setState(() => obscure = !obscure);
-                  },
-                  icon: Icon(
-                    obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ForgotPasswordScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Esqueci minha senha',
-                  style: TextStyle(
-                    color: AppColors.green700,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            FilledButton(
-              onPressed: loading ? null : _login,
-              child: loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: AppColors.white,
-                      ),
-                    )
-                  : const Text('Entrar'),
-            ),
-            const SizedBox(height: 18),
-            if (!AppConfig.useBackend)
-              Container(
-                padding: const EdgeInsets.all(13),
-                decoration: BoxDecoration(
-                  color: AppColors.green100,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  demoText,
-                  style: const TextStyle(
-                    color: AppColors.green900,
-                    fontSize: 11.5,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
               children: [
+                const SizedBox(height: 14),
                 const Text(
-                  'Ainda não tem conta?',
-                  style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  'Bem-vindo de volta!',
+                  style: TextStyle(
+                    color: AppColors.green900,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -.7,
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ProfileChoiceScreen(),
-                      ),
-                    );
+                const SizedBox(height: 6),
+                const Text(
+                  'Entre com seu e-mail e senha para continuar.',
+                  style: TextStyle(color: AppColors.muted, fontSize: 13.5),
+                ),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.username],
+                  enabled: !loading,
+                  textInputAction: TextInputAction.next,
+                  autocorrect: false,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail',
+                    hintText: 'Seu e-mail cadastrado',
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscure,
+                  autofillHints: const [AutofillHints.password],
+                  enabled: !loading,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    if (!loading) _login();
                   },
-                  child: const Text(
-                    'Criar conta',
-                    style: TextStyle(
-                      color: AppColors.green700,
-                      fontWeight: FontWeight.w800,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() => obscure = !obscure);
+                      },
+                      icon: Icon(
+                        obscure
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
                     ),
                   ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Esqueci minha senha',
+                      style: TextStyle(
+                        color: AppColors.green700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                FilledButton(
+                  onPressed: loading ? null : _login,
+                  child: loading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: AppColors.white,
+                          ),
+                        )
+                      : const Text('Entrar'),
+                ),
+                const SizedBox(height: 18),
+                if (!AppConfig.useBackend)
+                  Container(
+                    padding: const EdgeInsets.all(13),
+                    decoration: BoxDecoration(
+                      color: AppColors.green100,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      demoText,
+                      style: const TextStyle(
+                        color: AppColors.green900,
+                        fontSize: 11.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 18),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text(
+                      'Ainda não tem conta?',
+                      style: TextStyle(color: AppColors.muted, fontSize: 12),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProfileChoiceScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Criar conta',
+                        style: TextStyle(
+                          color: AppColors.green700,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

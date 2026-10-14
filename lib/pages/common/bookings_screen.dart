@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../utils/run_action.dart';
-import '../../models/local_booking.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/booking_summary_card.dart';
+import 'booking_details_screen.dart';
 
 class BookingsScreen extends StatelessWidget {
   const BookingsScreen({super.key, required this.role});
@@ -11,149 +11,67 @@ class BookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = AppStore.instance;
-
     return SafeArea(
       child: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
           final normalized = role.toLowerCase();
           final list = store.bookings.where((booking) {
-            if (normalized == 'turista') {
-              return booking.roleView == 'turista';
-            }
+            if (normalized == 'turista') return booking.roleView == 'turista';
             if (normalized == 'guia') {
               return booking.roleView == 'guia' ||
                   booking.roleView == 'turista';
             }
             return true;
           }).toList();
-
-          return CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Text(
-                    normalized == 'turista'
-                        ? 'Meus agendamentos'
-                        : 'Agendamentos',
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Text(
+                    normalized == 'turista' ? 'Minhas reservas' : 'Reservas',
                     style: const TextStyle(
-                      color: AppColors.green900,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
+                      color: AppColors.forest,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-              ),
-              if (list.isEmpty)
-                const SliverFillRemaining(
-                  child: Center(child: Text('Nenhum agendamento encontrado.')),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  sliver: SliverList.separated(
-                    itemCount: list.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      return _BookingCard(booking: list[index]);
-                    },
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Acompanhe suas atividades e consulte os detalhes de cada reserva.',
+                    style: TextStyle(color: AppColors.muted),
                   ),
-                ),
-            ],
+                  const SizedBox(height: 20),
+                  if (list.isEmpty)
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Nenhuma reserva disponível.'),
+                      ),
+                    ),
+                  ...list.map(
+                    (booking) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: BookingSummaryCard(
+                        booking: booking,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                BookingDetailsScreen(bookingId: booking.id),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
-      ),
-    );
-  }
-}
-
-class _BookingCard extends StatelessWidget {
-  const _BookingCard({required this.booking});
-  final LocalBooking booking;
-
-  @override
-  Widget build(BuildContext context) {
-    final cancelled = booking.status == 'Cancelado';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  booking.trailName,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-              Text(
-                booking.status,
-                style: TextStyle(
-                  color: cancelled ? AppColors.red : AppColors.green700,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            booking.personName,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            booking.date,
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Valor: R\$ ${booking.valuePaid.toStringAsFixed(2)}',
-            style: const TextStyle(color: AppColors.muted, fontSize: 11),
-          ),
-          if (!cancelled) ...[
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: const Text('Cancelar agendamento?'),
-                    content: Text(booking.trailName),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                        child: const Text('Voltar'),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(dialogContext, true),
-                        child: const Text('Cancelar'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true && context.mounted) {
-                  await runAction(
-                    context,
-                    () => AppStore.instance.cancelBooking(booking),
-                  );
-                }
-              },
-              icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Cancelar agendamento'),
-            ),
-          ],
-        ],
       ),
     );
   }

@@ -31,7 +31,7 @@ class TrailDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Confirmar agendamento',
+                'Confirme sua reserva',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
@@ -57,6 +57,11 @@ class TrailDetailsScreen extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Esta reserva não realiza pagamento online.',
+                style: TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 20),
               FilledButton(
@@ -99,9 +104,7 @@ class TrailDetailsScreen extends StatelessWidget {
     if (!context.mounted || !confirmed) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Agendamento salvo. Confira a aba Agendamentos.'),
-      ),
+      const SnackBar(content: Text('Reserva salva. Confira a aba Reservas.')),
     );
   }
 
@@ -225,19 +228,6 @@ class TrailDetailsScreen extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const Icon(
-                              Icons.star_rounded,
-                              color: AppColors.gold,
-                              size: 17,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${trail.rating} (${trail.reviews})',
-                              style: const TextStyle(
-                                color: AppColors.ink,
-                                fontSize: 11.5,
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 22),
@@ -248,14 +238,6 @@ class TrailDetailsScreen extends StatelessWidget {
                             _ChipMetric(
                               icon: Icons.route_rounded,
                               value: '${trail.distanceKm} km',
-                            ),
-                            _ChipMetric(
-                              icon: Icons.schedule_rounded,
-                              value: trail.duration,
-                            ),
-                            _ChipMetric(
-                              icon: Icons.terrain_rounded,
-                              value: '${trail.elevation} m',
                             ),
                             _ChipMetric(
                               icon: Icons.hiking_rounded,
@@ -360,7 +342,7 @@ class TrailDetailsScreen extends StatelessWidget {
                           subtitle: Text(
                             responsibleGuide == null
                                 ? 'Responsável pela experiência'
-                                : '★ ${responsibleGuide.rating} • Toque para ver o perfil',
+                                : 'Ver perfil do responsável',
                           ),
                           trailing: responsibleGuide == null
                               ? null
@@ -412,7 +394,7 @@ class TrailDetailsScreen extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => _book(context),
                   icon: const Icon(Icons.hiking_rounded),
-                  label: const Text('Agendar trilha'),
+                  label: const Text('Reservar'),
                 ),
               ),
             ],

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/run_action.dart';
 import '../../state/app_store.dart';
-import '../../theme/app_colors.dart';
-import '../../widgets/network_image_box.dart';
+import '../../widgets/trail_card.dart';
 import '../tourist/trail_details_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -14,7 +13,7 @@ class FavoritesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Trilhas favoritas',
+          'Favoritos',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -33,37 +32,17 @@ class FavoritesScreen extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final trail = trails[index];
-              return ListTile(
-                tileColor: AppColors.paper,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                leading: SizedBox(
-                  width: 64,
-                  height: 54,
-                  child: NetworkImageBox(url: trail.imageUrl, borderRadius: 10),
-                ),
-                title: Text(
-                  trail.name,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                subtitle: Text(trail.location),
-                trailing: IconButton(
-                  onPressed: () =>
-                      runAction(context, () => store.toggleFavorite(trail.id)),
-                  icon: const Icon(
-                    Icons.favorite_rounded,
-                    color: AppColors.red,
+              return TrailCard(
+                trail: trail,
+                favorite: true,
+                onFavorite: () =>
+                    runAction(context, () => store.toggleFavorite(trail.id)),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TrailDetailsScreen(trail: trail),
                   ),
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TrailDetailsScreen(trail: trail),
-                    ),
-                  );
-                },
               );
             },
           );

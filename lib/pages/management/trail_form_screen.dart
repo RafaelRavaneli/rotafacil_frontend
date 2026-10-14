@@ -276,233 +276,274 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       appBar: AppBar(
         title: Text(
           widget.existing == null ? 'Nova trilha' : 'Editar trilha',
-          style: const TextStyle(fontWeight: FontWeight.w900),
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-        children: [
-          InkWell(
-            onTap: _pickImage,
-            borderRadius: BorderRadius.circular(18),
-            child: SizedBox(
-              height: 190,
-              child: imageBytes != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: Image.memory(
-                        imageBytes!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    )
-                  : existingImageUrl != null
-                  ? NetworkImageBox(url: existingImageUrl!, borderRadius: 18)
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.green100,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_a_photo_outlined,
-                            color: AppColors.green700,
-                            size: 38,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Adicionar foto da trilha',
-                            style: TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Escolher da galeria',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: _pickImage,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Escolher/trocar foto'),
-          ),
-          const SizedBox(height: 18),
-          TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nome'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: descriptionController,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Descrição',
-              alignLabelWithHint: true,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
             children: [
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: cityController,
-                  decoration: const InputDecoration(labelText: 'Cidade'),
+              const Text(
+                'Apresente sua trilha',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: AppColors.forest,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: stateController,
-                  maxLength: 2,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    labelText: 'UF',
-                    counterText: '',
-                  ),
+              const SizedBox(height: 6),
+              const Text(
+                'Foto, descrição e informações para ajudar o turista a escolher.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: _pickImage,
+                borderRadius: BorderRadius.circular(18),
+                child: SizedBox(
+                  height: 190,
+                  child: imageBytes != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.memory(
+                            imageBytes!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        )
+                      : existingImageUrl != null
+                      ? NetworkImageBox(
+                          url: existingImageUrl!,
+                          borderRadius: 18,
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.green100,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_outlined,
+                                color: AppColors.green700,
+                                size: 38,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Adicionar foto da trilha',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'Escolher da galeria',
+                                style: TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: difficulty,
-            decoration: const InputDecoration(labelText: 'Dificuldade'),
-            items: const [
-              DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
-              DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
-              DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => difficulty = value);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: modality,
-            decoration: const InputDecoration(labelText: 'Modalidade'),
-            items: const [
-              DropdownMenuItem(value: 'Trekking', child: Text('Trekking')),
-              DropdownMenuItem(value: 'Hiking', child: Text('Hiking')),
-              DropdownMenuItem(value: 'Caminhada', child: Text('Caminhada')),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => modality = value);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: distanceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Distância do percurso (km)',
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: priceController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(
-              labelText: 'Valor por pessoa (R\$)',
-            ),
-          ),
-          const SizedBox(height: 12),
-          InkWell(
-            onTap: _pickDate,
-            child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'Data da atividade',
-                prefixIcon: Icon(Icons.calendar_month_outlined),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Escolher/trocar foto'),
               ),
-              child: Text(dateLabel),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.green100,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.green700,
+              const SizedBox(height: 18),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Nome'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Descrição',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: cityController,
+                      decoration: const InputDecoration(labelText: 'Cidade'),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        latitude == null || longitude == null
-                            ? 'Nenhuma coordenada selecionada.'
-                            : 'Latitude ${latitude!.toStringAsFixed(5)} • Longitude ${longitude!.toStringAsFixed(5)}',
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: stateController,
+                      maxLength: 2,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'UF',
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: difficulty,
+                decoration: const InputDecoration(labelText: 'Dificuldade'),
+                items: const [
+                  DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
+                  DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
+                  DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => difficulty = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: modality,
+                decoration: const InputDecoration(labelText: 'Modalidade'),
+                items: const [
+                  DropdownMenuItem(value: 'Trekking', child: Text('Trekking')),
+                  DropdownMenuItem(value: 'Hiking', child: Text('Hiking')),
+                  DropdownMenuItem(
+                    value: 'Caminhada',
+                    child: Text('Caminhada'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => modality = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Informações da atividade',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: AppColors.forest,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: distanceController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Distância do percurso (km)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Valor por pessoa (R\$)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Data da atividade',
+                    prefixIcon: Icon(Icons.calendar_month_outlined),
+                  ),
+                  child: Text(dateLabel),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.green100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.green700,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            latitude == null || longitude == null
+                                ? 'Nenhuma coordenada selecionada.'
+                                : 'Latitude ${latitude!.toStringAsFixed(5)} • Longitude ${longitude!.toStringAsFixed(5)}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: locating ? null : _useCurrentLocation,
+                      icon: const Icon(Icons.my_location_rounded),
+                      label: Text(
+                        locating
+                            ? 'Obtendo localização...'
+                            : 'Usar localização atual',
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: locating ? null : _useCurrentLocation,
-                  icon: const Icon(Icons.my_location_rounded),
-                  label: Text(
-                    locating
-                        ? 'Obtendo localização...'
-                        : 'Usar localização atual',
+              ),
+              if (widget.isAgency) ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: guides.any((guide) => guide.id == guideId)
+                      ? guideId
+                      : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Guia responsável',
                   ),
+                  items: guides
+                      .map(
+                        (guide) => DropdownMenuItem(
+                          value: guide.id,
+                          child: Text(guide.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    String? selectedGuideName;
+
+                    if (value != null) {
+                      for (final guide in guides) {
+                        if (guide.id == value) {
+                          selectedGuideName = guide.name;
+                          break;
+                        }
+                      }
+                    }
+
+                    setState(() {
+                      guideName = selectedGuideName;
+                      guideId = value;
+                    });
+                  },
                 ),
               ],
-            ),
+            ],
           ),
-          if (widget.isAgency) ...[
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: guides.any((guide) => guide.id == guideId)
-                  ? guideId
-                  : null,
-              decoration: const InputDecoration(labelText: 'Guia responsável'),
-              items: guides
-                  .map(
-                    (guide) => DropdownMenuItem(
-                      value: guide.id,
-                      child: Text(guide.name),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                String? selectedGuideName;
-
-                if (value != null) {
-                  for (final guide in guides) {
-                    if (guide.id == value) {
-                      selectedGuideName = guide.name;
-                      break;
-                    }
-                  }
-                }
-
-                setState(() {
-                  guideName = selectedGuideName;
-                  guideId = value;
-                });
-              },
-            ),
-          ],
-        ],
+        ),
       ),
       bottomNavigationBar: SafeArea(
         top: false,

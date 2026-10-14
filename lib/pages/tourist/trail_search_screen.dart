@@ -5,6 +5,7 @@ import '../../models/trail.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
+import '../../widgets/trail_results_map.dart';
 import 'trail_details_screen.dart';
 
 class TrailSearchScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   double radiusKm = 20;
   Position? position;
   bool locating = false;
+  bool showMap = true;
+  String? selectedTrailId;
 
   @override
   void dispose() {
@@ -104,10 +107,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   double? _distanceFromUser(Trail trail) {
     final current = position;
 
-    if (!nearMe ||
-        current == null ||
-        trail.latitude == null ||
-        trail.longitude == null) {
+    if (!nearMe || current == null || trailMapPosition(trail) == null) {
       return null;
     }
 
@@ -141,10 +141,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       final date = _trailDate(trail);
 
       final startMatch =
-          startDate == null || date == null || !date.isBefore(startDate!);
+          startDate == null || (date != null && !date.isBefore(startDate!));
 
       final endMatch =
-          endDate == null || date == null || !date.isAfter(endDate!);
+          endDate == null || (date != null && !date.isAfter(endDate!));
 
       final distance = _distanceFromUser(trail);
 
@@ -179,7 +179,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     );
 
     if (date != null) {
-      setState(() => startDate = date);
+      setState(() {
+        startDate = date;
+        if (endDate != null && endDate!.isBefore(date)) endDate = null;
+      });
     }
   }
 
@@ -222,7 +225,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       appBar: AppBar(
         title: const Text(
           'Buscar trilhas',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [TextButton(onPressed: _clear, child: const Text('Limpar'))],
       ),
@@ -230,6 +233,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
         animation: AppStore.instance,
         builder: (context, _) {
           final results = filtered;
+          final selected = results
+              .where((r) => r.trail.id == selectedTrailId)
+              .firstOrNull;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -264,6 +270,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                key: ValueKey(difficulty),
                 initialValue: difficulty,
                 decoration: const InputDecoration(labelText: 'Dificuldade'),
                 items: const [
@@ -305,7 +312,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                 onChanged: locating ? null : _toggleNearMe,
                 title: const Text(
                   'Buscar perto de mim',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(
                   locating
@@ -349,10 +356,37 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                 style: const TextStyle(
                   color: AppColors.green900,
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 10),
+              if (results.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => setState(() => showMap = !showMap),
+                        icon: Icon(showMap ? Icons.list : Icons.map_outlined),
+                        label: Text(showMap ? 'Ocultar mapa' : 'Mostrar mapa'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (showMap) ...[
+                  TrailResultsMap(
+                    trails: results.map((r) => r.trail).toList(),
+                    selectedId: selectedTrailId,
+                    onSelected: (trail) =>
+                        setState(() => selectedTrailId = trail.id),
+                  ),
+                  if (selected != null) ...[
+                    const SizedBox(height: 12),
+                    _ResultCard(result: selected),
+                  ],
+                  const SizedBox(height: 20),
+                ],
+              ],
               if (results.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
@@ -418,7 +452,7 @@ class _ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       trail.name,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -430,7 +464,7 @@ class _ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${trail.difficulty} • ${trail.distanceKm} km • ★ ${trail.rating}',
+                      '${trail.difficulty} • ${trail.distanceKm} km',
                       style: const TextStyle(
                         color: AppColors.green700,
                         fontSize: 11,
@@ -444,7 +478,7 @@ class _ResultCard extends StatelessWidget {
                         style: const TextStyle(
                           color: AppColors.green900,
                           fontSize: 11,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
