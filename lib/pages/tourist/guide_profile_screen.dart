@@ -52,10 +52,14 @@ class GuideProfileScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '${guide.city} / ${guide.state}',
-                    style: const TextStyle(color: AppColors.muted),
-                  ),
+                  if (guide.city.isNotEmpty || guide.state.isNotEmpty)
+                    Text(
+                      [
+                        guide.city,
+                        guide.state,
+                      ].where((item) => item.isNotEmpty).join(' / '),
+                      style: const TextStyle(color: AppColors.muted),
+                    ),
                   if (guide.verified)
                     const Padding(
                       padding: EdgeInsets.only(top: 12),
@@ -71,6 +75,30 @@ class GuideProfileScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  if (guide.bio.trim().isNotEmpty) ...[
+                    const SizedBox(height: 22),
+                    Text(
+                      'Sobre',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(guide.bio),
+                  ],
+                  if (guide.specialties.isNotEmpty) ...[
+                    const SizedBox(height: 22),
+                    Text(
+                      'Especialidades',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: guide.specialties
+                          .map((item) => Chip(label: Text(item)))
+                          .toList(),
+                    ),
+                  ],
                   const SizedBox(height: 28),
                   Text(
                     'Trilhas deste guia',

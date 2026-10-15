@@ -27,6 +27,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   late final TextEditingController city;
   late final TextEditingController state;
   late final TextEditingController document;
+  late final TextEditingController emergencyName;
+  late final TextEditingController emergencyPhone;
+  late final TextEditingController professionalDescription;
+  late final TextEditingController specialties;
 
   String? currentImageDataUrl;
   Uint8List? pickedImageBytes;
@@ -64,6 +68,12 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     document = TextEditingController(
       text: DocumentValidator.formatForRole(widget.role, user.document),
     );
+    emergencyName = TextEditingController(text: user.emergencyContactName);
+    emergencyPhone = TextEditingController(text: user.emergencyContactPhone);
+    professionalDescription = TextEditingController(
+      text: user.professionalDescription,
+    );
+    specialties = TextEditingController(text: user.specialties.join(', '));
 
     currentImageDataUrl = user.profileImageDataUrl;
   }
@@ -76,6 +86,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     city.dispose();
     state.dispose();
     document.dispose();
+    emergencyName.dispose();
+    emergencyPhone.dispose();
+    professionalDescription.dispose();
+    specialties.dispose();
     super.dispose();
   }
 
@@ -146,6 +160,19 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         document: needsDocument ? normalizedDocument : null,
         profileImageDataUrl: previewDataUrl,
         updateProfileImage: true,
+        emergencyContactName: emergencyName.text.trim(),
+        emergencyContactPhone: emergencyPhone.text.trim(),
+        professionalDescription: needsDocument
+            ? professionalDescription.text.trim()
+            : null,
+        specialties: needsDocument
+            ? specialties.text
+                  .split(',')
+                  .map((item) => item.trim())
+                  .where((item) => item.isNotEmpty)
+                  .toSet()
+                  .toList()
+            : null,
       );
 
       if (!AppStore.instance.useBackend) {
@@ -287,6 +314,73 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                 ),
               ),
             ],
+          ),
+          if (needsDocument) ...[
+            const SizedBox(height: 18),
+            const Text(
+              'Perfil profissional público',
+              style: TextStyle(
+                color: AppColors.forest,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Esses dados ajudam o turista a conhecer o responsável. Documento, e-mail e telefone não são publicados.',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: professionalDescription,
+              maxLines: 4,
+              maxLength: 600,
+              decoration: const InputDecoration(
+                labelText: 'Apresentação profissional',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.description_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: specialties,
+              decoration: const InputDecoration(
+                labelText: 'Especialidades',
+                helperText: 'Separe por vírgulas. Ex.: trekking, cachoeiras',
+                prefixIcon: Icon(Icons.workspace_premium_outlined),
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          const Text(
+            'Contato de emergência',
+            style: TextStyle(
+              color: AppColors.forest,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Disponível somente para responsáveis autorizados durante uma reserva ativa.',
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: emergencyName,
+            decoration: const InputDecoration(
+              labelText: 'Nome do contato',
+              prefixIcon: Icon(Icons.emergency_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: emergencyPhone,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Telefone de emergência',
+              prefixIcon: Icon(Icons.phone_in_talk_outlined),
+            ),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(

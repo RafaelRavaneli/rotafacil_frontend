@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -33,6 +34,30 @@ void main() {
         isA<ApiException>().having((error) => error.statusCode, 'status', 401),
       ),
     );
+  });
+
+  test('Upload informa o tipo MIME da imagem ao backend', () async {
+    final api = ApiClient(
+      client: MockClient((request) async {
+        expect(
+          request.headers['content-type'],
+          startsWith('multipart/form-data; boundary='),
+        );
+        expect(request, isA<http.Request>());
+        final body = utf8.decode(
+          (request as http.Request).bodyBytes,
+          allowMalformed: true,
+        );
+        expect(body.toLowerCase(), contains('content-type: image/png'));
+        return http.Response('{"url":"https://example.test/foto.png"}', 200);
+      }),
+    );
+    final result = await api.uploadMultipart(
+      '/api/uploads/imagem',
+      bytes: Uint8List.fromList([1, 2, 3]),
+      fileName: 'foto.png',
+    );
+    expect(result['url'], 'https://example.test/foto.png');
   });
 
   test(
@@ -160,6 +185,17 @@ void main() {
         'token': 'codigo',
         'nova_senha': 'nova123',
       });
+      await gateway.changePassword(
+        role: 'Guia',
+        currentPassword: 'senha123',
+        newPassword: 'nova456',
+      );
+      expect(requests[3].method, 'PUT');
+      expect(requests[3].url.path, '/api/auth/senha');
+      expect(jsonDecode(requests[3].body), {
+        'senha_atual': 'senha123',
+        'nova_senha': 'nova456',
+      });
     },
     skip: !const bool.fromEnvironment('USE_BACKEND'),
   );
@@ -175,6 +211,14 @@ void main() {
           expect(body['id_guia'], 'u1');
           expect(body['data_atividade'], '2026-09-25');
           expect(body['preco'], 35);
+          expect(body['acessivel'], true);
+          expect(body['itens_recomendados'], ['Água', 'Boné']);
+          expect(body['trajeto'], [
+            {'latitude': -23.4, 'longitude': -51.9},
+          ]);
+          expect(body['capacidade'], 8);
+          expect(body['horario_inicio'], '08:00');
+          expect(body['horario_fim'], '12:00');
           expect(body.containsKey('latitude'), false);
           return http.Response('{"id":"t1"}', 201);
         }),
@@ -186,11 +230,213 @@ void main() {
           'id_guia': 'u1',
           'preco': 35,
           'date': '25/09/2026',
+          'acessivel': true,
+          'itens_recomendados': ['Água', 'Boné'],
+          'trajeto': [
+            {'latitude': -23.4, 'longitude': -51.9},
+          ],
+          'capacidade': 8,
+          'horario_inicio': '08:00',
+          'horario_fim': '12:00',
         }),
         create: true,
       );
     },
   );
+
+  test('Exclusão de conta usa o usuário autenticado e método DELETE', () async {
+    final requests = <http.Request>[];
+    final repository = BackendRepository(
+      api: ApiClient(
+        client: MockClient((request) async {
+          requests.add(request);
+          expect(request.headers['Authorization'], 'Bearer jwt');
+          return http.Response.bytes(
+            utf8.encode('{"mensagem":"Conta excluída"}'),
+            200,
+          );
+        }),
+      ),
+    );
+    await SessionService.instance.save(
+      authToken: 'jwt',
+      selectedRole: 'usuario',
+      userEmail: 'ana@example.test',
+      id: 'u 1',
+    );
+
+    await repository.deleteAccount(SessionService.instance.userId!);
+
+    expect(requests.single.method, 'DELETE');
+    expect(requests.single.url.path, '/api/usuarios/u%201');
+  });
+
+  test('Alteração de tipo usa rota específica e documento validado', () async {
+    late http.Request captured;
+    final repository = BackendRepository(
+      api: ApiClient(
+        client: MockClient((request) async {
+          captured = request;
+          return http.Response.bytes(
+            utf8.encode('{"mensagem":"Tipo alterado"}'),
+            200,
+          );
+        }),
+      ),
+    );
+
+    await repository.changeAccountType(
+      userId: 'u1',
+      type: 'guia',
+      document: '52998224725',
+    );
+
+    expect(captured.method, 'PUT');
+    expect(captured.url.path, '/api/usuarios/u1/tipo');
+    expect(jsonDecode(captured.body), {
+      'tipo': 'guia',
+      'documento': '52998224725',
+    });
+  });
+
+  test(
+    'Documentos profissionais usam acesso autenticado e análise separada',
+    () async {
+      await SessionService.instance.save(
+        authToken: 'jwt',
+        selectedRole: 'admin',
+        userEmail: 'admin@example.test',
+        id: 'admin1',
+      );
+      final requests = <http.Request>[];
+      final repository = BackendRepository(
+        api: ApiClient(
+          client: MockClient((request) async {
+            requests.add(request);
+            expect(request.headers['Authorization'], 'Bearer jwt');
+            if (request.url.path == '/api/documentos-profissionais/') {
+              return http.Response.bytes(
+                utf8.encode(
+                  '[{"id":"d1","id_usuario":"g1","status":"pendente",'
+                  '"tipo_documento":"cadastur","nome_arquivo":"doc.png"}]',
+                ),
+                200,
+              );
+            }
+            if (request.url.path.endsWith('/arquivo')) {
+              return http.Response.bytes([1, 2, 3], 200);
+            }
+            return http.Response.bytes(
+              utf8.encode('{"mensagem":"Documento aprovado"}'),
+              200,
+            );
+          }),
+        ),
+      );
+
+      final documents = await repository.professionalDocuments(
+        status: 'pendente',
+      );
+      expect(documents.single.id, 'd1');
+      expect(requests[0].url.queryParameters['status'], 'pendente');
+      expect(await repository.professionalDocumentBytes('d1'), [1, 2, 3]);
+      await repository.reviewProfessionalDocument(id: 'd1', status: 'aprovado');
+      expect(requests[2].method, 'PUT');
+      expect(requests[2].url.path, '/api/documentos-profissionais/d1/analise');
+    },
+  );
+
+  test(
+    'Central e preferências de notificações usam contratos remotos',
+    () async {
+      final requests = <http.Request>[];
+      final repository = BackendRepository(
+        api: ApiClient(
+          client: MockClient((request) async {
+            requests.add(request);
+            final Object data = switch (request.url.path) {
+              '/api/notificacoes/' => [
+                {
+                  'id': 'n1',
+                  'titulo': 'Reserva',
+                  'corpo': 'Confirmada',
+                  'lida': false,
+                  'criado_em': '2026-10-15T10:00:00Z',
+                },
+              ],
+              '/api/notificacoes/preferencias' =>
+                request.method == 'GET'
+                    ? {'push': true, 'agendamentos': false, 'marketing': true}
+                    : {'push': false},
+              _ => {'mensagem': 'ok'},
+            };
+            return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
+          }),
+        ),
+      );
+
+      final notifications = await repository.notifications();
+      expect(notifications.single.title, 'Reserva');
+      expect(notifications.single.read, false);
+      expect(await repository.notificationPreferences(), {
+        'push': true,
+        'agendamentos': false,
+        'marketing': true,
+      });
+      await repository.markNotificationRead('n1');
+      await repository.markAllNotificationsRead();
+      await repository.updateNotificationPreferences({'push': false});
+      expect(requests[2].url.path, '/api/notificacoes/n1/lida');
+      expect(requests[3].url.path, '/api/notificacoes/lidas');
+      expect(jsonDecode(requests[4].body), {'push': false});
+    },
+  );
+
+  test('Perfil público do guia usa somente o contrato sanitizado', () async {
+    final repository = BackendRepository(
+      api: ApiClient(
+        client: MockClient(
+          (_) async => http.Response.bytes(
+            utf8.encode(
+              '{"id":"g1","nome":"Ana","cidade":"Maringá",'
+              '"estado":"PR","verificado":true,'
+              '"descricao_profissional":"Condutora de ecoturismo",'
+              '"especialidades":["Trekking","Cachoeiras"]}',
+            ),
+            200,
+          ),
+        ),
+      ),
+    );
+
+    final guide = await repository.publicGuide('g1');
+    expect(guide.name, 'Ana');
+    expect(guide.verified, true);
+    expect(guide.bio, 'Condutora de ecoturismo');
+    expect(guide.specialties, ['Trekking', 'Cachoeiras']);
+  });
+
+  test('Login aceita papel administrativo retornado pelo servidor', () async {
+    final gateway = AuthGateway(
+      api: ApiClient(
+        client: MockClient(
+          (_) async => http.Response.bytes(
+            utf8.encode(
+              '{"token":"cabecalho.YWRtaW4.assinatura",'
+              '"id":"a1","tipo":"admin"}',
+            ),
+            200,
+          ),
+        ),
+      ),
+    );
+    final result = await gateway.login(
+      email: 'admin@example.test',
+      password: 'senha123',
+    );
+    expect(result?.role, 'admin');
+  }, skip: !const bool.fromEnvironment('USE_BACKEND'));
+
   for (final role in ['guia', 'agencia']) {
     test('Agenda de $role usa somente ID autenticado no carregamento', () async {
       await SessionService.instance.save(
@@ -222,7 +468,7 @@ void main() {
               '/api/trilhas/' => [
                 {'id': 't1', 'nome': 'Trilha'},
               ],
-              '/api/agendamentos/guia/g1' => [
+              '/api/agendamentos/guia/g1' || '/api/agendamentos/agencia/g1' => [
                 {
                   'id': 'b1',
                   'id_trilha': 't1',
@@ -237,6 +483,11 @@ void main() {
                   'id_guia': 'guia@example.test',
                 },
               ],
+              '/api/agendamentos/dashboard/g1' => {
+                'total_agendamentos': 2,
+                'por_status': {'agendado': 2, 'cancelado': 0},
+                'valor_declarado_ativo': 50.5,
+              },
               '/api/favoritos/' ||
               '/api/agendamentos/usuario/g1' ||
               '/api/convites-guias' => [],
@@ -248,9 +499,16 @@ void main() {
       );
       final snapshot = await repository.load();
       expect(snapshot.bookings.map((b) => b.id).toSet(), {'b1', 'b2'});
-      expect(paths.where((p) => p.startsWith('/api/agendamentos/guia/')), [
-        '/api/agendamentos/guia/g1',
-      ]);
+      expect(snapshot.dashboard?.active, 2);
+      expect(snapshot.dashboard?.declaredValue, 50.5);
+      final expectedAgenda = '/api/agendamentos/$role/g1';
+      expect(paths.where((p) => p == expectedAgenda), [expectedAgenda]);
+      if (role == 'agencia') {
+        expect(
+          paths.where((p) => p.startsWith('/api/agendamentos/guia/')),
+          isEmpty,
+        );
+      }
     });
   }
   test('Agenda mantém bloqueio real de autorização pelo ID', () async {

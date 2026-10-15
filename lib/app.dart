@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'config/app_config.dart';
 import 'pages/agency/agency_shell.dart';
+import 'pages/admin/admin_shell.dart';
 import 'pages/auth/welcome_screen.dart';
 import 'pages/guide/guide_shell.dart';
 import 'pages/tourist/tourist_shell.dart';
@@ -93,6 +94,9 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
         case 'agência':
         case 'agency':
           return const AgencyShell();
+
+        case 'admin':
+          return const AdminShell();
 
         default:
           // Sessão antiga, corrompida ou com perfil

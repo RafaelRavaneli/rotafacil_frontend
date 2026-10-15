@@ -26,6 +26,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   DateTime? startDate;
   DateTime? endDate;
   bool nearMe = false;
+  bool accessibleOnly = false;
   double radiusKm = 20;
   Position? position;
   bool locating = false;
@@ -166,13 +167,15 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       final distance = _distanceFromUser(trail);
 
       final nearMatch = !nearMe || (distance != null && distance <= radiusKm);
+      final accessibilityMatch = !accessibleOnly || trail.accessible;
 
       if (cityMatch &&
           stateMatch &&
           difficultyMatch &&
           startMatch &&
           endMatch &&
-          nearMatch) {
+          nearMatch &&
+          accessibilityMatch) {
         results.add(_TrailResult(trail: trail, userDistanceKm: distance));
       }
     }
@@ -231,6 +234,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       startDate = null;
       endDate = null;
       nearMe = false;
+      accessibleOnly = false;
       position = null;
       radiusKm = 20;
       selectedTrailId = null;
@@ -335,6 +339,18 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                       : nearMe
                       ? 'Localização capturada.'
                       : 'Usa o GPS do dispositivo.',
+                ),
+              ),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: accessibleOnly,
+                onChanged: (value) => setState(() => accessibleOnly = value),
+                title: const Text(
+                  'Somente trilhas acessíveis',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: const Text(
+                  'Mostra percursos informados como acessíveis pelo responsável.',
                 ),
               ),
               if (nearMe) ...[

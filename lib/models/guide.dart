@@ -32,4 +32,28 @@ class GuideProfile {
   final bool verified;
 
   String get location => '$city - $state';
+
+  factory GuideProfile.fromJson(Map<String, dynamic> json) {
+    final rawSpecialties = json['especialidades'] ?? json['specialties'];
+    return GuideProfile(
+      id: json['id']?.toString() ?? '',
+      name: (json['nome'] ?? json['name'])?.toString() ?? 'Guia',
+      rating: 0,
+      reviews: 0,
+      imageUrl: (json['foto_url'] ?? json['imageUrl'])?.toString() ?? '',
+      bio: (json['descricao_profissional'] ?? json['bio'])?.toString() ?? '',
+      specialties: rawSpecialties is List
+          ? rawSpecialties
+                .map((item) => item.toString().trim())
+                .where((item) => item.isNotEmpty)
+                .toList()
+          : const [],
+      experienceYears: 0,
+      completedTrails: 0,
+      totalKm: 0,
+      city: (json['cidade'] ?? json['city'])?.toString() ?? '',
+      state: (json['estado'] ?? json['state'])?.toString() ?? '',
+      verified: json['verificado'] == true || json['verified'] == true,
+    );
+  }
 }

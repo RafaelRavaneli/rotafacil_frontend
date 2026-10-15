@@ -20,7 +20,7 @@ class StatusPill extends StatelessWidget {
       fg = AppColors.amber700;
     }
 
-    if (normalized.contains('cancel')) {
+    if (normalized.contains('cancel') || normalized.contains('rejeit')) {
       bg = const Color(0xFFFFE6E3);
       fg = AppColors.red;
     }

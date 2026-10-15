@@ -11,6 +11,7 @@ import '../agency/remote_guides_screen.dart';
 import '../../utils/role_utils.dart';
 import 'favorites_screen.dart';
 import 'notification_center_screen.dart';
+import 'professional_documents_screen.dart';
 import 'settings/help_support_screen.dart';
 import 'settings/notifications_screen.dart';
 import 'settings/personal_data_screen.dart';
@@ -102,6 +103,15 @@ class ProfileTab extends StatelessWidget {
                 title: 'Privacidade e segurança',
                 onTap: () => _open(context, PrivacySecurityScreen(role: role)),
               ),
+              if (store.useBackend &&
+                  {'guia', 'agencia'}.contains(normalizeRoleKey(role)))
+                _ProfileItem(
+                  icon: Icons.badge_outlined,
+                  title: 'Documentos profissionais',
+                  subtitle: 'Envio privado e acompanhamento da análise',
+                  onTap: () =>
+                      _open(context, const ProfessionalDocumentsScreen()),
+                ),
               _ProfileItem(
                 icon: Icons.help_outline_rounded,
                 title: 'Ajuda',

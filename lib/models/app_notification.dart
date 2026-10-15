@@ -24,12 +24,14 @@ class AppNotificationItem {
   factory AppNotificationItem.fromJson(Map<String, dynamic> json) {
     return AppNotificationItem(
       id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? 'RotaFácil',
-      body: json['body']?.toString() ?? '',
+      title: (json['title'] ?? json['titulo'])?.toString() ?? 'RotaFácil',
+      body: (json['body'] ?? json['corpo'])?.toString() ?? '',
       createdAt:
-          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.tryParse(
+            (json['createdAt'] ?? json['criado_em'])?.toString() ?? '',
+          ) ??
           DateTime.now(),
-      read: json['read'] == true,
+      read: json['read'] == true || json['lida'] == true,
     );
   }
 }

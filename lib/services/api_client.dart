@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../config/app_config.dart';
 import 'session_service.dart';
@@ -80,6 +81,17 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<Uint8List> getBytes(String path, {bool auth = true}) async {
+    final response = await _client
+        .get(_uri(path), headers: _headers(auth: auth))
+        .timeout(timeout);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.bodyBytes;
+    }
+    _decode(response);
+    throw ApiException('Erro ao carregar arquivo.', response.statusCode);
+  }
+
   // POST - criar/enviar dados
   Future<dynamic> post(String path, {Object? body, bool auth = true}) async {
     final response = await _client
@@ -147,7 +159,12 @@ class ApiClient {
     }
 
     request.files.add(
-      http.MultipartFile.fromBytes(fieldName, bytes, filename: fileName),
+      http.MultipartFile.fromBytes(
+        fieldName,
+        bytes,
+        filename: fileName,
+        contentType: _imageContentType(fileName),
+      ),
     );
 
     final streamedResponse = await _client.send(request).timeout(timeout);
@@ -157,6 +174,16 @@ class ApiClient {
     ).timeout(timeout);
 
     return _decode(response);
+  }
+
+  MediaType? _imageContentType(String fileName) {
+    final normalized = fileName.toLowerCase();
+    if (normalized.endsWith('.jpg') || normalized.endsWith('.jpeg')) {
+      return MediaType('image', 'jpeg');
+    }
+    if (normalized.endsWith('.png')) return MediaType('image', 'png');
+    if (normalized.endsWith('.webp')) return MediaType('image', 'webp');
+    return null;
   }
 
   dynamic _decode(http.Response response) {

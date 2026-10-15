@@ -25,4 +25,8 @@ class CommunityApi {
       body: {'status': status},
     );
   }
+
+  Future<void> manage(String id, String action) async {
+    await api.put('/api/convites-guias/${Uri.encodeComponent(id)}/$action');
+  }
 }

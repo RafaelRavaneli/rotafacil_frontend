@@ -45,6 +45,23 @@ class TrailStatus {
   }
 }
 
+class TrailPoint {
+  const TrailPoint({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+
+  Map<String, dynamic> toJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+  };
+
+  factory TrailPoint.fromJson(Map<String, dynamic> json) => TrailPoint(
+    latitude: double.tryParse(json['latitude']?.toString() ?? '') ?? 0,
+    longitude: double.tryParse(json['longitude']?.toString() ?? '') ?? 0,
+  );
+}
+
 class Trail {
   const Trail({
     required this.id,
@@ -62,6 +79,7 @@ class Trail {
     required this.imageUrl,
     required this.guideName,
     this.guideId = '',
+    this.responsibleRole = '',
     this.createdBy = '',
     required this.date,
     this.price = 189,
@@ -69,6 +87,12 @@ class Trail {
     this.modality = 'Trekking',
     this.latitude,
     this.longitude,
+    this.accessible = false,
+    this.recommendedItems = const [],
+    this.route = const [],
+    this.capacity = 12,
+    this.startTime = '',
+    this.endTime = '',
   });
 
   final String id;
@@ -90,6 +114,7 @@ class Trail {
 
   /// Identificador do guia usado na integração com o backend.
   final String guideId;
+  final String responsibleRole;
   final String createdBy;
 
   final String date;
@@ -98,6 +123,12 @@ class Trail {
   final String modality;
   final double? latitude;
   final double? longitude;
+  final bool accessible;
+  final List<String> recommendedItems;
+  final List<TrailPoint> route;
+  final int capacity;
+  final String startTime;
+  final String endTime;
 
   String get location => '$city - $state';
 
@@ -135,6 +166,7 @@ class Trail {
     'imageUrl': imageUrl,
     'guideName': guideName,
     'guideId': guideId,
+    'responsibleRole': responsibleRole,
     'createdBy': createdBy,
     'date': date,
     'price': price,
@@ -142,6 +174,12 @@ class Trail {
     'modality': modality,
     'latitude': latitude,
     'longitude': longitude,
+    'accessible': accessible,
+    'recommendedItems': recommendedItems,
+    'route': route.map((point) => point.toJson()).toList(),
+    'capacity': capacity,
+    'startTime': startTime,
+    'endTime': endTime,
   };
 
   factory Trail.fromJson(Map<String, dynamic> json) {
@@ -151,9 +189,12 @@ class Trail {
 
     final rawElevation = json['elevation'];
 
-    final rawRating = json['rating'];
+    final rawRating = json['rating'] ?? json['nota_media'];
 
-    final rawReviews = json['reviews'];
+    final rawReviews = json['reviews'] ?? json['total_avaliacoes'];
+
+    final rawItems = json['recommendedItems'] ?? json['itens_recomendados'];
+    final rawRoute = json['route'] ?? json['trajeto'];
 
     return Trail(
       id: json['id']?.toString() ?? '',
@@ -183,6 +224,9 @@ class Trail {
           'Guia responsável',
 
       guideId: (json['guideId'] ?? json['id_guia'])?.toString() ?? '',
+      responsibleRole:
+          (json['responsibleRole'] ?? json['tipo_responsavel'])?.toString() ??
+          '',
       createdBy: (json['createdBy'] ?? json['criado_por'])?.toString() ?? '',
 
       date: (json['date'] ?? json['data_atividade'])?.toString() ?? '',
@@ -196,6 +240,27 @@ class Trail {
           (json['modality'] ?? json['modalidade'])?.toString() ?? 'Trekking',
       latitude: double.tryParse(json['latitude']?.toString() ?? ''),
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),
+      accessible: json['accessible'] == true || json['acessivel'] == true,
+      recommendedItems: rawItems is List
+          ? rawItems.map((item) => item.toString()).toList()
+          : const [],
+      route: rawRoute is List
+          ? rawRoute
+                .whereType<Map>()
+                .map(
+                  (point) =>
+                      TrailPoint.fromJson(Map<String, dynamic>.from(point)),
+                )
+                .toList()
+          : const [],
+      capacity:
+          int.tryParse(
+            (json['capacity'] ?? json['capacidade'])?.toString() ?? '',
+          ) ??
+          12,
+      startTime:
+          (json['startTime'] ?? json['horario_inicio'])?.toString() ?? '',
+      endTime: (json['endTime'] ?? json['horario_fim'])?.toString() ?? '',
     );
   }
 }

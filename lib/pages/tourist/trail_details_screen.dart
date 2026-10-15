@@ -1,19 +1,94 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../utils/run_action.dart';
 
 import '../../data/demo_data.dart' show guideByName;
 
 import '../../models/local_booking.dart';
 import '../../models/trail.dart';
+import '../../models/trail_experience.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import 'guide_profile_screen.dart';
 
-class TrailDetailsScreen extends StatelessWidget {
+class TrailDetailsScreen extends StatefulWidget {
   const TrailDetailsScreen({super.key, required this.trail});
 
   final Trail trail;
+
+  @override
+  State<TrailDetailsScreen> createState() => _TrailDetailsScreenState();
+}
+
+class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
+  Trail get trail => widget.trail;
+  late Future<List<TrailReview>> reviewsFuture;
+  late Future<TrailWeather?> weatherFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final store = AppStore.instance;
+    reviewsFuture = store.reviewsFor(trail.id);
+    weatherFuture = trail.latitude == null || trail.longitude == null
+        ? Future<TrailWeather?>.value(null)
+        : store.weatherFor(trail.id);
+  }
+
+  Future<void> _showRoute(BuildContext context) async {
+    final enabled = await Geolocator.isLocationServiceEnabled();
+    if (!enabled && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ative a localização do dispositivo.')),
+      );
+      return;
+    }
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Permita a localização para calcular a rota até o início.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    final position = await Geolocator.getCurrentPosition();
+    if (!context.mounted) return;
+    final summary = await runValueAction<RouteSummary>(
+      context,
+      () => AppStore.instance.routeToTrail(
+        trailId: trail.id,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      ),
+    );
+    if (summary == null || !context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Rota até o início'),
+        content: Text(
+          '${summary.distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km • '
+          '${summary.durationMinutes.toStringAsFixed(0)} minutos',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _book(BuildContext context) async {
     bool confirmed = false;
@@ -114,6 +189,10 @@ class TrailDetailsScreen extends StatelessWidget {
     final responsibleGuide = store.useBackend
         ? null
         : guideByName(trail.guideName);
+    final hasRemoteGuide =
+        store.useBackend &&
+        trail.guideId.isNotEmpty &&
+        trail.responsibleRole == 'guia';
 
     return Scaffold(
       backgroundColor: AppColors.paper,
@@ -243,6 +322,16 @@ class TrailDetailsScreen extends StatelessWidget {
                               icon: Icons.hiking_rounded,
                               value: trail.modality,
                             ),
+                            _ChipMetric(
+                              icon: Icons.groups_outlined,
+                              value: '${trail.capacity} vagas',
+                            ),
+                            if (trail.startTime.isNotEmpty &&
+                                trail.endTime.isNotEmpty)
+                              _ChipMetric(
+                                icon: Icons.schedule_outlined,
+                                value: '${trail.startTime}–${trail.endTime}',
+                              ),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -266,23 +355,108 @@ class TrailDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        if (trail.latitude != null && trail.longitude != null)
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: AppColors.green100,
-                              borderRadius: BorderRadius.circular(14),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            trail.accessible
+                                ? Icons.accessible_forward_rounded
+                                : Icons.info_outline_rounded,
+                            color: AppColors.green700,
+                          ),
+                          title: Text(
+                            trail.accessible
+                                ? 'Percurso informado como acessível'
+                                : 'Acessibilidade não informada',
+                          ),
+                        ),
+                        if (trail.recommendedItems.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Itens recomendados',
+                            style: TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.map_outlined,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: trail.recommendedItems
+                                .map(
+                                  (item) => Chip(
+                                    avatar: const Icon(
+                                      Icons.check_rounded,
+                                      size: 16,
+                                    ),
+                                    label: Text(item),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ],
+                        if (trail.route.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          Text(
+                            'Percurso cadastrado: ${trail.route.length} ponto${trail.route.length == 1 ? '' : 's'}.',
+                            style: const TextStyle(color: AppColors.muted),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        FutureBuilder<TrailWeather?>(
+                          future: weatherFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const LinearProgressIndicator();
+                            }
+                            final weather = snapshot.data;
+                            if (weather == null) return const SizedBox.shrink();
+                            return Card(
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.cloud_outlined,
                                   color: AppColors.green700,
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Ponto da trilha: ${trail.latitude!.toStringAsFixed(5)}, ${trail.longitude!.toStringAsFixed(5)}',
+                                title: Text(weather.condition),
+                                subtitle: Text(
+                                  '${weather.minimumTemperature?.toStringAsFixed(0) ?? '-'} °C a '
+                                  '${weather.maximumTemperature?.toStringAsFixed(0) ?? '-'} °C • '
+                                  '${weather.rainProbability ?? 0}% de chuva',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 18),
+                        if (trail.latitude != null && trail.longitude != null)
+                          Card(
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.map_outlined,
+                                    color: AppColors.green700,
+                                  ),
+                                  title: const Text('Ponto de início'),
+                                  subtitle: Text(
+                                    '${trail.latitude!.toStringAsFixed(5)}, ${trail.longitude!.toStringAsFixed(5)}',
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    12,
+                                  ),
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => _showRoute(context),
+                                    icon: const Icon(Icons.directions_outlined),
+                                    label: const Text(
+                                      'Calcular rota até o início',
+                                    ),
                                   ),
                                 ),
                               ],
@@ -340,25 +514,93 @@ class TrailDetailsScreen extends StatelessWidget {
                             ],
                           ),
                           subtitle: Text(
-                            responsibleGuide == null
-                                ? 'Responsável pela experiência'
-                                : 'Ver perfil do responsável',
+                            responsibleGuide != null || hasRemoteGuide
+                                ? 'Ver perfil do responsável'
+                                : 'Responsável pela experiência',
                           ),
-                          trailing: responsibleGuide == null
+                          trailing: responsibleGuide == null && !hasRemoteGuide
                               ? null
                               : const Icon(Icons.chevron_right_rounded),
-                          onTap: responsibleGuide == null
+                          onTap: responsibleGuide == null && !hasRemoteGuide
                               ? null
-                              : () {
-                                  Navigator.push(
+                              : () async {
+                                  final guide =
+                                      responsibleGuide ??
+                                      await runValueAction(
+                                        context,
+                                        () => store.publicGuide(trail.guideId),
+                                      );
+                                  if (guide == null || !context.mounted) return;
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => GuideProfileScreen(
-                                        guide: responsibleGuide,
-                                      ),
+                                      builder: (_) =>
+                                          GuideProfileScreen(guide: guide),
                                     ),
                                   );
                                 },
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Avaliações',
+                          style: TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FutureBuilder<List<TrailReview>>(
+                          future: reviewsFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const LinearProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return const Text(
+                                'Não foi possível carregar as avaliações.',
+                                style: TextStyle(color: AppColors.muted),
+                              );
+                            }
+                            final reviews = snapshot.data ?? const [];
+                            if (reviews.isEmpty) {
+                              return const Text(
+                                'Esta trilha ainda não possui avaliações.',
+                                style: TextStyle(color: AppColors.muted),
+                              );
+                            }
+                            return Column(
+                              children: reviews
+                                  .map(
+                                    (review) => Card(
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: AppColors.green100,
+                                          child: Text(
+                                            review.rating.toString(),
+                                            style: const TextStyle(
+                                              color: AppColors.green800,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                        title: Text(review.userName),
+                                        subtitle: Text(
+                                          review.comment.trim().isEmpty
+                                              ? 'Sem comentário.'
+                                              : review.comment,
+                                        ),
+                                        trailing: const Icon(
+                                          Icons.star_rounded,
+                                          color: AppColors.earth,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
                         ),
                       ],
                     ),

@@ -67,7 +67,7 @@ class AuthGateway {
     final token = data['token']?.toString();
 
     final role = data['tipo']?.toString().trim().toLowerCase();
-    if (!{'usuario', 'guia', 'agencia'}.contains(role)) {
+    if (!{'usuario', 'guia', 'agencia', 'admin'}.contains(role)) {
       throw StateError('A conta retornou um perfil não suportado.');
     }
 
@@ -201,6 +201,27 @@ class AuthGateway {
       '/api/auth/senha/solicitar',
       auth: false,
       body: {'email': email.trim()},
+    );
+  }
+
+  Future<void> changePassword({
+    required String role,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (!AppConfig.useBackend) {
+      final changed = await LocalAuthService.instance.changePassword(
+        role: role,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      if (!changed) throw StateError('Senha atual incorreta.');
+      return;
+    }
+
+    await _api.put(
+      '/api/auth/senha',
+      body: {'senha_atual': currentPassword, 'nova_senha': newPassword},
     );
   }
 

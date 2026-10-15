@@ -76,19 +76,23 @@ Para configurar Firebase Web e VAPID, siga [docs/FIREBASE.md](docs/FIREBASE.md) 
 - cadastro e login por e-mail e senha;
 - interface de recuperação de senha (entrega de e-mail adiada);
 - sessão por JWT;
+- alteração de senha autenticada, com conferência da senha atual;
 - consulta, criação, edição e desativação de trilhas;
 - agendamento e cancelamento;
 - favoritos;
 - atualização de perfil e upload de imagens;
+- exclusão segura da conta, bloqueada enquanto houver reservas ativas;
+- alteração do tipo da conta com validação de CPF/CNPJ e novo login;
 - catálogo de guias e convites entre agência e guia;
 - registro, remoção e teste do dispositivo para push;
 - indicadores de agendamentos fornecidos pela API.
+- documentos profissionais privados, acompanhamento da análise e painel administrativo.
 
 ## Guias e convites
 
 No modo conectado, a agência consulta o catálogo de guias e envia convites usando o identificador do guia. O catálogo não representa a equipe da agência: somente convites aceitos formam vínculos. O guia consulta os convites recebidos pela opção "Convites de agências" no Perfil.
 
-Envio, aceite e recusa possuem confirmação. As telas mostram carregamento, ausência de resultados, erro e tentativa novamente. Enquanto uma ação está em andamento, novas ações ficam bloqueadas. Convites existentes não oferecem reenvio ou revogação, pois essas operações não estão implementadas no backend.
+Envio, aceite, recusa, revogação, reenvio e desligamento possuem confirmação. As telas mostram carregamento, ausência de resultados, erro e tentativa novamente. Enquanto uma ação está em andamento, novas ações ficam bloqueadas. O desligamento é bloqueado enquanto houver reservas ativas no vínculo.
 
 No modo local, a agência pode adicionar e gerenciar registros demonstrativos neste dispositivo. Essa operação não envia um convite real e não simula uma resposta de outro usuário.
 
@@ -108,9 +112,8 @@ Os testes automatizados não substituem a validação com Firebase, e-mail, ImgB
 ## Limitações conhecidas
 
 - a ajuda é orientativa; o código de chat e atendimento por conversas foi removido;
-- convites não possuem reenvio ou revogação;
 - push possui registro e envio de teste, mas o recebimento real precisa ser homologado no navegador;
-- avaliações, planejamento completo da trilha, contato de emergência e verificação administrativa ainda não formam fluxos completos na interface;
+- armazenamento privado de documentos exige `FIREBASE_STORAGE_BUCKET` e permissão da conta de serviço no Firebase Storage;
 - backend publicado no Vercel; frontend público e homologação completa ainda pendentes. Não confundir build/testes simulados com aprovação dos fluxos reais.
 
 ## Repositórios relacionados

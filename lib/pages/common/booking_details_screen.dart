@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/local_booking.dart';
+import '../../models/trail_experience.dart';
+import '../../services/session_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/run_action.dart';
@@ -15,6 +17,7 @@ class BookingDetailsScreen extends StatefulWidget {
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   bool cancelling = false;
+  bool acting = false;
 
   Future<void> _cancel(LocalBooking booking) async {
     if (cancelling) return;
@@ -54,6 +57,164 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
+  Future<void> _checkIn(LocalBooking booking) async {
+    if (acting) return;
+    setState(() => acting = true);
+    try {
+      final saved = await runAction(
+        context,
+        () => AppStore.instance.checkInBooking(booking),
+      );
+      if (saved && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Check-in realizado. Boa trilha!')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => acting = false);
+    }
+  }
+
+  Future<void> _checkOut(LocalBooking booking) async {
+    if (acting) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Concluir atividade?'),
+        content: const Text(
+          'O check-out registra que a participação foi concluída.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Voltar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Fazer check-out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => acting = true);
+    try {
+      final saved = await runAction(
+        context,
+        () => AppStore.instance.checkOutBooking(booking),
+      );
+      if (saved && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Atividade concluída.')));
+      }
+    } finally {
+      if (mounted) setState(() => acting = false);
+    }
+  }
+
+  Future<void> _review(LocalBooking booking) async {
+    var rating = 5;
+    final comment = TextEditingController();
+    final data = await showDialog<(int, String)?>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Avaliar trilha'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Wrap(
+                children: List.generate(
+                  5,
+                  (index) => IconButton(
+                    tooltip: '${index + 1} estrela${index == 0 ? '' : 's'}',
+                    onPressed: () => setDialogState(() => rating = index + 1),
+                    icon: Icon(
+                      index < rating ? Icons.star_rounded : Icons.star_border,
+                      color: AppColors.earth,
+                    ),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: comment,
+                maxLength: 500,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  labelText: 'Comentário',
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, (rating, comment.text.trim())),
+              child: const Text('Publicar avaliação'),
+            ),
+          ],
+        ),
+      ),
+    );
+    comment.dispose();
+    if (data == null || !mounted) return;
+    final saved = await runAction(
+      context,
+      () => AppStore.instance.reviewTrail(
+        trailId: booking.trailId,
+        rating: data.$1,
+        comment: data.$2,
+      ),
+    );
+    if (saved && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Avaliação publicada.')));
+    }
+  }
+
+  Future<void> _showEmergency(LocalBooking booking) async {
+    final EmergencyContact? contact = await runValueAction<EmergencyContact>(
+      context,
+      () => AppStore.instance.emergencyContactFor(booking.personId),
+    );
+    if (contact == null || !mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Contato de emergência'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Information(label: 'Participante', value: contact.participantName),
+            _Information(
+              label: 'Telefone do participante',
+              value: contact.participantPhone,
+            ),
+            _Information(label: 'Contato', value: contact.contactName),
+            _Information(
+              label: 'Telefone de emergência',
+              value: contact.contactPhone,
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = AppStore.instance;
@@ -78,6 +239,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           final trail = store.trails
               .where((t) => t.id == booking.trailId)
               .firstOrNull;
+          final role = SessionService.instance.role?.toLowerCase() ?? '';
+          final isOperator = role == 'guia' || role == 'agencia';
+          final normalizedStatus = BookingStatus.normalize(booking.status);
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -163,7 +327,43 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       style: TextStyle(color: AppColors.muted),
                     ),
                   ],
-                  if (!BookingStatus.isCancelled(booking.status)) ...[
+                  if (BookingStatus.isConfirmed(booking.status)) ...[
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: acting ? null : () => _checkIn(booking),
+                      icon: const Icon(Icons.login_rounded),
+                      label: Text(acting ? 'Registrando...' : 'Fazer check-in'),
+                    ),
+                  ],
+                  if (normalizedStatus == 'Em andamento') ...[
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: acting ? null : () => _checkOut(booking),
+                      icon: const Icon(Icons.logout_rounded),
+                      label: Text(
+                        acting ? 'Registrando...' : 'Fazer check-out',
+                      ),
+                    ),
+                  ],
+                  if (normalizedStatus == 'Concluído' && !isOperator) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _review(booking),
+                      icon: const Icon(Icons.star_outline_rounded),
+                      label: const Text('Avaliar trilha'),
+                    ),
+                  ],
+                  if (isOperator &&
+                      booking.personId.isNotEmpty &&
+                      BookingStatus.isActive(booking.status)) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _showEmergency(booking),
+                      icon: const Icon(Icons.emergency_outlined),
+                      label: const Text('Contato de emergência'),
+                    ),
+                  ],
+                  if (BookingStatus.canCancel(booking.status)) ...[
                     const SizedBox(height: 24),
                     OutlinedButton.icon(
                       onPressed: cancelling ? null : () => _cancel(booking),

@@ -211,6 +211,14 @@ class NotificationService extends ChangeNotifier {
   }
 
   Future<void> _saveMessage(RemoteMessage message) async {
+    if (AppStore.instance.useBackend) {
+      try {
+        await AppStore.instance.refreshNotifications();
+        return;
+      } catch (_) {
+        // Se a central remota falhar, preserva a mensagem recebida localmente.
+      }
+    }
     final notification = message.notification;
 
     await AppStore.instance.addNotification(

@@ -219,8 +219,14 @@ void main() {
     expect(find.text('Nenhum guia cadastrado.'), findsOneWidget);
   });
 
-  for (final status in ['pendente', 'aceito', 'recusado']) {
-    testWidgets('Convite $status não oferece reenvio nem revogação', (
+  for (final scenario in [
+    ('pendente', 'Revogar'),
+    ('aceito', 'Desligar'),
+    ('recusado', 'Reenviar'),
+    ('revogado', 'Reenviar'),
+    ('desligado', 'Reenviar'),
+  ]) {
+    testWidgets('Convite ${scenario.$1} oferece ${scenario.$2}', (
       tester,
     ) async {
       final api = CommunityApi(
@@ -236,7 +242,7 @@ void main() {
                         'id': 'i',
                         'id_guia': 'g',
                         'nome_guia': 'Ana',
-                        'status': status,
+                        'status': scenario.$1,
                       },
                     ],
             ),
@@ -248,10 +254,53 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(0, -450));
       await tester.pumpAndSettle();
       expect(find.text('Convidar'), findsNothing);
-      expect(find.text('Revogar'), findsNothing);
-      expect(AppStore.instance.agencyGuides.length, status == 'aceito' ? 1 : 0);
+      expect(find.text(scenario.$2), findsWidgets);
+      expect(
+        AppStore.instance.agencyGuides.length,
+        scenario.$1 == 'aceito' ? 1 : 0,
+      );
     });
   }
+
+  testWidgets('Agência revoga convite pela rota específica', (tester) async {
+    var status = 'pendente';
+    var writes = 0;
+    final api = CommunityApi(
+      api: ApiClient(
+        client: MockClient((request) async {
+          if (request.method == 'PUT') {
+            writes++;
+            expect(request.url.path, '/api/convites-guias/i/revogar');
+            status = 'revogado';
+            return response({});
+          }
+          return response(
+            request.url.path == '/api/guias'
+                ? [
+                    {'id': 'g', 'nome': 'Ana'},
+                  ]
+                : [
+                    {
+                      'id': 'i',
+                      'id_guia': 'g',
+                      'nome_guia': 'Ana',
+                      'status': status,
+                    },
+                  ],
+          );
+        }),
+      ),
+    );
+    await tester.pumpWidget(app(RemoteGuidesScreen(api: api)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Revogar').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Revogar'));
+    await tester.pumpAndSettle();
+    expect(writes, 1);
+    expect(find.text('Convite revogado.'), findsOneWidget);
+    expect(find.text('Reenviar'), findsWidgets);
+  });
 
   for (final role in ['agencia', 'guia']) {
     for (final width in [320.0, 1024.0]) {

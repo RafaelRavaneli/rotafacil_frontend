@@ -151,6 +151,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Filtro de acessibilidade mantém somente percursos informados', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final store = AppStore.instance;
+    await store.initialize();
+    final old = List<Trail>.from(store.trails);
+    store.trails
+      ..clear()
+      ..addAll([
+        Trail.fromJson({
+          'id': 'acessivel',
+          'nome': 'Percurso acessível',
+          'ativo': true,
+          'acessivel': true,
+        }),
+        Trail.fromJson({
+          'id': 'comum',
+          'nome': 'Percurso comum',
+          'ativo': true,
+        }),
+      ]);
+    addTearDown(() {
+      store.trails
+        ..clear()
+        ..addAll(old);
+    });
+
+    await tester.pumpWidget(const MaterialApp(home: TrailSearchScreen()));
+    expect(find.text('2 resultado(s)'), findsOneWidget);
+    await tester.tap(find.text('Somente trilhas acessíveis'));
+    await tester.pump();
+    expect(find.text('1 resultado(s)'), findsOneWidget);
+  });
+
   testWidgets(
     'Localização negada orienta usuário sem erro técnico e mantém busca',
     (tester) async {
@@ -174,7 +209,11 @@ void main() {
       );
       expect(find.textContaining('Bad state'), findsNothing);
       expect(
-        tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+        tester
+            .widget<SwitchListTile>(
+              find.widgetWithText(SwitchListTile, 'Buscar perto de mim'),
+            )
+            .value,
         isFalse,
       );
       await tester.enterText(find.byType(TextField).first, 'Maringá');

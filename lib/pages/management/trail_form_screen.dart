@@ -30,6 +30,8 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   final stateController = TextEditingController();
   final distanceController = TextEditingController();
   final priceController = TextEditingController();
+  final recommendedItemsController = TextEditingController();
+  final capacityController = TextEditingController(text: '12');
 
   String difficulty = 'Moderada';
   String modality = 'Trekking';
@@ -42,6 +44,10 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   double? longitude;
   bool locating = false;
   bool saving = false;
+  bool accessible = false;
+  final List<TrailPoint> routePoints = [];
+  TimeOfDay? startTime;
+  TimeOfDay? endTime;
 
   @override
   void initState() {
@@ -74,6 +80,12 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       latitude = trail.latitude;
       longitude = trail.longitude;
       date = _parseDate(trail.date);
+      accessible = trail.accessible;
+      recommendedItemsController.text = trail.recommendedItems.join(', ');
+      routePoints.addAll(trail.route);
+      capacityController.text = trail.capacity.toString();
+      startTime = _parseTime(trail.startTime);
+      endTime = _parseTime(trail.endTime);
     }
   }
 
@@ -92,6 +104,36 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     );
   }
 
+  TimeOfDay? _parseTime(String value) {
+    final parts = value.split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return TimeOfDay(hour: hour, minute: minute);
+  }
+
+  String _timeValue(TimeOfDay? value) => value == null
+      ? ''
+      : '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+
+  Future<void> _pickTime({required bool start}) async {
+    final selected = await showTimePicker(
+      context: context,
+      initialTime: start
+          ? startTime ?? const TimeOfDay(hour: 8, minute: 0)
+          : endTime ?? const TimeOfDay(hour: 12, minute: 0),
+    );
+    if (selected == null) return;
+    setState(() {
+      if (start) {
+        startTime = selected;
+      } else {
+        endTime = selected;
+      }
+    });
+  }
+
   @override
   void dispose() {
     nameController.dispose();
@@ -100,7 +142,23 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     stateController.dispose();
     distanceController.dispose();
     priceController.dispose();
+    recommendedItemsController.dispose();
+    capacityController.dispose();
     super.dispose();
+  }
+
+  void _addRoutePoint() {
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Obtenha a localização antes de adicionar o ponto.'),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      routePoints.add(TrailPoint(latitude: latitude!, longitude: longitude!));
+    });
   }
 
   Future<void> _pickImage() async {
@@ -167,7 +225,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     final selected = await showDatePicker(
       context: context,
       initialDate: date ?? today,
-      firstDate: DateTime(today.year - 1),
+      firstDate: DateTime(today.year, today.month, today.day),
       lastDate: DateTime(2035),
     );
 
@@ -205,6 +263,31 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
         ),
       );
       return;
+    }
+    final capacity = int.tryParse(capacityController.text.trim());
+    if (capacity == null || capacity <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe uma capacidade maior que zero.')),
+      );
+      return;
+    }
+    if ((startTime == null) != (endTime == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe horário inicial e final.')),
+      );
+      return;
+    }
+    if (startTime != null && endTime != null) {
+      final startMinutes = startTime!.hour * 60 + startTime!.minute;
+      final endMinutes = endTime!.hour * 60 + endTime!.minute;
+      if (startMinutes >= endMinutes) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('O horário final deve ser posterior ao inicial.'),
+          ),
+        );
+        return;
+      }
     }
     setState(() => saving = true);
 
@@ -252,6 +335,16 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       modality: modality,
       latitude: latitude,
       longitude: longitude,
+      accessible: accessible,
+      recommendedItems: recommendedItemsController.text
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList(),
+      route: List<TrailPoint>.from(routePoints),
+      capacity: capacity,
+      startTime: _timeValue(startTime),
+      endTime: _timeValue(endTime),
     );
 
     final saved = await runAction(context, () async {
@@ -384,6 +477,50 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Número de vagas',
+                  prefixIcon: Icon(Icons.groups_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _pickTime(start: true),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Início',
+                          prefixIcon: Icon(Icons.schedule_outlined),
+                        ),
+                        child: Text(
+                          startTime == null
+                              ? 'Selecionar'
+                              : startTime!.format(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _pickTime(start: false),
+                      child: InputDecorator(
+                        decoration: const InputDecoration(labelText: 'Fim'),
+                        child: Text(
+                          endTime == null
+                              ? 'Selecionar'
+                              : endTime!.format(context),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -481,6 +618,27 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Trilha acessível'),
+                subtitle: const Text(
+                  'Informe se o percurso possui condições de acessibilidade.',
+                ),
+                value: accessible,
+                onChanged: (value) => setState(() => accessible = value),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: recommendedItemsController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Itens recomendados',
+                  hintText: 'Água, protetor solar, calçado adequado',
+                  helperText: 'Separe os itens por vírgulas.',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -515,6 +673,32 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                             : 'Usar localização atual',
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _addRoutePoint,
+                      icon: const Icon(Icons.add_location_alt_outlined),
+                      label: const Text('Adicionar ponto ao percurso'),
+                    ),
+                    if (routePoints.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      ...routePoints.asMap().entries.map(
+                        (entry) => ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.route_outlined),
+                          title: Text('Ponto ${entry.key + 1}'),
+                          subtitle: Text(
+                            '${entry.value.latitude.toStringAsFixed(5)}, ${entry.value.longitude.toStringAsFixed(5)}',
+                          ),
+                          trailing: IconButton(
+                            tooltip: 'Remover ponto',
+                            onPressed: () =>
+                                setState(() => routePoints.removeAt(entry.key)),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

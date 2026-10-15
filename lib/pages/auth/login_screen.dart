@@ -7,6 +7,7 @@ import '../../services/notification_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../agency/agency_shell.dart';
+import '../admin/admin_shell.dart';
 import '../guide/guide_shell.dart';
 import '../tourist/tourist_shell.dart';
 import 'forgot_password_screen.dart';
@@ -103,6 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
       'guia' => const GuideShell(),
       'agencia' => const AgencyShell(),
       'usuario' => const TouristShell(),
+      'admin' => const AdminShell(),
       _ => throw StateError('Perfil não suportado.'),
     };
 

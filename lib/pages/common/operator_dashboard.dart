@@ -11,6 +11,7 @@ import '../management/trail_form_screen.dart';
 import 'booking_details_screen.dart';
 import 'bookings_screen.dart';
 import 'notification_center_screen.dart';
+import 'availability_screen.dart';
 import 'trails_management_screen.dart';
 
 /// Shared presentation; existing store and server still determine data access.
@@ -56,6 +57,7 @@ class OperatorDashboard extends StatelessWidget {
             final activeBookings = bookings
                 .where((b) => BookingStatus.isActive(b.status))
                 .toList();
+            final summary = store.operatorDashboardSummary;
             final reservations = activeBookings.take(3).toList();
             return Align(
               alignment: Alignment.topCenter,
@@ -139,7 +141,7 @@ class OperatorDashboard extends StatelessWidget {
                       builder: (context, constraints) {
                         final width = constraints.maxWidth < 500
                             ? (constraints.maxWidth - 12) / 2
-                            : (constraints.maxWidth - 24) / 3;
+                            : (constraints.maxWidth - 36) / 4;
                         return Wrap(
                           spacing: 12,
                           runSpacing: 12,
@@ -147,22 +149,29 @@ class OperatorDashboard extends StatelessWidget {
                             _Metric(
                               width: width,
                               label: 'Trilhas cadastradas',
-                              value: trails.length,
+                              value: '${trails.length}',
                               icon: Icons.terrain,
                             ),
                             _Metric(
                               width: width,
                               label: 'Trilhas ativas',
-                              value: trails
-                                  .where((t) => TrailStatus.isActive(t.status))
-                                  .length,
+                              value:
+                                  '${trails.where((t) => TrailStatus.isActive(t.status)).length}',
                               icon: Icons.check_circle_outline,
                             ),
                             _Metric(
                               width: width,
                               label: 'Reservas ativas',
-                              value: activeBookings.length,
+                              value:
+                                  '${summary?.active ?? activeBookings.length}',
                               icon: Icons.event_outlined,
+                            ),
+                            _Metric(
+                              width: width,
+                              label: 'Valor declarado',
+                              value:
+                                  'R\$ ${(summary?.declaredValue ?? activeBookings.fold<double>(0, (total, item) => total + item.valuePaid)).toStringAsFixed(2).replaceAll('.', ',')}',
+                              icon: Icons.receipt_long_outlined,
                             ),
                           ],
                         );
@@ -197,6 +206,17 @@ class OperatorDashboard extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.terrain_outlined),
                       label: const Text('Gerenciar trilhas'),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AvailabilityScreen(),
+                        ),
+                      ),
+                      icon: const Icon(Icons.event_available_outlined),
+                      label: const Text('Calendário e disponibilidade'),
                     ),
                     if (isAgency) ...[
                       const SizedBox(height: 10),
@@ -280,7 +300,7 @@ class _Metric extends StatelessWidget {
   });
   final double width;
   final String label;
-  final int value;
+  final String value;
   final IconData icon;
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -293,12 +313,16 @@ class _Metric extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.leaf),
             const SizedBox(height: 8),
-            Text(
-              '$value',
-              style: const TextStyle(
-                fontSize: 26,
-                color: AppColors.forest,
-                fontWeight: FontWeight.w700,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 26,
+                  color: AppColors.forest,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             Text(

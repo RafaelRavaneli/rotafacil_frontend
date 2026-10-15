@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import '../services/api_client.dart';
 import '../services/backend_repository.dart';
+import '../services/local_auth_service.dart';
 import '../services/session_service.dart';
 import '../data/demo_data.dart' as demo;
 import '../models/app_notification.dart';
@@ -13,6 +14,10 @@ import '../models/app_user.dart';
 import '../models/local_booking.dart';
 import '../models/local_guide.dart';
 import '../models/trail.dart';
+import '../models/trail_experience.dart';
+import '../models/availability.dart';
+import '../models/professional_document.dart';
+import '../models/guide.dart';
 import '../utils/role_utils.dart';
 
 class AppStore extends ChangeNotifier {
@@ -56,6 +61,7 @@ class AppStore extends ChangeNotifier {
   final List<Trail> trails = <Trail>[];
   final List<LocalGuide> agencyGuides = <LocalGuide>[];
   final List<LocalBooking> bookings = <LocalBooking>[];
+  OperatorDashboardSummary? operatorDashboardSummary;
 
   final List<AppNotificationItem> notifications = <AppNotificationItem>[];
 
@@ -191,17 +197,20 @@ class AppStore extends ChangeNotifier {
       trails.clear();
       agencyGuides.clear();
       bookings.clear();
+      operatorDashboardSummary = null;
       favoriteTrailIds.clear();
     }
 
-    // A central de notificações pode continuar sendo
-    // armazenada localmente mesmo usando backend.
-    _loadList<AppNotificationItem>(
-      key: 'notifications',
-      target: notifications,
-      decoder: AppNotificationItem.fromJson,
-      fallback: [],
-    );
+    if (useBackend) {
+      notifications.clear();
+    } else {
+      _loadList<AppNotificationItem>(
+        key: 'notifications',
+        target: notifications,
+        decoder: AppNotificationItem.fromJson,
+        fallback: [],
+      );
+    }
 
     // Preferências do aparelho continuam locais.
     pushNotifications = _prefs.getBool('pushNotifications') ?? true;
@@ -335,9 +344,27 @@ class AppStore extends ChangeNotifier {
     bookings
       ..clear()
       ..addAll(snapshot.bookings);
+    operatorDashboardSummary = snapshot.dashboard;
     favoriteTrailIds
       ..clear()
       ..addAll(snapshot.favorites);
+    await refreshNotifications();
+    notifyListeners();
+  }
+
+  Future<void> refreshNotifications() async {
+    if (!useBackend) return;
+    final results = await Future.wait([
+      _backend.notifications(),
+      _backend.notificationPreferences(),
+    ]);
+    notifications
+      ..clear()
+      ..addAll(results[0] as List<AppNotificationItem>);
+    final preferences = results[1] as Map<String, bool>;
+    pushNotifications = preferences['push'] ?? true;
+    bookingNotifications = preferences['agendamentos'] ?? true;
+    marketingNotifications = preferences['marketing'] ?? false;
     notifyListeners();
   }
 
@@ -351,6 +378,10 @@ class AppStore extends ChangeNotifier {
     String? document,
     String? profileImageDataUrl,
     bool updateProfileImage = false,
+    String? emergencyContactName,
+    String? emergencyContactPhone,
+    String? professionalDescription,
+    List<String>? specialties,
   }) async {
     if (useBackend) {
       final session = SessionService.instance;
@@ -365,6 +396,10 @@ class AppStore extends ChangeNotifier {
           'foto_url': profileImageDataUrl == null
               ? null
               : await _backend.uploadImage(profileImageDataUrl),
+        'contato_emergencia_nome': ?emergencyContactName,
+        'contato_emergencia_telefone': ?emergencyContactPhone,
+        'descricao_profissional': ?professionalDescription,
+        'especialidades': ?specialties,
       };
       await ApiClient.instance.put(
         '/api/usuarios/${Uri.encodeComponent(session.userId!)}',
@@ -394,6 +429,18 @@ class AppStore extends ChangeNotifier {
 
     if (updateProfileImage) {
       user.profileImageDataUrl = profileImageDataUrl;
+    }
+    if (emergencyContactName != null) {
+      user.emergencyContactName = emergencyContactName;
+    }
+    if (emergencyContactPhone != null) {
+      user.emergencyContactPhone = emergencyContactPhone;
+    }
+    if (professionalDescription != null) {
+      user.professionalDescription = professionalDescription;
+    }
+    if (specialties != null) {
+      user.specialties = List.of(specialties);
     }
 
     await _persistAll();
@@ -543,6 +590,11 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> cancelBooking(LocalBooking booking) async {
+    if (!BookingStatus.canCancel(booking.status)) {
+      throw StateError(
+        'Somente reservas ainda não iniciadas podem ser canceladas.',
+      );
+    }
     if (useBackend) {
       await ApiClient.instance.put(
         '/api/agendamentos/${Uri.encodeComponent(booking.id)}/cancelar',
@@ -563,6 +615,241 @@ class AppStore extends ChangeNotifier {
     await _persistAll();
 
     notifyListeners();
+  }
+
+  Future<void> checkInBooking(
+    LocalBooking booking, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    if (useBackend) {
+      await _backend.checkIn(
+        booking.id,
+        latitude: latitude,
+        longitude: longitude,
+      );
+      await refreshBackend();
+      return;
+    }
+    if (!BookingStatus.isConfirmed(booking.status)) {
+      throw StateError('Somente reservas confirmadas permitem check-in.');
+    }
+    booking.status = 'Em andamento';
+    await _persistAll();
+    notifyListeners();
+  }
+
+  Future<void> checkOutBooking(LocalBooking booking) async {
+    if (useBackend) {
+      await _backend.checkOut(booking.id);
+      await refreshBackend();
+      return;
+    }
+    if (BookingStatus.normalize(booking.status) != 'Em andamento') {
+      throw StateError('Faça check-in antes de concluir a atividade.');
+    }
+    booking.status = 'Concluído';
+    await _persistAll();
+    notifyListeners();
+  }
+
+  Future<List<TrailReview>> reviewsFor(String trailId) async {
+    if (!useBackend) return const [];
+    return _backend.reviews(trailId);
+  }
+
+  Future<GuideProfile> publicGuide(String guideId) {
+    if (!useBackend) {
+      throw StateError('Perfil público remoto exige conexão com o servidor.');
+    }
+    return _backend.publicGuide(guideId);
+  }
+
+  Future<void> reviewTrail({
+    required String trailId,
+    required int rating,
+    required String comment,
+  }) async {
+    if (!useBackend) {
+      throw StateError('Avaliações exigem conexão com o servidor.');
+    }
+    await _backend.addReview(
+      trailId: trailId,
+      rating: rating,
+      comment: comment,
+    );
+    await refreshBackend();
+  }
+
+  Future<TrailWeather?> weatherFor(String trailId) async {
+    if (!useBackend) return null;
+    return _backend.weather(trailId);
+  }
+
+  Future<RouteSummary> routeToTrail({
+    required String trailId,
+    required double latitude,
+    required double longitude,
+  }) {
+    if (!useBackend) {
+      throw StateError('Rota exige conexão com o servidor.');
+    }
+    return _backend.routeToTrail(
+      trailId: trailId,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+
+  Future<EmergencyContact> emergencyContactFor(String userId) {
+    if (!useBackend) {
+      throw StateError('Contato de emergência exige conexão com o servidor.');
+    }
+    return _backend.emergencyContact(userId);
+  }
+
+  Future<List<Availability>> availabilities({String? guideId}) {
+    if (!useBackend) return Future.value(const []);
+    return _backend.availabilities(guideId: guideId);
+  }
+
+  Future<void> createAvailability({
+    required String date,
+    required String startTime,
+    required String endTime,
+    required String type,
+    required String note,
+    int? capacity,
+  }) {
+    if (!useBackend) {
+      throw StateError('Calendário exige conexão com o servidor.');
+    }
+    return _backend.createAvailability(
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      type: type,
+      note: note,
+      capacity: capacity,
+    );
+  }
+
+  Future<void> deleteAvailability(String id) {
+    if (!useBackend) {
+      throw StateError('Calendário exige conexão com o servidor.');
+    }
+    return _backend.deleteAvailability(id);
+  }
+
+  Future<void> deleteCurrentAccount(String role) async {
+    if (useBackend) {
+      final userId = SessionService.instance.userId;
+      if (userId == null || userId.isEmpty) {
+        throw StateError('Faça login novamente para excluir sua conta.');
+      }
+      await _backend.deleteAccount(userId);
+    } else {
+      final roleKey = normalizeRole(role);
+      await LocalAuthService.instance.deleteAccount(role: roleKey);
+      await _prefs.remove('user_$roleKey');
+      final empty = AppUser(
+        name: '',
+        email: '',
+        phone: '',
+        city: '',
+        state: '',
+        role: role,
+      );
+      switch (roleKey) {
+        case 'guia':
+          guide = empty;
+        case 'agencia':
+          agency = empty;
+        default:
+          tourist = empty;
+      }
+    }
+
+    notifications.clear();
+    favoriteTrailIds.clear();
+    operatorDashboardSummary = null;
+    await _prefs.remove('notifications');
+    notifyListeners();
+  }
+
+  Future<void> changeAccountType({
+    required String type,
+    String? document,
+  }) async {
+    if (!useBackend) {
+      throw StateError(
+        'A alteração do tipo da conta exige conexão com o servidor.',
+      );
+    }
+    final userId = SessionService.instance.userId;
+    if (userId == null || userId.isEmpty) {
+      throw StateError('Faça login novamente para alterar sua conta.');
+    }
+    await _backend.changeAccountType(
+      userId: userId,
+      type: type,
+      document: document,
+    );
+  }
+
+  Future<List<ProfessionalDocument>> professionalDocuments({String? status}) {
+    if (!useBackend) return Future.value(const []);
+    return _backend.professionalDocuments(status: status);
+  }
+
+  Future<void> uploadProfessionalDocument({
+    required List<int> bytes,
+    required String fileName,
+    required String documentType,
+  }) {
+    if (!useBackend) {
+      throw StateError(
+        'Documentos profissionais exigem conexão com o servidor.',
+      );
+    }
+    return _backend.uploadProfessionalDocument(
+      bytes: bytes,
+      fileName: fileName,
+      documentType: documentType,
+    );
+  }
+
+  Future<Uint8List> professionalDocumentBytes(String id) {
+    if (!useBackend) {
+      throw StateError(
+        'Documentos profissionais exigem conexão com o servidor.',
+      );
+    }
+    return _backend.professionalDocumentBytes(id);
+  }
+
+  Future<void> deleteProfessionalDocument(String id) {
+    if (!useBackend) {
+      throw StateError(
+        'Documentos profissionais exigem conexão com o servidor.',
+      );
+    }
+    return _backend.deleteProfessionalDocument(id);
+  }
+
+  Future<void> reviewProfessionalDocument({
+    required String id,
+    required String status,
+    String note = '',
+  }) {
+    if (!useBackend) {
+      throw StateError('Análise de documentos exige conexão com o servidor.');
+    }
+    return _backend.reviewProfessionalDocument(
+      id: id,
+      status: status,
+      note: note,
+    );
   }
 
   Future<void> toggleFavorite(String trailId) async {
@@ -622,6 +909,7 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> markNotificationRead(AppNotificationItem item) async {
+    if (useBackend) await _backend.markNotificationRead(item.id);
     item.read = true;
 
     await _persistAll();
@@ -630,6 +918,7 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> markAllNotificationsRead() async {
+    if (useBackend) await _backend.markAllNotificationsRead();
     for (final item in notifications) {
       item.read = true;
     }
@@ -644,6 +933,9 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> setPushNotifications(bool value) async {
+    if (useBackend) {
+      await _backend.updateNotificationPreferences({'push': value});
+    }
     pushNotifications = value;
 
     await _persistAll();
@@ -652,6 +944,9 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> setBookingNotifications(bool value) async {
+    if (useBackend) {
+      await _backend.updateNotificationPreferences({'agendamentos': value});
+    }
     bookingNotifications = value;
 
     await _persistAll();
@@ -660,6 +955,9 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> setMarketingNotifications(bool value) async {
+    if (useBackend) {
+      await _backend.updateNotificationPreferences({'marketing': value});
+    }
     marketingNotifications = value;
 
     await _persistAll();

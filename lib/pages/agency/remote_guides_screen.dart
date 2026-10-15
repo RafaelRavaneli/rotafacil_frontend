@@ -145,6 +145,55 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
             label: const Text('Recusar'),
           ),
         ],
+        if (agency && status == 'pendente')
+          OutlinedButton.icon(
+            onPressed: busy || id.isEmpty
+                ? null
+                : () => _confirm(
+                    id: id,
+                    name: name,
+                    title: 'Revogar convite?',
+                    description: 'O guia não poderá mais aceitar este envio.',
+                    confirmLabel: 'Revogar',
+                    success: 'Convite revogado.',
+                    perform: () => api.manage(id, 'revogar'),
+                  ),
+            icon: const Icon(Icons.undo_rounded),
+            label: const Text('Revogar'),
+          ),
+        if (agency && {'recusado', 'revogado', 'desligado'}.contains(status))
+          OutlinedButton.icon(
+            onPressed: busy || id.isEmpty
+                ? null
+                : () => _confirm(
+                    id: id,
+                    name: name,
+                    title: 'Reenviar convite?',
+                    description: 'Um novo convite pendente será criado.',
+                    confirmLabel: 'Reenviar',
+                    success: 'Convite reenviado.',
+                    perform: () => api.manage(id, 'reenviar'),
+                  ),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Reenviar'),
+          ),
+        if (status == 'aceito')
+          TextButton.icon(
+            onPressed: busy || id.isEmpty
+                ? null
+                : () => _confirm(
+                    id: id,
+                    name: name,
+                    title: 'Encerrar vínculo?',
+                    description:
+                        'O desligamento é bloqueado enquanto houver reservas ativas entre as partes.',
+                    confirmLabel: 'Encerrar vínculo',
+                    success: 'Vínculo encerrado.',
+                    perform: () => api.manage(id, 'desligar'),
+                  ),
+            icon: const Icon(Icons.link_off_rounded),
+            label: const Text('Desligar'),
+          ),
       ],
     );
   }
@@ -186,11 +235,6 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                   ),
             icon: const Icon(Icons.person_add_outlined),
             label: Text(busy && activeId == id ? 'Enviando...' : 'Convidar'),
-          ),
-        if (existing?['status'] == 'recusado')
-          const Text(
-            'Reenvio de convite ainda não está disponível.',
-            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
       ],
     );

@@ -196,4 +196,11 @@ class LocalAuthService {
 
     await prefs.setString(_accountsKey, jsonEncode(accounts));
   }
+
+  Future<void> deleteAccount({required String role}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final accounts = await _accounts();
+    accounts.remove(_roleKey(role));
+    await prefs.setString(_accountsKey, jsonEncode(accounts));
+  }
 }

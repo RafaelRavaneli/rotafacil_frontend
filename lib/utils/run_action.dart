@@ -17,3 +17,19 @@ Future<bool> runAction(
     return false;
   }
 }
+
+Future<T?> runValueAction<T>(
+  BuildContext context,
+  Future<T> Function() action,
+) async {
+  try {
+    return await action();
+  } catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+    }
+    return null;
+  }
+}

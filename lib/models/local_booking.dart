@@ -53,6 +53,11 @@ class BookingStatus {
     return status != cancelled && status != 'Concluído';
   }
 
+  static bool canCancel(String? value) {
+    final status = normalize(value);
+    return status == pending || status == confirmed;
+  }
+
   static bool isCancelled(String? value) {
     return normalize(value) == cancelled;
   }
@@ -68,6 +73,8 @@ class LocalBooking {
     required String status,
     required this.roleView,
     this.valuePaid = 0,
+    this.personId = '',
+    this.guideId = '',
   }) : _status = BookingStatus.normalize(status);
 
   final String id;
@@ -78,6 +85,8 @@ class LocalBooking {
   String _status;
   String roleView;
   double valuePaid;
+  final String personId;
+  final String guideId;
 
   String get status => _status;
 
@@ -94,6 +103,8 @@ class LocalBooking {
     'status': status,
     'roleView': roleView,
     'valuePaid': valuePaid,
+    'personId': personId,
+    'guideId': guideId,
   };
 
   factory LocalBooking.fromJson(Map<String, dynamic> json) {
@@ -106,6 +117,8 @@ class LocalBooking {
       status: json['status']?.toString() ?? BookingStatus.pending,
       roleView: json['roleView']?.toString() ?? 'turista',
       valuePaid: (json['valuePaid'] as num?)?.toDouble() ?? 0,
+      personId: (json['personId'] ?? json['id_usuario'])?.toString() ?? '',
+      guideId: (json['guideId'] ?? json['id_guia'])?.toString() ?? '',
     );
   }
 }
