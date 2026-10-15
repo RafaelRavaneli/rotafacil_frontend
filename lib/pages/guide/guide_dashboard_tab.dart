@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../common/operator_dashboard.dart';
 
 class GuideDashboardTab extends StatelessWidget {
-  const GuideDashboardTab({super.key});
+  const GuideDashboardTab({super.key, this.onOpenBookings});
+  final VoidCallback? onOpenBookings;
 
   @override
   Widget build(BuildContext context) =>
-      const OperatorDashboard(isAgency: false);
+      OperatorDashboard(isAgency: false, onOpenBookings: onOpenBookings);
 }

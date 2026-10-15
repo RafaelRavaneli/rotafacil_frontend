@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter_map/flutter_map.dart' show TileProvider;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -9,7 +11,8 @@ import '../../widgets/trail_results_map.dart';
 import 'trail_details_screen.dart';
 
 class TrailSearchScreen extends StatefulWidget {
-  const TrailSearchScreen({super.key});
+  const TrailSearchScreen({super.key, this.tileProvider});
+  final TileProvider? tileProvider;
 
   @override
   State<TrailSearchScreen> createState() => _TrailSearchScreenState();
@@ -62,10 +65,14 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
 
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        throw StateError('Permissão de localização negada.');
+        throw StateError(
+          'Permita o acesso à localização nas configurações do navegador ou dispositivo e tente novamente. Você também pode buscar por cidade e UF.',
+        );
       }
 
-      final current = await Geolocator.getCurrentPosition();
+      final current = await Geolocator.getCurrentPosition().timeout(
+        const Duration(seconds: 15),
+      );
 
       if (!mounted) return;
 
@@ -81,9 +88,19 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
         position = null;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is StateError
+                ? error.message.toString()
+                : error is PermissionDeniedException
+                ? 'Permita o acesso à localização nas configurações do navegador ou dispositivo. Você também pode buscar por cidade e UF.'
+                : error is TimeoutException
+                ? 'Não foi possível obter sua localização a tempo. Tente novamente ou busque por cidade e UF.'
+                : 'Não foi possível obter sua localização. Verifique a permissão e tente novamente, ou busque por cidade e UF.',
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => locating = false);
     }
@@ -216,6 +233,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       nearMe = false;
       position = null;
       radiusKm = 20;
+      selectedTrailId = null;
     });
   }
 
@@ -233,9 +251,6 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
         animation: AppStore.instance,
         builder: (context, _) {
           final results = filtered;
-          final selected = results
-              .where((r) => r.trail.id == selectedTrailId)
-              .firstOrNull;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -377,13 +392,17 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                   TrailResultsMap(
                     trails: results.map((r) => r.trail).toList(),
                     selectedId: selectedTrailId,
-                    onSelected: (trail) =>
-                        setState(() => selectedTrailId = trail.id),
+                    tileProvider: widget.tileProvider,
+                    onSelected: (trail) {
+                      setState(() => selectedTrailId = trail.id);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TrailDetailsScreen(trail: trail),
+                        ),
+                      );
+                    },
                   ),
-                  if (selected != null) ...[
-                    const SizedBox(height: 12),
-                    _ResultCard(result: selected),
-                  ],
                   const SizedBox(height: 20),
                 ],
               ],
@@ -464,7 +483,7 @@ class _ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${trail.difficulty} • ${trail.distanceKm} km',
+                      '${trail.difficulty} • ${trail.distanceLabel}',
                       style: const TextStyle(
                         color: AppColors.green700,
                         fontSize: 11,

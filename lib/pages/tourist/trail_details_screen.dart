@@ -237,7 +237,7 @@ class TrailDetailsScreen extends StatelessWidget {
                           children: [
                             _ChipMetric(
                               icon: Icons.route_rounded,
-                              value: '${trail.distanceKm} km',
+                              value: trail.distanceLabel,
                             ),
                             _ChipMetric(
                               icon: Icons.hiking_rounded,
@@ -323,7 +323,7 @@ class TrailDetailsScreen extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  trail.guideName,
+                                  trail.responsibleName,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                   ),

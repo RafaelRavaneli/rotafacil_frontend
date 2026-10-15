@@ -104,3 +104,15 @@ O frontend consulta a agenda por ID da sessão autenticada, sem repetir a chamad
 Agenda e painéis de guia/agência consultam a API ao abrir e quando o aplicativo volta ao primeiro plano. O botão Atualizar reservas e o gesto de puxar a lista repetem a consulta. Não há assinatura em tempo real; reservas feitas em outro dispositivo aparecem após essa atualização. Falhas mantêm os dados anteriores e mostram aviso, sem indicar atualização concluída.
 
 Trilhas com reservas pendentes, confirmadas ou em andamento não podem ser desativadas. O backend retorna HTTP 409 tanto na exclusão lógica quanto na edição com ativo=false. É necessário cancelar ou concluir as reservas antes. Reservas canceladas e concluídas permanecem no histórico; nenhuma reserva é apagada em cascata. O modo demonstrativo segue a mesma regra. A validação do servidor precisa estar publicada para valer contra todos os clientes.
+
+
+## Correções dos relatos de homologação
+
+- O marcador do mapa abre os detalhes da trilha selecionada. O destaque não cria um segundo cartão na lista. Trilhas sem coordenadas válidas permanecem nos resultados comuns e não recebem marcador inventado.
+- Negar localização apresenta instruções legíveis e mantém a busca por cidade e UF. O formulário de trilha também remove prefixos técnicos das mensagens.
+- Distâncias aceitam vírgula decimal. O formulário exige valor positivo e finito; ausência, zero ou dados inválidos antigos aparecem como “Distância não informada”. A descrição livre não é usada para inventar a extensão. O responsável deve editar registros antigos cujo valor estruturado esteja ausente ou incorreto.
+- A API de trilhas acrescenta nome_guia com o nome público do responsável localizado pelo ID ou e-mail legado. Não são acrescentados senha, documento, telefone ou dados privados do usuário. Registros sem vínculo válido mostram “Responsável não informado”. Essa identificação depende da atualização do backend.
+- O painel mostra Reservas ativas e exclui canceladas e concluídas desse contador. O histórico permanece disponível na Agenda.
+- Ver todas as reservas seleciona a aba da Agenda nos perfis guia e agência, preservando a navegação inferior.
+
+Reteste os relatos no aplicativo conectado depois de atualizar ambos os repositórios. Testes automatizados usam dados e serviços isolados; não equivalem à aprovação pelos responsáveis da homologação.

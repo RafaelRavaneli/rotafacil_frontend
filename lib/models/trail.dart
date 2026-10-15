@@ -101,6 +101,24 @@ class Trail {
 
   String get location => '$city - $state';
 
+  bool get hasDistance => distanceKm.isFinite && distanceKm > 0;
+  String get distanceLabel {
+    if (!hasDistance) return 'Distância não informada';
+    return '${distanceKm.toString().replaceFirst(RegExp(r"\.0$"), "").replaceAll(".", ",")} km';
+  }
+
+  String get responsibleName =>
+      guideName.trim().isEmpty || guideName == 'Guia responsável'
+      ? 'Responsável não informado'
+      : guideName;
+
+  static double parseDistance(Object? value) {
+    final distance = value is num
+        ? value.toDouble()
+        : double.tryParse(value?.toString().trim().replaceAll(',', '.') ?? '');
+    return distance != null && distance.isFinite && distance > 0 ? distance : 0;
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -144,9 +162,7 @@ class Trail {
       state: (json['state'] ?? json['estado'])?.toString() ?? '',
       difficulty:
           (json['difficulty'] ?? json['dificuldade'])?.toString() ?? 'Moderada',
-      distanceKm: rawDistance is num
-          ? rawDistance.toDouble()
-          : double.tryParse(rawDistance?.toString() ?? '') ?? 0,
+      distanceKm: parseDistance(rawDistance),
       duration: json['duration']?.toString() ?? '3h',
       elevation: rawElevation is num
           ? rawElevation.toInt()

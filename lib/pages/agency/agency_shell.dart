@@ -20,7 +20,9 @@ class _AgencyShellState extends State<AgencyShell> {
   Widget _currentPage() {
     switch (index) {
       case 0:
-        return const AgencyDashboardTab();
+        return AgencyDashboardTab(
+          onOpenBookings: () => setState(() => index = 3),
+        );
       case 1:
         return const TrailsManagementScreen(isAgency: true);
       case 2:
@@ -30,7 +32,9 @@ class _AgencyShellState extends State<AgencyShell> {
       case 4:
         return const ProfileTab(role: 'Agência');
       default:
-        return const AgencyDashboardTab();
+        return AgencyDashboardTab(
+          onOpenBookings: () => setState(() => index = 3),
+        );
     }
   }
 

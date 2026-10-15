@@ -27,11 +27,13 @@ class TrailResultsMap extends StatefulWidget {
     required this.trails,
     required this.onSelected,
     this.selectedId,
+    this.tileProvider,
   });
 
   final List<Trail> trails;
   final ValueChanged<Trail> onSelected;
   final String? selectedId;
+  final TileProvider? tileProvider;
 
   @override
   State<TrailResultsMap> createState() => _TrailResultsMapState();
@@ -87,6 +89,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
               ),
               children: [
                 TileLayer(
+                  tileProvider: widget.tileProvider,
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.rotafacil.app',
                   errorTileCallback: (_, _, _) {
@@ -105,7 +108,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
                           width: 52,
                           height: 52,
                           child: Tooltip(
-                            message: trail.name,
+                            message: 'Abrir trilha: ${trail.name}',
                             child: IconButton(
                               onPressed: () => widget.onSelected(trail),
                               style: IconButton.styleFrom(
@@ -137,7 +140,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
         ),
         const SizedBox(height: 8),
         Text(
-          '${mapped.length} trilha(s) no mapa. Toque em um marcador para selecionar.',
+          '${mapped.length} trilha(s) no mapa. Toque em um marcador para abrir os detalhes.',
           style: const TextStyle(color: AppColors.muted, fontSize: 12),
         ),
         if (mapped.length < widget.trails.length)

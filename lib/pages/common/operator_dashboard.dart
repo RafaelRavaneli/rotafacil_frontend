@@ -1,3 +1,4 @@
+import '../../models/local_booking.dart';
 import '../../widgets/backend_refresh.dart';
 import 'package:flutter/material.dart';
 import '../../models/trail.dart';
@@ -14,8 +15,13 @@ import 'trails_management_screen.dart';
 
 /// Shared presentation; existing store and server still determine data access.
 class OperatorDashboard extends StatelessWidget {
-  const OperatorDashboard({super.key, required this.isAgency});
+  const OperatorDashboard({
+    super.key,
+    required this.isAgency,
+    this.onOpenBookings,
+  });
   final bool isAgency;
+  final VoidCallback? onOpenBookings;
 
   void _open(BuildContext context, Widget page, String title) {
     Navigator.push(
@@ -47,7 +53,10 @@ class OperatorDashboard extends StatelessWidget {
                       b.roleView == 'turista',
                 )
                 .toList();
-            final reservations = bookings.take(3).toList();
+            final activeBookings = bookings
+                .where((b) => BookingStatus.isActive(b.status))
+                .toList();
+            final reservations = activeBookings.take(3).toList();
             return Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
@@ -151,8 +160,8 @@ class OperatorDashboard extends StatelessWidget {
                             ),
                             _Metric(
                               width: width,
-                              label: 'Reservas disponíveis',
-                              value: bookings.length,
+                              label: 'Reservas ativas',
+                              value: activeBookings.length,
                               icon: Icons.event_outlined,
                             ),
                           ],
@@ -213,7 +222,7 @@ class OperatorDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Consulte a situação e os detalhes das reservas disponíveis.',
+                      'Reservas em aberto. Canceladas e concluídas permanecem no histórico.',
                       style: TextStyle(color: AppColors.muted),
                     ),
                     const SizedBox(height: 12),
@@ -241,11 +250,13 @@ class OperatorDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
-                      onPressed: () => _open(
-                        context,
-                        BookingsScreen(role: isAgency ? 'agencia' : 'guia'),
-                        'Reservas',
-                      ),
+                      onPressed:
+                          onOpenBookings ??
+                          () => _open(
+                            context,
+                            BookingsScreen(role: isAgency ? 'agencia' : 'guia'),
+                            'Reservas',
+                          ),
                       icon: const Icon(Icons.calendar_month_outlined),
                       label: const Text('Ver todas as reservas'),
                     ),

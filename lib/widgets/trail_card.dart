@@ -57,7 +57,7 @@ class TrailCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${trail.difficulty} · ${trail.distanceKm} km',
+                      '${trail.difficulty} · ${trail.distanceLabel}',
                       style: const TextStyle(
                         color: AppColors.muted,
                         fontSize: 12,

@@ -26,6 +26,8 @@ class BookingStatus {
       case 'em_andamento':
         return 'Em andamento';
       case 'concluido':
+      case 'concluído':
+      case 'completed':
         return 'Concluído';
       case 'cancelado':
       case 'cancelada':

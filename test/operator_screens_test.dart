@@ -1,3 +1,5 @@
+import 'package:rotafacil/pages/guide/guide_shell.dart';
+import 'package:rotafacil/pages/agency/agency_shell.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -324,4 +326,59 @@ void main() {
     },
     skip: AppConfig.useBackend,
   );
+  testWidgets(
+    'Cancelamento reduz contador ativo e preserva reserva no histórico',
+    (tester) async {
+      await tester.pumpWidget(app(const OperatorDashboard(isAgency: false)));
+      await tester.pumpAndSettle();
+      final metric = find
+          .ancestor(
+            of: find.text('Reservas ativas'),
+            matching: find.byType(Card),
+          )
+          .first;
+      expect(
+        find.descendant(of: metric, matching: find.text('1')),
+        findsOneWidget,
+      );
+      await store.cancelBooking(store.bookings.single);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: metric, matching: find.text('0')),
+        findsOneWidget,
+      );
+      expect(store.bookings.single.status, 'Cancelado');
+      await tester.pumpWidget(app(const BookingsScreen(role: 'guia')));
+      await tester.pumpAndSettle();
+      expect(find.text('Cancelado'), findsOneWidget);
+    },
+    skip: AppConfig.useBackend,
+  );
+
+  for (final scenario in [(const GuideShell(), 2), (const AgencyShell(), 3)]) {
+    testWidgets(
+      'Ver todas as reservas mantém rodapé no perfil ${scenario.$2}',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(theme: AppTheme.light, home: scenario.$1),
+        );
+        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.text('Ver todas as reservas'),
+          250,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.tap(find.text('Ver todas as reservas'));
+        await tester.pumpAndSettle();
+        expect(find.byType(BookingsScreen), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        expect(
+          tester
+              .widget<NavigationBar>(find.byType(NavigationBar))
+              .selectedIndex,
+          scenario.$2,
+        );
+      },
+    );
+  }
 }

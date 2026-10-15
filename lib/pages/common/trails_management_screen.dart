@@ -279,7 +279,7 @@ class _TrailRow extends StatelessWidget {
                   runSpacing: 5,
                   children: [
                     _MiniChip(text: trail.difficulty),
-                    _MiniChip(text: '${trail.distanceKm} km'),
+                    _MiniChip(text: trail.distanceLabel),
                     _MiniChip(text: trail.status),
                   ],
                 ),

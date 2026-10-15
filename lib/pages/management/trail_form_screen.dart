@@ -1,3 +1,4 @@
+import '../../utils/auth_error_message.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -52,7 +53,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       descriptionController.text = trail.description;
       cityController.text = trail.city;
       stateController.text = trail.state;
-      distanceController.text = trail.distanceKm.toStringAsFixed(1);
+      distanceController.text = trail.hasDistance
+          ? trail.distanceKm.toString()
+          : '';
       priceController.text = trail.price.toStringAsFixed(2);
       difficulty = trail.difficulty;
       modality = trail.modality;
@@ -135,7 +138,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
 
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        throw StateError('Permissão de localização negada.');
+        throw StateError(
+          'Permita o acesso à localização nas configurações do navegador ou dispositivo e tente novamente.',
+        );
       }
 
       final position = await Geolocator.getCurrentPosition();
@@ -150,7 +155,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
     } finally {
       if (mounted) setState(() => locating = false);
     }
@@ -190,10 +195,18 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       return;
     }
 
+    final distance = Trail.parseDistance(distanceController.text);
+    if (distance <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe uma distância do percurso válida, maior que zero, em quilômetros.',
+          ),
+        ),
+      );
+      return;
+    }
     setState(() => saving = true);
-
-    final distance =
-        double.tryParse(distanceController.text.replaceAll(',', '.')) ?? 0;
 
     final price =
         double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0;
