@@ -46,6 +46,11 @@ class BookingStatus {
     return normalize(value) == confirmed;
   }
 
+  static bool isActive(String? value) {
+    final status = normalize(value);
+    return status != cancelled && status != 'Concluído';
+  }
+
   static bool isCancelled(String? value) {
     return normalize(value) == cancelled;
   }

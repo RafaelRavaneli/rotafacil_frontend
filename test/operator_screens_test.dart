@@ -222,4 +222,106 @@ void main() {
       });
     }
   }
+  testWidgets('Agenda consulta ao abrir e mostra reserva nova após atualizar', (
+    tester,
+  ) async {
+    var calls = 0;
+    Future<void> reload() async {
+      calls++;
+      if (calls > 1) {
+        store.bookings.add(
+          LocalBooking(
+            id: 'r2',
+            trailId: 't1',
+            trailName: 'Nova reserva remota',
+            personName: 'Novo participante',
+            date: '26/10/2026',
+            status: 'Confirmado',
+            roleView: 'turista',
+          ),
+        );
+        // Simula a notificação que refreshBackend publica ao receber o snapshot.
+        // ignore: invalid_use_of_protected_member
+        store.notifyListeners();
+      }
+    }
+
+    await tester.pumpWidget(
+      app(BookingsScreen(role: 'turista', onRefresh: reload)),
+    );
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(find.text('Nova reserva remota'), findsNothing);
+    await tester.tap(find.text('Atualizar reservas'));
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+    expect(find.text('Nova reserva remota'), findsOneWidget);
+  });
+
+  testWidgets(
+    'Falha de atualização mantém reservas e permite tentar novamente',
+    (tester) async {
+      var calls = 0;
+      await tester.pumpWidget(
+        app(
+          BookingsScreen(
+            role: 'turista',
+            onRefresh: () async {
+              calls++;
+              if (calls == 1) throw StateError('API indisponível');
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Não foi possível atualizar as reservas.'),
+        findsOneWidget,
+      );
+      expect(store.bookings.single.id, 'r1');
+      await tester.tap(find.text('Atualizar reservas'));
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+      expect(
+        find.textContaining('Não foi possível atualizar as reservas.'),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('Agenda volta a consultar ao retomar o aplicativo', (
+    tester,
+  ) async {
+    var calls = 0;
+    await tester.pumpWidget(
+      app(
+        BookingsScreen(
+          role: 'turista',
+          onRefresh: () async {
+            calls++;
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(calls, 2);
+  });
+
+  test(
+    'Modo local bloqueia exclusão com reserva ativa e preserva histórico cancelado',
+    () async {
+      final trail = store.trails.single;
+      await expectLater(store.removeTrail(trail), throwsA(isA<StateError>()));
+      expect(store.trails.single.id, 't1');
+      expect(store.bookings.single.id, 'r1');
+      store.bookings.single.status = BookingStatus.cancelled;
+      await store.removeTrail(trail);
+      expect(store.trails, isEmpty);
+      expect(store.bookings.single.status, BookingStatus.cancelled);
+    },
+    skip: AppConfig.useBackend,
+  );
 }

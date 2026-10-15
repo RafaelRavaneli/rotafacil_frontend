@@ -496,6 +496,15 @@ class AppStore extends ChangeNotifier {
       return;
     }
 
+    if (bookings.any(
+      (booking) =>
+          booking.trailId == trail.id && BookingStatus.isActive(booking.status),
+    )) {
+      throw StateError(
+        'Esta trilha possui reservas ativas. Cancele ou conclua essas reservas antes de desativá-la.',
+      );
+    }
+
     trails.removeWhere((item) => item.id == trail.id);
 
     favoriteTrailIds.remove(trail.id);

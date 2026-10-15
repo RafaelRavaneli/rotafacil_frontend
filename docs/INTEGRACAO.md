@@ -97,3 +97,10 @@ Contratos de guias e convites: `CONTRATOS_COMUNIDADE.md` no repositório do back
 ## Identificação da agenda de guia e agência
 
 O frontend consulta a agenda por ID da sessão autenticada, sem repetir a chamada usando o e-mail. No backend atualizado, a mesma consulta reúne registros pelo ID e pelo e-mail atual do responsável, preservando agendamentos antigos sem duplicar resultados. A regra de autorização da rota permanece em vigor; falhas de acesso à agenda por ID continuam sendo exibidas. Essa compatibilidade depende de executar/publicar também a atualização de services/agendamentos.py no backend.
+
+
+## Atualização de reservas e desativação de trilhas
+
+Agenda e painéis de guia/agência consultam a API ao abrir e quando o aplicativo volta ao primeiro plano. O botão Atualizar reservas e o gesto de puxar a lista repetem a consulta. Não há assinatura em tempo real; reservas feitas em outro dispositivo aparecem após essa atualização. Falhas mantêm os dados anteriores e mostram aviso, sem indicar atualização concluída.
+
+Trilhas com reservas pendentes, confirmadas ou em andamento não podem ser desativadas. O backend retorna HTTP 409 tanto na exclusão lógica quanto na edição com ativo=false. É necessário cancelar ou concluir as reservas antes. Reservas canceladas e concluídas permanecem no histórico; nenhuma reserva é apagada em cascata. O modo demonstrativo segue a mesma regra. A validação do servidor precisa estar publicada para valer contra todos os clientes.

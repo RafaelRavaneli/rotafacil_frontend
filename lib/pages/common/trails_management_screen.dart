@@ -146,8 +146,8 @@ class TrailsManagementScreen extends StatelessWidget {
           ),
           content: Text(
             AppStore.instance.useBackend
-                ? 'A trilha "${trail.name}" deixará de aparecer na busca.'
-                : 'Tem certeza que deseja excluir "${trail.name}"?',
+                ? 'A trilha "${trail.name}" deixará de aparecer na busca. Reservas ativas impedem a desativação; o histórico será preservado.'
+                : 'Excluir "${trail.name}"? Reservas ativas impedem a exclusão; o histórico será preservado.',
           ),
           actions: [
             TextButton(
