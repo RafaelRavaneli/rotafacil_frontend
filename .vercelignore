@@ -1,0 +1,10 @@
+.git
+.dart_tool
+build
+.idea
+*.log
+.env*
+firebase-web.local.json
+coverage
+docs
+*.iml
