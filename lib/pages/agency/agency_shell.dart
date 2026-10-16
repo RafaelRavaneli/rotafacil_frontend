@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/role_navigation_bar.dart';
 import '../common/bookings_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
@@ -41,14 +42,14 @@ class _AgencyShellState extends State<AgencyShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.paper,
 
       // Constrói apenas a página selecionada.
       // Isso evita que abas pesadas escondidas bloqueiem
       // a interface inteira no Chrome.
       body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
 
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,
         onDestinationSelected: (value) {
           if (value == index) return;
@@ -58,27 +59,27 @@ class _AgencyShellState extends State<AgencyShell> {
           });
         },
         destinations: const [
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
             label: 'Painel',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.terrain_outlined),
             selectedIcon: Icon(Icons.terrain_rounded),
-            label: 'Trilhas',
+            label: 'Roteiros',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.groups_2_outlined),
             selectedIcon: Icon(Icons.groups_2_rounded),
             label: 'Guias',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month_rounded),
-            label: 'Reservas',
+            label: 'Agenda',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',

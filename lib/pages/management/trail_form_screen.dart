@@ -33,11 +33,12 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   final recommendedItemsController = TextEditingController();
   final capacityController = TextEditingController(text: '12');
 
-  String difficulty = 'Moderada';
-  String modality = 'Trekking';
+  String difficulty = TrailDifficulty.intermediate;
+  final Set<String> activities = {'Trilha'};
   String? guideName;
   String? guideId;
-  DateTime? date;
+  DateTime? startDateTime;
+  DateTime? endDateTime;
   Uint8List? imageBytes;
   String? existingImageUrl;
   double? latitude;
@@ -46,8 +47,6 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   bool saving = false;
   bool accessible = false;
   final List<TrailPoint> routePoints = [];
-  TimeOfDay? startTime;
-  TimeOfDay? endTime;
 
   @override
   void initState() {
@@ -63,8 +62,10 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           ? trail.distanceKm.toString()
           : '';
       priceController.text = trail.price.toStringAsFixed(2);
-      difficulty = trail.difficulty;
-      modality = trail.modality;
+      difficulty = TrailDifficulty.normalize(trail.difficulty);
+      activities
+        ..clear()
+        ..addAll(trail.effectiveActivities);
       guideName = trail.guideName;
       guideId = trail.guideId.isEmpty ? null : trail.guideId;
 
@@ -79,57 +80,65 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       existingImageUrl = trail.imageUrl;
       latitude = trail.latitude;
       longitude = trail.longitude;
-      date = _parseDate(trail.date);
+      startDateTime = trail.startsAt;
+      endDateTime = trail.endsAt;
       accessible = trail.accessible;
       recommendedItemsController.text = trail.recommendedItems.join(', ');
       routePoints.addAll(trail.route);
       capacityController.text = trail.capacity.toString();
-      startTime = _parseTime(trail.startTime);
-      endTime = _parseTime(trail.endTime);
     }
   }
 
-  DateTime? _parseDate(String value) {
-    final short = value.split(' ').first;
+  String _dateValue(DateTime value) =>
+      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
-    if (short.contains('-')) {
-      return DateTime.tryParse(short);
-    }
+  String _timeValue(DateTime value) =>
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 
-    final parts = short.split('/');
-    if (parts.length != 3) return null;
-
-    return DateTime.tryParse(
-      '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
-    );
-  }
-
-  TimeOfDay? _parseTime(String value) {
-    final parts = value.split(':');
-    if (parts.length != 2) return null;
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return null;
-    return TimeOfDay(hour: hour, minute: minute);
-  }
-
-  String _timeValue(TimeOfDay? value) => value == null
-      ? ''
-      : '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
-
-  Future<void> _pickTime({required bool start}) async {
-    final selected = await showTimePicker(
+  Future<void> _pickDateTime({required bool start}) async {
+    final now = DateTime.now();
+    final rawCurrent = start
+        ? startDateTime ?? now.add(const Duration(days: 1))
+        : endDateTime ??
+              (startDateTime ?? now.add(const Duration(days: 1))).add(
+                const Duration(hours: 4),
+              );
+    final today = DateTime(now.year, now.month, now.day);
+    final minimum = !start && startDateTime != null
+        ? DateTime(
+            startDateTime!.year,
+            startDateTime!.month,
+            startDateTime!.day,
+          )
+        : today;
+    final current = rawCurrent.isBefore(minimum) ? minimum : rawCurrent;
+    final selectedDate = await showDatePicker(
       context: context,
-      initialTime: start
-          ? startTime ?? const TimeOfDay(hour: 8, minute: 0)
-          : endTime ?? const TimeOfDay(hour: 12, minute: 0),
+      initialDate: current,
+      firstDate: minimum,
+      lastDate: DateTime(2035),
     );
-    if (selected == null) return;
+    if (selectedDate == null || !mounted) return;
+    final selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (selectedTime == null) return;
+    final value = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
     setState(() {
       if (start) {
-        startTime = selected;
+        startDateTime = value;
+        if (endDateTime != null && !endDateTime!.isAfter(value)) {
+          endDateTime = value.add(const Duration(hours: 4));
+        }
       } else {
-        endTime = selected;
+        endDateTime = value;
       }
     });
   }
@@ -219,28 +228,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final today = DateTime.now();
-
-    final selected = await showDatePicker(
-      context: context,
-      initialDate: date ?? today,
-      firstDate: DateTime(today.year, today.month, today.day),
-      lastDate: DateTime(2035),
-    );
-
-    if (selected != null) {
-      setState(() => date = selected);
-    }
-  }
-
-  String get dateLabel {
-    if (date == null) return 'Selecionar data';
-
-    final day = date!.day.toString().padLeft(2, '0');
-    final month = date!.month.toString().padLeft(2, '0');
-
-    return '$day/$month/${date!.year}';
+  String _dateTimeLabel(DateTime? value) {
+    if (value == null) return 'Selecionar data e hora';
+    final day = value.day.toString().padLeft(2, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    return '$day/$month/${value.year} às ${_timeValue(value)}';
   }
 
   Future<void> _save() async {
@@ -271,23 +263,25 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       );
       return;
     }
-    if ((startTime == null) != (endTime == null)) {
+    if (startDateTime == null || endDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe horário inicial e final.')),
+        const SnackBar(content: Text('Informe início e fim do roteiro.')),
       );
       return;
     }
-    if (startTime != null && endTime != null) {
-      final startMinutes = startTime!.hour * 60 + startTime!.minute;
-      final endMinutes = endTime!.hour * 60 + endTime!.minute;
-      if (startMinutes >= endMinutes) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('O horário final deve ser posterior ao inicial.'),
-          ),
-        );
-        return;
-      }
+    if (!endDateTime!.isAfter(startDateTime!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O fim deve ser posterior ao início do roteiro.'),
+        ),
+      );
+      return;
+    }
+    if (activities.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione pelo menos uma atividade.')),
+      );
+      return;
     }
     setState(() => saving = true);
 
@@ -329,10 +323,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           (AppStore.instance.useBackend
               ? SessionService.instance.userId ?? ''
               : ''),
-      date: dateLabel,
+      date: _dateValue(startDateTime!),
       price: price,
       status: current?.status ?? 'Ativa',
-      modality: modality,
+      modality: activities.first,
+      activities: activities.toList(),
       latitude: latitude,
       longitude: longitude,
       accessible: accessible,
@@ -343,8 +338,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           .toList(),
       route: List<TrailPoint>.from(routePoints),
       capacity: capacity,
-      startTime: _timeValue(startTime),
-      endTime: _timeValue(endTime),
+      startTime: _timeValue(startDateTime!),
+      endTime: _timeValue(endDateTime!),
+      endDate: _dateValue(endDateTime!),
+      startDateTime: startDateTime!.toIso8601String(),
+      endDateTime: endDateTime!.toIso8601String(),
     );
 
     final saved = await runAction(context, () async {
@@ -365,8 +363,8 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       SnackBar(
         content: Text(
           current == null
-              ? 'Trilha adicionada com sucesso.'
-              : 'Trilha atualizada com sucesso.',
+              ? 'Roteiro adicionado com sucesso.'
+              : 'Roteiro atualizado com sucesso.',
         ),
       ),
     );
@@ -381,7 +379,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.existing == null ? 'Nova trilha' : 'Editar trilha',
+          widget.existing == null ? 'Novo roteiro' : 'Editar roteiro',
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
@@ -393,7 +391,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
             children: [
               const Text(
-                'Apresente sua trilha',
+                'Apresente seu roteiro',
                 style: TextStyle(
                   fontSize: 24,
                   color: AppColors.forest,
@@ -440,7 +438,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Adicionar foto da trilha',
+                                'Adicionar foto do roteiro',
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               SizedBox(height: 3),
@@ -486,39 +484,26 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _pickTime(start: true),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Início',
-                          prefixIcon: Icon(Icons.schedule_outlined),
-                        ),
-                        child: Text(
-                          startTime == null
-                              ? 'Selecionar'
-                              : startTime!.format(context),
-                        ),
-                      ),
-                    ),
+              InkWell(
+                onTap: () => _pickDateTime(start: true),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Início do roteiro',
+                    prefixIcon: Icon(Icons.event_available_outlined),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _pickTime(start: false),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Fim'),
-                        child: Text(
-                          endTime == null
-                              ? 'Selecionar'
-                              : endTime!.format(context),
-                        ),
-                      ),
-                    ),
+                  child: Text(_dateTimeLabel(startDateTime)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () => _pickDateTime(start: false),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Fim do roteiro',
+                    prefixIcon: Icon(Icons.event_busy_outlined),
                   ),
-                ],
+                  child: Text(_dateTimeLabel(endDateTime)),
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -548,11 +533,12 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               DropdownButtonFormField<String>(
                 initialValue: difficulty,
                 decoration: const InputDecoration(labelText: 'Dificuldade'),
-                items: const [
-                  DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
-                  DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
-                  DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
-                ],
+                items: TrailDifficulty.values
+                    .map(
+                      (value) =>
+                          DropdownMenuItem(value: value, child: Text(value)),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   if (value != null) {
                     setState(() => difficulty = value);
@@ -560,22 +546,31 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: modality,
-                decoration: const InputDecoration(labelText: 'Modalidade'),
-                items: const [
-                  DropdownMenuItem(value: 'Trekking', child: Text('Trekking')),
-                  DropdownMenuItem(value: 'Hiking', child: Text('Hiking')),
-                  DropdownMenuItem(
-                    value: 'Caminhada',
-                    child: Text('Caminhada'),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => modality = value);
-                  }
-                },
+              InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Atividades do roteiro',
+                  helperText: 'Selecione todas as atividades incluídas.',
+                  alignLabelWithHint: true,
+                ),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: RouteActivity.values
+                      .map(
+                        (activity) => FilterChip(
+                          label: Text(activity),
+                          selected: activities.contains(activity),
+                          onSelected: (selected) => setState(() {
+                            if (selected) {
+                              activities.add(activity);
+                            } else {
+                              activities.remove(activity);
+                            }
+                          }),
+                        ),
+                      )
+                      .toList(),
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -607,20 +602,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Data da atividade',
-                    prefixIcon: Icon(Icons.calendar_month_outlined),
-                  ),
-                  child: Text(dateLabel),
-                ),
-              ),
-              const SizedBox(height: 12),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Trilha acessível'),
+                title: const Text('Roteiro acessível'),
                 subtitle: const Text(
                   'Informe se o percurso possui condições de acessibilidade.',
                 ),
@@ -752,7 +736,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               saving
                   ? 'Salvando...'
                   : widget.existing == null
-                  ? 'Adicionar trilha'
+                  ? 'Adicionar roteiro'
                   : 'Salvar alterações',
             ),
           ),

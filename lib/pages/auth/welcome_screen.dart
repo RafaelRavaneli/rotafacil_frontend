@@ -17,7 +17,7 @@ class WelcomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Trilhas e aventuras\npara todos os caminhos.',
+            'Roteiros e aventuras\npara todos os caminhos.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.paper,
@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
           const SizedBox(height: 32),
           const _Benefit(
             icon: Icons.hiking_rounded,
-            text: 'Explore trilhas incríveis',
+            text: 'Explore roteiros incríveis',
           ),
           const SizedBox(height: 18),
           const _Benefit(

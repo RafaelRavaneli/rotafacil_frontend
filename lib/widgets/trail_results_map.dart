@@ -52,7 +52,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(
-            'As trilhas encontradas não possuem coordenadas válidas. Consulte a lista de resultados.',
+            'Os roteiros encontrados não possuem coordenadas válidas. Consulte a lista de resultados.',
           ),
         ),
       );
@@ -108,7 +108,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
                           width: 52,
                           height: 52,
                           child: Tooltip(
-                            message: 'Abrir trilha: ${trail.name}',
+                            message: 'Abrir roteiro: ${trail.name}',
                             child: IconButton(
                               onPressed: () => widget.onSelected(trail),
                               style: IconButton.styleFrom(
@@ -140,7 +140,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
         ),
         const SizedBox(height: 8),
         Text(
-          '${mapped.length} trilha(s) no mapa. Toque em um marcador para abrir os detalhes.',
+          '${mapped.length} roteiro(s) no mapa. Toque em um marcador para abrir os detalhes.',
           style: const TextStyle(color: AppColors.muted, fontSize: 12),
         ),
         if (mapped.length < widget.trails.length)

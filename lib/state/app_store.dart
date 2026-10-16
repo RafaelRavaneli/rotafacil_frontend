@@ -505,7 +505,7 @@ class AppStore extends ChangeNotifier {
     trails.insert(0, trail);
 
     await addNotification(
-      title: 'Trilha adicionada',
+      title: 'Roteiro adicionado',
       body: '${trail.name} foi adicionada ao RotaFácil.',
     );
 
@@ -548,7 +548,7 @@ class AppStore extends ChangeNotifier {
           booking.trailId == trail.id && BookingStatus.isActive(booking.status),
     )) {
       throw StateError(
-        'Esta trilha possui reservas ativas. Cancele ou conclua essas reservas antes de desativá-la.',
+        'Este roteiro possui reservas ativas. Cancele ou conclua essas reservas antes de desativá-lo.',
       );
     }
 
@@ -684,21 +684,6 @@ class AppStore extends ChangeNotifier {
   Future<TrailWeather?> weatherFor(String trailId) async {
     if (!useBackend) return null;
     return _backend.weather(trailId);
-  }
-
-  Future<RouteSummary> routeToTrail({
-    required String trailId,
-    required double latitude,
-    required double longitude,
-  }) {
-    if (!useBackend) {
-      throw StateError('Rota exige conexão com o servidor.');
-    }
-    return _backend.routeToTrail(
-      trailId: trailId,
-      latitude: latitude,
-      longitude: longitude,
-    );
   }
 
   Future<EmergencyContact> emergencyContactFor(String userId) {

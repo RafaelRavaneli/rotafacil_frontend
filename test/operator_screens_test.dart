@@ -146,42 +146,43 @@ void main() {
     expect(find.text('Cancelar reserva'), findsNothing);
   });
 
-  testWidgets('Detalhe usa registro atualizado e preserva reserva sem trilha', (
-    tester,
-  ) async {
-    store.trails.clear();
-    await tester.pumpWidget(app(BookingDetailsScreen(bookingId: 'r1')));
-    await tester.scrollUntilVisible(
-      find.textContaining('Os dados atuais da trilha não estão disponíveis'),
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(ListView),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    expect(
-      find.textContaining('Os dados atuais da trilha não estão disponíveis'),
-      findsOneWidget,
-    );
-    store.bookings
-      ..clear()
-      ..add(reservation(status: 'Cancelado'));
-    await tester.pumpWidget(app(BookingDetailsScreen(bookingId: 'r1')));
-    await tester.scrollUntilVisible(
-      find.text('Cancelado'),
-      -200,
-      scrollable: find
-          .descendant(
-            of: find.byType(ListView),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    expect(find.text('Cancelado'), findsOneWidget);
-    expect(find.text('Cancelar reserva'), findsNothing);
-  });
+  testWidgets(
+    'Detalhe usa registro atualizado e preserva reserva sem roteiro',
+    (tester) async {
+      store.trails.clear();
+      await tester.pumpWidget(app(BookingDetailsScreen(bookingId: 'r1')));
+      await tester.scrollUntilVisible(
+        find.textContaining('Os dados atuais do roteiro não estão disponíveis'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(
+        find.textContaining('Os dados atuais do roteiro não estão disponíveis'),
+        findsOneWidget,
+      );
+      store.bookings
+        ..clear()
+        ..add(reservation(status: 'Cancelado'));
+      await tester.pumpWidget(app(BookingDetailsScreen(bookingId: 'r1')));
+      await tester.scrollUntilVisible(
+        find.text('Cancelado'),
+        -200,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(find.text('Cancelado'), findsOneWidget);
+      expect(find.text('Cancelar reserva'), findsNothing);
+    },
+  );
 
   for (final width in [320.0, 1024.0]) {
     for (final entry in <String, Widget>{
@@ -349,6 +350,8 @@ void main() {
       );
       expect(store.bookings.single.status, 'Cancelado');
       await tester.pumpWidget(app(const BookingsScreen(role: 'guia')));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView).first, const Offset(0, -700));
       await tester.pumpAndSettle();
       expect(find.text('Cancelado'), findsOneWidget);
     },

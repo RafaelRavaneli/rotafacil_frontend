@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../utils/run_action.dart';
 
 import '../../data/demo_data.dart' show guideByName;
@@ -10,6 +9,7 @@ import '../../models/trail_experience.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
+import '../../widgets/trail_location_map.dart';
 import 'guide_profile_screen.dart';
 
 class TrailDetailsScreen extends StatefulWidget {
@@ -34,60 +34,6 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
     weatherFuture = trail.latitude == null || trail.longitude == null
         ? Future<TrailWeather?>.value(null)
         : store.weatherFor(trail.id);
-  }
-
-  Future<void> _showRoute(BuildContext context) async {
-    final enabled = await Geolocator.isLocationServiceEnabled();
-    if (!enabled && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ative a localização do dispositivo.')),
-      );
-      return;
-    }
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Permita a localização para calcular a rota até o início.',
-            ),
-          ),
-        );
-      }
-      return;
-    }
-    final position = await Geolocator.getCurrentPosition();
-    if (!context.mounted) return;
-    final summary = await runValueAction<RouteSummary>(
-      context,
-      () => AppStore.instance.routeToTrail(
-        trailId: trail.id,
-        latitude: position.latitude,
-        longitude: position.longitude,
-      ),
-    );
-    if (summary == null || !context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Rota até o início'),
-        content: Text(
-          '${summary.distanceKm.toStringAsFixed(1).replaceAll('.', ',')} km • '
-          '${summary.durationMinutes.toStringAsFixed(0)} minutos',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _book(BuildContext context) async {
@@ -338,7 +284,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                         const Divider(),
                         const SizedBox(height: 10),
                         const Text(
-                          'Sobre a trilha',
+                          'Sobre o roteiro',
                           style: TextStyle(
                             color: AppColors.ink,
                             fontSize: 17,
@@ -431,37 +377,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                         ),
                         const SizedBox(height: 18),
                         if (trail.latitude != null && trail.longitude != null)
-                          Card(
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.map_outlined,
-                                    color: AppColors.green700,
-                                  ),
-                                  title: const Text('Ponto de início'),
-                                  subtitle: Text(
-                                    '${trail.latitude!.toStringAsFixed(5)}, ${trail.longitude!.toStringAsFixed(5)}',
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    16,
-                                    0,
-                                    16,
-                                    12,
-                                  ),
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => _showRoute(context),
-                                    icon: const Icon(Icons.directions_outlined),
-                                    label: const Text(
-                                      'Calcular rota até o início',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          TrailLocationMap(trail: trail),
                         const SizedBox(height: 20),
                         const Text(
                           'Guia responsável',
@@ -566,7 +482,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                             final reviews = snapshot.data ?? const [];
                             if (reviews.isEmpty) {
                               return const Text(
-                                'Esta trilha ainda não possui avaliações.',
+                                'Este roteiro ainda não possui avaliações.',
                                 style: TextStyle(color: AppColors.muted),
                               );
                             }

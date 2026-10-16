@@ -44,10 +44,7 @@ void main() {
           startsWith('multipart/form-data; boundary='),
         );
         expect(request, isA<http.Request>());
-        final body = utf8.decode(
-          (request as http.Request).bodyBytes,
-          allowMalformed: true,
-        );
+        final body = utf8.decode(request.bodyBytes, allowMalformed: true);
         expect(body.toLowerCase(), contains('content-type: image/png'));
         return http.Response('{"url":"https://example.test/foto.png"}', 200);
       }),

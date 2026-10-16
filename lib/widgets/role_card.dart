@@ -14,7 +14,7 @@ class RoleCard extends StatelessWidget {
     final data = switch (role) {
       UserRole.tourist => (
         Icons.hiking_rounded,
-        'Quero descobrir trilhas e viver novas aventuras.',
+        'Quero descobrir roteiros e viver novas aventuras.',
       ),
       UserRole.guide => (
         Icons.flag_rounded,

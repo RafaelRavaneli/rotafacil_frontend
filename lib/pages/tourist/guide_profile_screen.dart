@@ -101,12 +101,12 @@ class GuideProfileScreen extends StatelessWidget {
                   ],
                   const SizedBox(height: 28),
                   Text(
-                    'Trilhas deste guia',
+                    'Roteiros deste guia',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
                   if (trails.isEmpty)
-                    const Text('Nenhuma trilha disponível neste catálogo.'),
+                    const Text('Nenhum roteiro disponível neste catálogo.'),
                   for (final trail in trails)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),

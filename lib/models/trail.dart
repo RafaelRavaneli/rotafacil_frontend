@@ -45,6 +45,75 @@ class TrailStatus {
   }
 }
 
+class TrailDifficulty {
+  const TrailDifficulty._();
+
+  static const String beginner = 'Iniciante';
+  static const String intermediate = 'Intermediário';
+  static const String advanced = 'Avançado';
+  static const List<String> values = [beginner, intermediate, advanced];
+
+  static String normalize(String? value) {
+    switch (value?.trim().toLowerCase()) {
+      case 'fácil':
+      case 'facil':
+      case 'iniciante':
+        return beginner;
+      case 'moderada':
+      case 'moderado':
+      case 'intermediário':
+      case 'intermediario':
+        return intermediate;
+      case 'difícil':
+      case 'dificil':
+      case 'avançado':
+      case 'avancado':
+        return advanced;
+      default:
+        return intermediate;
+    }
+  }
+}
+
+class RouteActivity {
+  const RouteActivity._();
+
+  static const List<String> values = [
+    'Trilha',
+    'Trekking',
+    'Aquatrekking',
+    'Escalada',
+    'Rapel',
+    'Tirolesa',
+    'Rafting',
+    'Boia cross',
+    'Acampamento',
+    'Canoagem',
+    'Caiaque',
+    'Canyoning',
+    'Cachoeirismo',
+    'Mountain bike',
+    'Cicloturismo',
+    'Arvorismo',
+    'Via ferrata',
+    'Cavalgada',
+    'Observação de aves',
+    'Observação de fauna',
+    'Passeio ecológico',
+    'Espeleologia',
+    'Orientação',
+    'Mergulho',
+    'Stand up paddle',
+    'Surfe',
+    'Pesca esportiva',
+    'Sandboard',
+    'Voo livre',
+    'Parapente',
+    'Asa-delta',
+    'Off-road',
+  ];
+}
+
 class TrailPoint {
   const TrailPoint({required this.latitude, required this.longitude});
 
@@ -84,7 +153,8 @@ class Trail {
     required this.date,
     this.price = 189,
     this.status = TrailStatus.active,
-    this.modality = 'Trekking',
+    this.modality = 'Trilha',
+    this.activities = const [],
     this.latitude,
     this.longitude,
     this.accessible = false,
@@ -93,6 +163,9 @@ class Trail {
     this.capacity = 12,
     this.startTime = '',
     this.endTime = '',
+    this.endDate = '',
+    this.startDateTime = '',
+    this.endDateTime = '',
   });
 
   final String id;
@@ -121,6 +194,7 @@ class Trail {
   final double price;
   final String status;
   final String modality;
+  final List<String> activities;
   final double? latitude;
   final double? longitude;
   final bool accessible;
@@ -129,6 +203,20 @@ class Trail {
   final int capacity;
   final String startTime;
   final String endTime;
+  final String endDate;
+  final String startDateTime;
+  final String endDateTime;
+
+  List<String> get effectiveActivities => activities.isNotEmpty
+      ? List.unmodifiable(activities)
+      : [modality.trim().isEmpty ? 'Trilha' : modality];
+
+  DateTime? get startsAt =>
+      DateTime.tryParse(startDateTime) ?? _combineDateAndTime(date, startTime);
+
+  DateTime? get endsAt =>
+      DateTime.tryParse(endDateTime) ??
+      _combineDateAndTime(endDate.isEmpty ? date : endDate, endTime);
 
   String get location => '$city - $state';
 
@@ -172,6 +260,7 @@ class Trail {
     'price': price,
     'status': status,
     'modality': modality,
+    'activities': activities,
     'latitude': latitude,
     'longitude': longitude,
     'accessible': accessible,
@@ -180,6 +269,9 @@ class Trail {
     'capacity': capacity,
     'startTime': startTime,
     'endTime': endTime,
+    'endDate': endDate,
+    'startDateTime': startDateTime,
+    'endDateTime': endDateTime,
   };
 
   factory Trail.fromJson(Map<String, dynamic> json) {
@@ -195,14 +287,18 @@ class Trail {
 
     final rawItems = json['recommendedItems'] ?? json['itens_recomendados'];
     final rawRoute = json['route'] ?? json['trajeto'];
+    final rawActivities = json['activities'] ?? json['atividades'];
+    final legacyModality =
+        (json['modality'] ?? json['modalidade'])?.toString() ?? 'Trilha';
 
     return Trail(
       id: json['id']?.toString() ?? '',
       name: (json['name'] ?? json['nome'])?.toString() ?? '',
       city: (json['city'] ?? json['cidade'])?.toString() ?? '',
       state: (json['state'] ?? json['estado'])?.toString() ?? '',
-      difficulty:
-          (json['difficulty'] ?? json['dificuldade'])?.toString() ?? 'Moderada',
+      difficulty: TrailDifficulty.normalize(
+        (json['difficulty'] ?? json['dificuldade'])?.toString(),
+      ),
       distanceKm: parseDistance(rawDistance),
       duration: json['duration']?.toString() ?? '3h',
       elevation: rawElevation is num
@@ -236,8 +332,10 @@ class Trail {
       status: json['ativo'] == false
           ? TrailStatus.inactive
           : TrailStatus.normalize(json['status']?.toString()),
-      modality:
-          (json['modality'] ?? json['modalidade'])?.toString() ?? 'Trekking',
+      modality: legacyModality,
+      activities: rawActivities is List
+          ? rawActivities.map((item) => item.toString()).toList()
+          : [legacyModality],
       latitude: double.tryParse(json['latitude']?.toString() ?? ''),
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),
       accessible: json['accessible'] == true || json['acessivel'] == true,
@@ -261,6 +359,23 @@ class Trail {
       startTime:
           (json['startTime'] ?? json['horario_inicio'])?.toString() ?? '',
       endTime: (json['endTime'] ?? json['horario_fim'])?.toString() ?? '',
+      endDate: (json['endDate'] ?? json['data_fim'])?.toString() ?? '',
+      startDateTime:
+          (json['startDateTime'] ?? json['data_hora_inicio'])?.toString() ?? '',
+      endDateTime:
+          (json['endDateTime'] ?? json['data_hora_fim'])?.toString() ?? '',
     );
+  }
+
+  static DateTime? _combineDateAndTime(String dateValue, String timeValue) {
+    if (dateValue.trim().isEmpty) return null;
+    final parts = dateValue.trim().split('/');
+    final normalizedDate = parts.length == 3
+        ? '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}'
+        : dateValue.trim().split(' ').first;
+    final normalizedTime = timeValue.trim().isEmpty
+        ? '00:00'
+        : timeValue.trim();
+    return DateTime.tryParse('${normalizedDate}T$normalizedTime');
   }
 }

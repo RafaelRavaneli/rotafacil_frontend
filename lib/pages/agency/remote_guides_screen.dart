@@ -242,126 +242,143 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(agency ? 'Guias e convites' : 'Convites de agências'),
-      actions: [
-        IconButton(
-          onPressed: busy ? null : reload,
-          tooltip: 'Atualizar',
-          icon: const Icon(Icons.refresh),
-        ),
-      ],
-    ),
-    body: FutureBuilder<List<List<Map<String, dynamic>>>>(
-      future: data,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Carregando guias e convites...'),
-              ],
-            ),
-          );
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: GuideCollectionNotice(
-                  title: 'Não foi possível carregar',
-                  message: authErrorMessage(snapshot.error!),
-                  action: OutlinedButton.icon(
-                    onPressed: reload,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Tentar novamente'),
+    backgroundColor: AppColors.paper,
+    body: SafeArea(
+      child: FutureBuilder<List<List<Map<String, dynamic>>>>(
+        future: data,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Carregando guias e convites...'),
+                ],
+              ),
+            );
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: GuideCollectionNotice(
+                    title: 'Não foi possível carregar',
+                    message: authErrorMessage(snapshot.error!),
+                    action: OutlinedButton.icon(
+                      onPressed: reload,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Tentar novamente'),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }
-        final invites = snapshot.data!.first;
-        final guides = agency ? snapshot.data![1] : <Map<String, dynamic>>[];
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                Text(
-                  agency
-                      ? 'Encontre guias para suas trilhas'
-                      : 'Parcerias para suas trilhas',
-                  style: const TextStyle(
-                    color: AppColors.forest,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
+            );
+          }
+          final invites = snapshot.data!.first;
+          final guides = agency ? snapshot.data![1] : <Map<String, dynamic>>[];
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 30, 24, 30),
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          agency ? 'Guias' : 'Convites',
+                          style: const TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ),
+                      Material(
+                        color: AppColors.white,
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          onPressed: busy ? null : reload,
+                          tooltip: 'Atualizar',
+                          icon: const Icon(Icons.refresh),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  agency
-                      ? 'Consulte o catálogo e acompanhe a resposta dos guias.'
-                      : 'Confira as agências que convidaram você e escolha como responder.',
-                  style: const TextStyle(color: AppColors.muted, height: 1.5),
-                ),
-                const SizedBox(height: 24),
-                _Section(
-                  title: agency ? 'Convites enviados' : 'Convites recebidos',
-                  count: invites.length,
-                ),
-                const SizedBox(height: 12),
-                if (invites.isEmpty)
-                  GuideCollectionNotice(
-                    title: 'Nenhum convite.',
-                    message: agency
-                        ? 'Escolha um guia no catálogo abaixo para enviar o primeiro convite.'
-                        : 'Quando uma agência enviar um convite, ele aparecerá aqui.',
-                  ),
-                ...invites.map(
-                  (i) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _invitation(i),
-                  ),
-                ),
-                if (agency) ...[
-                  const SizedBox(height: 24),
-                  _Section(title: 'Catálogo de guias', count: guides.length),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Os guias do catálogo não são necessariamente vinculados à sua agência.',
-                    style: TextStyle(
+                  const SizedBox(height: 10),
+                  Text(
+                    agency
+                        ? 'Encontre guias para seus roteiros.'
+                        : 'Parcerias para seus roteiros.',
+                    style: const TextStyle(
                       color: AppColors.muted,
-                      fontSize: 12,
-                      height: 1.5,
+                      fontSize: 15,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    agency
+                        ? 'Consulte o catálogo e acompanhe a resposta dos guias.'
+                        : 'Confira as agências que convidaram você e escolha como responder.',
+                    style: const TextStyle(color: AppColors.muted, height: 1.5),
+                  ),
+                  const SizedBox(height: 24),
+                  _Section(
+                    title: agency ? 'Convites enviados' : 'Convites recebidos',
+                    count: invites.length,
                   ),
                   const SizedBox(height: 12),
-                  if (guides.isEmpty)
-                    const GuideCollectionNotice(
-                      title: 'Nenhum guia cadastrado.',
-                      message:
-                          'Atualize esta tela para consultar novos cadastros.',
+                  if (invites.isEmpty)
+                    GuideCollectionNotice(
+                      title: 'Nenhum convite.',
+                      message: agency
+                          ? 'Escolha um guia no catálogo abaixo para enviar o primeiro convite.'
+                          : 'Quando uma agência enviar um convite, ele aparecerá aqui.',
                     ),
-                  ...guides.map(
-                    (g) => Padding(
+                  ...invites.map(
+                    (i) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _guide(g, invites),
+                      child: _invitation(i),
                     ),
                   ),
+                  if (agency) ...[
+                    const SizedBox(height: 24),
+                    _Section(title: 'Catálogo de guias', count: guides.length),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Os guias do catálogo não são necessariamente vinculados à sua agência.',
+                      style: TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (guides.isEmpty)
+                      const GuideCollectionNotice(
+                        title: 'Nenhum guia cadastrado.',
+                        message:
+                            'Atualize esta tela para consultar novos cadastros.',
+                      ),
+                    ...guides.map(
+                      (g) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _guide(g, invites),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     ),
   );
 }

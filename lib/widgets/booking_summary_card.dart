@@ -14,18 +14,33 @@ class BookingSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppColors.white,
+      elevation: 1,
+      shadowColor: AppColors.shadow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.event_outlined, color: AppColors.forest),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      color: AppColors.sage,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.hiking_rounded,
+                      color: AppColors.forest,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -33,12 +48,12 @@ class BookingSummaryCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.forest,
+                        color: AppColors.ink,
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right, color: AppColors.forest),
+                  const Icon(Icons.chevron_right, color: AppColors.muted),
                 ],
               ),
               const SizedBox(height: 12),
@@ -73,6 +88,13 @@ class BookingSummaryCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (booking.personName.trim().isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  booking.personName,
+                  style: const TextStyle(color: AppColors.ink, fontSize: 13),
+                ),
+              ],
               const SizedBox(height: 10),
               Text(
                 'Valor declarado: R\$ ${booking.valuePaid.toStringAsFixed(2).replaceAll('.', ',')}',

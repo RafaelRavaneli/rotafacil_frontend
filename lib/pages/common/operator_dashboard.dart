@@ -71,27 +71,32 @@ class OperatorDashboard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            isAgency
-                                ? 'RotaFácil · Agência'
-                                : 'RotaFácil · Guia',
+                            'Painel',
                             style: const TextStyle(
-                              color: AppColors.forest,
-                              fontWeight: FontWeight.w600,
+                              color: AppColors.ink,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
                             ),
                           ),
                         ),
-                        IconButton(
-                          tooltip: 'Notificações',
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const NotificationCenterScreen(),
+                        Material(
+                          color: AppColors.white,
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            tooltip: 'Notificações',
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const NotificationCenterScreen(),
+                              ),
                             ),
-                          ),
-                          icon: Badge(
-                            isLabelVisible: store.unreadNotifications > 0,
-                            label: Text('${store.unreadNotifications}'),
-                            child: const Icon(Icons.notifications_outlined),
+                            icon: Badge(
+                              isLabelVisible: store.unreadNotifications > 0,
+                              label: Text('${store.unreadNotifications}'),
+                              child: const Icon(Icons.notifications_outlined),
+                            ),
                           ),
                         ),
                       ],
@@ -100,8 +105,15 @@ class OperatorDashboard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
-                        color: AppColors.forest,
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadow,
+                            blurRadius: 18,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -117,16 +129,16 @@ class OperatorDashboard extends StatelessWidget {
                                 Text(
                                   'Olá, ${user.name}!',
                                   style: const TextStyle(
-                                    color: AppColors.white,
+                                    color: AppColors.ink,
                                     fontSize: 24,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  'Organize suas trilhas e acompanhe as reservas.',
+                                  'Organize seus roteiros e acompanhe as reservas.',
                                   style: TextStyle(
-                                    color: AppColors.sage,
+                                    color: AppColors.muted,
                                     height: 1.4,
                                   ),
                                 ),
@@ -148,13 +160,13 @@ class OperatorDashboard extends StatelessWidget {
                           children: [
                             _Metric(
                               width: width,
-                              label: 'Trilhas cadastradas',
+                              label: 'Roteiros cadastrados',
                               value: '${trails.length}',
                               icon: Icons.terrain,
                             ),
                             _Metric(
                               width: width,
-                              label: 'Trilhas ativas',
+                              label: 'Roteiros ativos',
                               value:
                                   '${trails.where((t) => TrailStatus.isActive(t.status)).length}',
                               icon: Icons.check_circle_outline,
@@ -195,17 +207,17 @@ class OperatorDashboard extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.add),
-                      label: const Text('Criar nova trilha'),
+                      label: const Text('Criar novo roteiro'),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
                       onPressed: () => _open(
                         context,
                         TrailsManagementScreen(isAgency: isAgency),
-                        'Gestão de trilhas',
+                        'Gestão de roteiros',
                       ),
                       icon: const Icon(Icons.terrain_outlined),
-                      label: const Text('Gerenciar trilhas'),
+                      label: const Text('Gerenciar roteiros'),
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
@@ -246,6 +258,18 @@ class OperatorDashboard extends StatelessWidget {
                       style: TextStyle(color: AppColors.muted),
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed:
+                          onOpenBookings ??
+                          () => _open(
+                            context,
+                            BookingsScreen(role: isAgency ? 'agencia' : 'guia'),
+                            'Reservas',
+                          ),
+                      icon: const Icon(Icons.calendar_month_outlined),
+                      label: const Text('Ver todas as reservas'),
+                    ),
+                    const SizedBox(height: 16),
                     if (reservations.isEmpty)
                       const Card(
                         child: Padding(
@@ -267,18 +291,6 @@ class OperatorDashboard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed:
-                          onOpenBookings ??
-                          () => _open(
-                            context,
-                            BookingsScreen(role: isAgency ? 'agencia' : 'guia'),
-                            'Reservas',
-                          ),
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      label: const Text('Ver todas as reservas'),
                     ),
                   ],
                 ),

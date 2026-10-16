@@ -32,16 +32,17 @@ class TrailsManagementScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const Text(
-                          'Minhas trilhas',
+                          'Meus roteiros',
                           style: TextStyle(
-                            color: AppColors.forest,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
+                            color: AppColors.ink,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
                           ),
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'Gerencie suas trilhas e experiências',
+                          'Gerencie seus roteiros e experiências',
                           style: TextStyle(
                             color: AppColors.muted,
                             fontSize: 13,
@@ -51,7 +52,7 @@ class TrailsManagementScreen extends StatelessWidget {
                         FilledButton.icon(
                           onPressed: () => _openForm(context),
                           icon: const Icon(Icons.add),
-                          label: const Text('Nova trilha'),
+                          label: const Text('Novo roteiro'),
                         ),
                       ],
                     ),
@@ -73,7 +74,7 @@ class TrailsManagementScreen extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              '${store.managedTrails.length} trilha(s) cadastrada(s)',
+                              '${store.managedTrails.length} roteiro(s) cadastrado(s)',
                               style: const TextStyle(
                                 color: AppColors.green900,
                                 fontWeight: FontWeight.w600,
@@ -141,12 +142,12 @@ class TrailsManagementScreen extends StatelessWidget {
         return AlertDialog(
           title: Text(
             AppStore.instance.useBackend
-                ? 'Desativar trilha?'
-                : 'Excluir trilha?',
+                ? 'Desativar roteiro?'
+                : 'Excluir roteiro?',
           ),
           content: Text(
             AppStore.instance.useBackend
-                ? 'A trilha "${trail.name}" deixará de aparecer na busca. Reservas ativas impedem a desativação; o histórico será preservado.'
+                ? 'O roteiro "${trail.name}" deixará de aparecer na busca. Reservas ativas impedem a desativação; o histórico será preservado.'
                 : 'Excluir "${trail.name}"? Reservas ativas impedem a exclusão; o histórico será preservado.',
           ),
           actions: [
@@ -383,7 +384,7 @@ class _EmptyTrails extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             const Text(
-              'Nenhuma trilha cadastrada',
+              'Nenhum roteiro cadastrado',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.green900,
@@ -393,7 +394,7 @@ class _EmptyTrails extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Crie sua primeira trilha para começar.',
+              'Crie seu primeiro roteiro para começar.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
@@ -402,7 +403,7 @@ class _EmptyTrails extends StatelessWidget {
               style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
               onPressed: onAdd,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Adicionar trilha'),
+              label: const Text('Adicionar roteiro'),
             ),
           ],
         ),

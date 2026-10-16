@@ -46,25 +46,6 @@ class TrailWeather {
   );
 }
 
-class RouteSummary {
-  const RouteSummary({
-    required this.distanceKm,
-    required this.durationMinutes,
-    required this.profile,
-  });
-
-  final double distanceKm;
-  final double durationMinutes;
-  final String profile;
-
-  factory RouteSummary.fromJson(Map<String, dynamic> json) => RouteSummary(
-    distanceKm: double.tryParse(json['distancia_km']?.toString() ?? '') ?? 0,
-    durationMinutes:
-        double.tryParse(json['duracao_minutos']?.toString() ?? '') ?? 0,
-    profile: json['perfil']?.toString() ?? '',
-  );
-}
-
 class EmergencyContact {
   const EmergencyContact({
     required this.participantName,

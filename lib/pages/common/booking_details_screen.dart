@@ -67,7 +67,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       );
       if (saved && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Check-in realizado. Boa trilha!')),
+          const SnackBar(content: Text('Check-in realizado. Bom roteiro!')),
         );
       }
     } finally {
@@ -120,7 +120,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Avaliar trilha'),
+          title: const Text('Avaliar roteiro'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -301,7 +301,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             value: booking.personName,
                           ),
                           _Information(
-                            label: 'Responsável pela trilha',
+                            label: 'Responsável pelo roteiro',
                             value: trail?.guideName == 'Guia responsável'
                                 ? ''
                                 : (trail?.guideName ?? ''),
@@ -323,7 +323,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   if (trail == null) ...[
                     const SizedBox(height: 10),
                     const Text(
-                      'Os dados atuais da trilha não estão disponíveis. Os dados da reserva foram preservados.',
+                      'Os dados atuais do roteiro não estão disponíveis. Os dados da reserva foram preservados.',
                       style: TextStyle(color: AppColors.muted),
                     ),
                   ],
@@ -350,7 +350,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     OutlinedButton.icon(
                       onPressed: () => _review(booking),
                       icon: const Icon(Icons.star_outline_rounded),
-                      label: const Text('Avaliar trilha'),
+                      label: const Text('Avaliar roteiro'),
                     ),
                   ],
                   if (isOperator &&

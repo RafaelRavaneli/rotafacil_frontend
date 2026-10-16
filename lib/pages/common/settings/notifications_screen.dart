@@ -74,7 +74,7 @@ class NotificationsScreen extends StatelessWidget {
                 onChanged: store.setMarketingNotifications,
                 title: const Text('Novidades e recomendações'),
                 subtitle: const Text(
-                  'Sugestões de novas trilhas e experiências.',
+                  'Sugestões de novos roteiros e experiências.',
                 ),
               ),
               if (store.useBackend)

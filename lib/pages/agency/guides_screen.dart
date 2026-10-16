@@ -14,67 +14,70 @@ class GuidesScreen extends StatelessWidget {
     final store = AppStore.instance;
     if (store.useBackend) return const RemoteGuidesScreen();
     return Scaffold(
-      appBar: AppBar(title: const Text('Guias da agência')),
-      body: AnimatedBuilder(
-        animation: store,
-        builder: (context, _) => Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                const Text(
-                  'Organize sua equipe',
-                  style: TextStyle(
-                    color: AppColors.forest,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
+      backgroundColor: AppColors.paper,
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: store,
+          builder: (context, _) => Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const Text(
+                    'Organize sua equipe',
+                    style: TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Consulte os guias e suas situações.',
-                  style: TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 20),
-                const GuideCollectionNotice(
-                  title: 'Demonstração local',
-                  message:
-                      'Os registros desta tela ficam neste dispositivo. Convites reais e respostas de guias estão disponíveis no modo conectado ao backend.',
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: () => showDialog<void>(
-                    context: context,
-                    builder: (_) => const _LocalGuideDialog(),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Consulte os guias e suas situações.',
+                    style: TextStyle(color: AppColors.muted),
                   ),
-                  icon: const Icon(Icons.person_add_outlined),
-                  label: const Text('Adicionar guia'),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  '${store.agencyGuides.length} guia(s)',
-                  style: const TextStyle(
-                    color: AppColors.forest,
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (store.agencyGuides.isEmpty)
+                  const SizedBox(height: 20),
                   const GuideCollectionNotice(
-                    title: 'Nenhum guia registrado',
+                    title: 'Demonstração local',
                     message:
-                        'Adicione um guia para experimentar a organização da equipe.',
+                        'Os registros desta tela ficam neste dispositivo. Convites reais e respostas de guias estão disponíveis no modo conectado ao backend.',
                   ),
-                ...store.agencyGuides.map(
-                  (guide) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _LocalGuideCard(guide: guide),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => const _LocalGuideDialog(),
+                    ),
+                    icon: const Icon(Icons.person_add_outlined),
+                    label: const Text('Adicionar guia'),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    '${store.agencyGuides.length} guia(s)',
+                    style: const TextStyle(
+                      color: AppColors.forest,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (store.agencyGuides.isEmpty)
+                    const GuideCollectionNotice(
+                      title: 'Nenhum guia registrado',
+                      message:
+                          'Adicione um guia para experimentar a organização da equipe.',
+                    ),
+                  ...store.agencyGuides.map(
+                    (guide) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _LocalGuideCard(guide: guide),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

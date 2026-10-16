@@ -20,69 +20,48 @@ class TrailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 112,
-                height: 154,
-                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 16),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trail.name,
-                      style: const TextStyle(
-                        color: AppColors.forest,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1.35,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  NetworkImageBox(url: trail.imageUrl, borderRadius: 20),
+                  Positioned(
+                    left: 12,
+                    top: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      trail.location,
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
+                      decoration: BoxDecoration(
+                        color: AppColors.paper.withValues(alpha: .94),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${trail.difficulty} · ${trail.distanceLabel}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (trail.date.isNotEmpty) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        trail.date,
+                      child: Text(
+                        trail.difficulty,
                         style: const TextStyle(
-                          color: AppColors.muted,
-                          fontSize: 12,
+                          color: AppColors.forest,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 8),
-                    Text(
-                      'R\$ ${trail.price.toStringAsFixed(2).replaceAll('.', ',')} por pessoa',
-                      style: const TextStyle(
-                        color: AppColors.forest,
-                        fontWeight: FontWeight.w600,
-                      ),
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
+                  ),
+                  Positioned(
+                    right: 10,
+                    top: 10,
+                    child: Material(
+                      color: AppColors.paper.withValues(alpha: .94),
+                      shape: const CircleBorder(),
                       child: IconButton(
                         tooltip: favorite
                             ? 'Remover dos favoritos'
@@ -94,11 +73,78 @@ class TrailCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    trail.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (trail.rating > 0) ...[
+                  const Icon(
+                    Icons.star_rounded,
+                    size: 16,
+                    color: AppColors.earth,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    trail.rating.toStringAsFixed(1).replaceAll('.', ','),
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              trail.location,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              [
+                trail.distanceLabel,
+                if (trail.date.isNotEmpty) trail.date,
+              ].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+            const SizedBox(height: 7),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text:
+                        'R\$ ${trail.price.toStringAsFixed(2).replaceAll('.', ',')}',
+                    style: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  const TextSpan(text: ' por pessoa'),
+                ],
+              ),
+              style: const TextStyle(color: AppColors.ink, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );

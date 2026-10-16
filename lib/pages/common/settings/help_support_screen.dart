@@ -25,7 +25,7 @@ class HelpSupportScreen extends StatelessWidget {
           'Para entrar, informe e-mail e senha. A seleção entre turista, guia e agência acontece somente ao criar uma conta.',
         ),
         _HelpItem(
-          'Buscar uma trilha',
+          'Buscar um roteiro',
           'Em Explorar, abra a busca e selecione cidade, dificuldade, período ou proximidade. A localização é opcional.',
         ),
         _HelpItem(
@@ -38,7 +38,7 @@ class HelpSupportScreen extends StatelessWidget {
         ),
         _HelpItem(
           'Guias e agências',
-          'Gerencie atividades em Trilhas. Uma agência envia convites aos guias; o vínculo remoto depende do aceite do profissional.',
+          'Gerencie atividades em Roteiros. Uma agência envia convites aos guias; o vínculo remoto depende do aceite do profissional.',
         ),
         _HelpItem(
           'Recuperar acesso',

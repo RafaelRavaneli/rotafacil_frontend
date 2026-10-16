@@ -31,37 +31,105 @@ class ProfileTab extends StatelessWidget {
         animation: store,
         builder: (context, _) {
           final user = store.userForRole(role);
-
           final showDocument = user.document.isNotEmpty;
+          final normalizedRole = normalizeRoleKey(role);
+          final activityCount = normalizedRole == 'turista'
+              ? store.bookings
+                    .where((item) => item.roleView == 'turista')
+                    .length
+              : store.managedTrails.length;
+          final activityLabel = normalizedRole == 'turista'
+              ? 'reservas'
+              : 'roteiros';
 
           return ListView(
-            padding: const EdgeInsets.all(22),
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 34),
             children: [
-              const SizedBox(height: 10),
-              Center(
-                child: ProfileAvatar(
-                  dataUrl: user.profileImageDataUrl,
-                  radius: 46,
-                ),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Perfil',
+                      style: TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ),
+                  Material(
+                    color: AppColors.white,
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      tooltip: 'Notificações',
+                      onPressed: () =>
+                          _open(context, const NotificationCenterScreen()),
+                      icon: Badge(
+                        isLabelVisible: store.unreadNotifications > 0,
+                        label: Text('${store.unreadNotifications}'),
+                        child: const Icon(Icons.notifications_none_rounded),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 14),
-              Text(
-                user.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.green900,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
+              const SizedBox(height: 28),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 18,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                user.role,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                child: Row(
+                  children: [
+                    ProfileAvatar(
+                      dataUrl: user.profileImageDataUrl,
+                      radius: 46,
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user.role,
+                            style: const TextStyle(color: AppColors.muted),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            '$activityCount $activityLabel',
+                            style: const TextStyle(
+                              color: AppColors.forest,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (showDocument) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
                 Text(
                   '${DocumentValidator.labelForRole(role)}: '
                   '${DocumentValidator.formatForRole(role, user.document)}',
@@ -69,7 +137,16 @@ class ProfileTab extends StatelessWidget {
                   style: const TextStyle(color: AppColors.muted, fontSize: 11),
                 ),
               ],
-              const SizedBox(height: 28),
+              const SizedBox(height: 30),
+              const Text(
+                'Conta',
+                style: TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
               _ProfileItem(
                 icon: Icons.edit_outlined,
                 title: 'Editar perfil',
@@ -84,7 +161,7 @@ class ProfileTab extends StatelessWidget {
               if (role.toLowerCase() == 'turista')
                 _ProfileItem(
                   icon: Icons.favorite_border_rounded,
-                  title: 'Trilhas favoritas',
+                  title: 'Roteiros favoritos',
                   onTap: () => _open(context, const FavoritesScreen()),
                 ),
               _ProfileItem(
@@ -124,7 +201,7 @@ class ProfileTab extends StatelessWidget {
                   title: 'Convites de agências',
                   onTap: () => _open(context, const RemoteGuidesScreen()),
                 ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               OutlinedButton.icon(
                 onPressed: () async {
                   await NotificationService.instance.unregisterOnLogout();
@@ -171,15 +248,30 @@ class _ProfileItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.green700),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: const TextStyle(fontSize: 11.5)),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      contentPadding: EdgeInsets.zero,
-      onTap: onTap,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border, width: .6)),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.ink),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: subtitle == null
+            ? null
+            : Text(subtitle!, style: const TextStyle(fontSize: 11.5)),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: AppColors.muted,
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+        onTap: onTap,
+      ),
     );
   }
 }

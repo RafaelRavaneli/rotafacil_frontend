@@ -95,7 +95,7 @@ void main() {
     },
   );
 
-  testWidgets('Marcador abre trilha correta sem duplicar cartão ao retornar', (
+  testWidgets('Marcador abre roteiro correto sem duplicar cartão ao retornar', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -128,8 +128,8 @@ void main() {
       MaterialApp(home: TrailSearchScreen(tileProvider: _StaticTiles())),
     );
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Abrir trilha: Sem coordenadas'), findsNothing);
-    final marker = find.byTooltip('Abrir trilha: Trilha mapa');
+    expect(find.byTooltip('Abrir roteiro: Sem coordenadas'), findsNothing);
+    final marker = find.byTooltip('Abrir roteiro: Trilha mapa');
     await tester.ensureVisible(marker);
     await tester.pumpAndSettle();
     await tester.tap(marker);
@@ -181,7 +181,7 @@ void main() {
 
     await tester.pumpWidget(const MaterialApp(home: TrailSearchScreen()));
     expect(find.text('2 resultado(s)'), findsOneWidget);
-    await tester.tap(find.text('Somente trilhas acessíveis'));
+    await tester.tap(find.text('Somente roteiros acessíveis'));
     await tester.pump();
     expect(find.text('1 resultado(s)'), findsOneWidget);
   });
@@ -219,7 +219,7 @@ void main() {
       await tester.enterText(find.byType(TextField).first, 'Maringá');
       await tester.pump();
       expect(
-        find.text('Nenhuma trilha encontrada com esses filtros.'),
+        find.text('Nenhum roteiro encontrado com esses filtros.'),
         findsOneWidget,
       );
     },

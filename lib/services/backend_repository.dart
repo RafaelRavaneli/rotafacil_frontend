@@ -108,7 +108,7 @@ class BackendRepository {
       return LocalBooking(
         id: row['id'].toString(),
         trailId: row['id_trilha'].toString(),
-        trailName: trail?.name ?? 'Trilha indisponível',
+        trailName: trail?.name ?? 'Roteiro indisponível',
         personName:
             row['nome_usuario']?.toString() ??
             (row['id_usuario'] == id ? user.name : 'Participante'),
@@ -195,8 +195,12 @@ class BackendRepository {
       'estado': trail.state,
       'dificuldade': trail.difficulty,
       'modalidade': trail.modality,
+      'atividades': trail.effectiveActivities,
       'distancia_km': trail.distanceKm,
       'data_atividade': apiDate(trail.date),
+      'data_fim': apiDate(trail.endDate.isEmpty ? trail.date : trail.endDate),
+      'data_hora_inicio': trail.startDateTime,
+      'data_hora_fim': trail.endDateTime,
       'imagem_url': await uploadImage(trail.imageUrl),
       'preco': trail.price,
       'ativo': TrailStatus.isActive(trail.status),
@@ -256,23 +260,6 @@ class BackendRepository {
     final current = response['previsao_do_dia_da_trilha'];
     if (current is! Map) return null;
     return TrailWeather.fromJson(Map<String, dynamic>.from(current));
-  }
-
-  Future<RouteSummary> routeToTrail({
-    required String trailId,
-    required double latitude,
-    required double longitude,
-    String profile = 'foot-hiking',
-  }) async {
-    final response = await api.get(
-      '/api/trilhas/${Uri.encodeComponent(trailId)}/rota-ate-destino',
-      queryParameters: {
-        'latitude': latitude.toString(),
-        'longitude': longitude.toString(),
-        'perfil': profile,
-      },
-    );
-    return RouteSummary.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   Future<EmergencyContact> emergencyContact(String userId) async {

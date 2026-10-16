@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../widgets/role_navigation_bar.dart';
 import '../common/bookings_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
@@ -38,7 +39,7 @@ class _GuideShellState extends State<GuideShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: AppColors.paper,
 
       // Importante:
       // Não usamos mais IndexedStack.
@@ -47,7 +48,7 @@ class _GuideShellState extends State<GuideShell> {
       // Agora apenas a aba selecionada é montada.
       body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
 
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,
         onDestinationSelected: (value) {
           if (value == index) return;
@@ -57,22 +58,22 @@ class _GuideShellState extends State<GuideShell> {
           });
         },
         destinations: const [
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home_rounded),
             label: 'Painel',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.terrain_outlined),
             selectedIcon: Icon(Icons.terrain_rounded),
-            label: 'Trilhas',
+            label: 'Roteiros',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.calendar_month_outlined),
             selectedIcon: Icon(Icons.calendar_month_rounded),
             label: 'Agenda',
           ),
-          NavigationDestination(
+          RoleNavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded),
             label: 'Perfil',

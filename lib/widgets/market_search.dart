@@ -6,7 +6,7 @@ class MarketSearch extends StatelessWidget {
   const MarketSearch({
     super.key,
     required this.onTap,
-    this.hint = 'Buscar trilhas, destinos...',
+    this.hint = 'Cidade, dificuldade ou data',
   });
 
   final VoidCallback onTap;
@@ -16,28 +16,55 @@ class MarketSearch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.paper,
-      elevation: 2,
+      elevation: 5,
       shadowColor: AppColors.shadow,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(32),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(32),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          padding: const EdgeInsets.fromLTRB(18, 12, 10, 12),
           child: Row(
             children: [
-              const Icon(Icons.search_rounded, color: AppColors.ink, size: 22),
-              const SizedBox(width: 10),
+              const Icon(Icons.search_rounded, color: AppColors.ink, size: 24),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  hint,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Para onde?',
+                      style: TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Icon(
-                Icons.tune_rounded,
-                color: AppColors.green700,
-                size: 20,
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.tune_rounded,
+                  color: AppColors.green700,
+                  size: 19,
+                ),
               ),
             ],
           ),

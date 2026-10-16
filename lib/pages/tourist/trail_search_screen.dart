@@ -23,6 +23,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   final state = TextEditingController();
 
   String difficulty = 'Todas';
+  String modality = 'Todas';
   DateTime? startDate;
   DateTime? endDate;
   bool nearMe = false;
@@ -156,6 +157,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
           difficulty == 'Todas' ||
           trail.difficulty.toLowerCase() == difficulty.toLowerCase();
 
+      final modalityMatch = _matchesModality(trail);
+
       final date = _trailDate(trail);
 
       final startMatch =
@@ -172,6 +175,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       if (cityMatch &&
           stateMatch &&
           difficultyMatch &&
+          modalityMatch &&
           startMatch &&
           endMatch &&
           nearMatch &&
@@ -188,6 +192,24 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     }
 
     return results;
+  }
+
+  bool _matchesModality(Trail trail) {
+    if (modality == 'Todas') return true;
+    final values = trail.effectiveActivities
+        .map((activity) => activity.toLowerCase())
+        .toList();
+    final terms = switch (modality) {
+      'Trilha' => const ['trilha', 'trekking', 'caminhada'],
+      'Aquatrekking' => const ['aquatrekking', 'aqua trekking'],
+      'Acampamento' => const ['acampamento', 'camping'],
+      'Rapel' => const ['rapel'],
+      'Tirolesa' => const ['tirolesa'],
+      'Escalada' => const ['escalada'],
+      'Ciclismo' => const ['ciclismo', 'bike', 'cicloturismo'],
+      _ => [modality.toLowerCase()],
+    };
+    return values.any((value) => terms.any(value.contains));
   }
 
   Future<void> _pickStart() async {
@@ -231,6 +253,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
 
     setState(() {
       difficulty = 'Todas';
+      modality = 'Todas';
       startDate = null;
       endDate = null;
       nearMe = false;
@@ -244,10 +267,42 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text(
-          'Buscar trilhas',
-          style: TextStyle(fontWeight: FontWeight.w700),
+        backgroundColor: AppColors.paper,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: const [
+              BoxShadow(color: AppColors.shadow, blurRadius: 12),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.search_rounded, size: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Buscar roteiros',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      'Destino · data · dificuldade',
+                      style: TextStyle(fontSize: 10, color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [TextButton(onPressed: _clear, child: const Text('Limpar'))],
       ),
@@ -289,14 +344,36 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
+                key: ValueKey('modalidade-$modality'),
+                initialValue: modality,
+                decoration: const InputDecoration(
+                  labelText: 'Atividade do roteiro',
+                  prefixIcon: Icon(Icons.hiking_rounded),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+                  ...RouteActivity.values.map(
+                    (activity) => DropdownMenuItem(
+                      value: activity,
+                      child: Text(activity),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => modality = value);
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
                 key: ValueKey(difficulty),
                 initialValue: difficulty,
                 decoration: const InputDecoration(labelText: 'Dificuldade'),
-                items: const [
-                  DropdownMenuItem(value: 'Todas', child: Text('Todas')),
-                  DropdownMenuItem(value: 'Fácil', child: Text('Fácil')),
-                  DropdownMenuItem(value: 'Moderada', child: Text('Moderada')),
-                  DropdownMenuItem(value: 'Difícil', child: Text('Difícil')),
+                items: [
+                  const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+                  ...TrailDifficulty.values.map(
+                    (value) =>
+                        DropdownMenuItem(value: value, child: Text(value)),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -346,7 +423,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                 value: accessibleOnly,
                 onChanged: (value) => setState(() => accessibleOnly = value),
                 title: const Text(
-                  'Somente trilhas acessíveis',
+                  'Somente roteiros acessíveis',
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: const Text(
@@ -385,9 +462,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
               Text(
                 '${results.length} resultado(s)',
                 style: const TextStyle(
-                  color: AppColors.green900,
+                  color: AppColors.ink,
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 10),
@@ -426,7 +503,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: Center(
-                    child: Text('Nenhuma trilha encontrada com esses filtros.'),
+                    child: Text('Nenhum roteiro encontrado com esses filtros.'),
                   ),
                 )
               else
@@ -461,10 +538,12 @@ class _ResultCard extends StatelessWidget {
     final trail = result.trail;
 
     return Material(
-      color: AppColors.paper,
-      borderRadius: BorderRadius.circular(16),
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(20),
+      elevation: 1,
+      shadowColor: AppColors.shadow,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: () {
           Navigator.push(
             context,
@@ -474,36 +553,41 @@ class _ResultCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                width: 100,
-                height: 78,
-                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 12),
+                width: 116,
+                height: 96,
+                child: NetworkImageBox(url: trail.imageUrl, borderRadius: 16),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       trail.name,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       trail.location,
                       style: const TextStyle(
                         color: AppColors.muted,
-                        fontSize: 11.5,
+                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 7),
                     Text(
-                      '${trail.difficulty} • ${trail.distanceLabel}',
+                      '${trail.difficulty} · ${trail.distanceLabel}',
                       style: const TextStyle(
-                        color: AppColors.green700,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        color: AppColors.forest,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     if (result.userDistanceKm != null) ...[
@@ -520,6 +604,7 @@ class _ResultCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
             ],
           ),
         ),
