@@ -53,3 +53,8 @@ app.*.map.json
 /firebase-web.local.json
 
 /web/firebase-messaging-sw.js
+
+# Variáveis locais e de hospedagem
+.env
+.env.*
+!.env.example
