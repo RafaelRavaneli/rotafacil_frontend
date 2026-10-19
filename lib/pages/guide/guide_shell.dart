@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../widgets/role_navigation_bar.dart';
+import '../../widgets/animated_tab_body.dart';
 import '../common/bookings_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
@@ -46,7 +47,7 @@ class _GuideShellState extends State<GuideShell> {
       // IndexedStack construía TODAS as abas ao mesmo tempo,
       // inclusive telas escondidas com listas, imagens e listeners.
       // Agora apenas a aba selecionada é montada.
-      body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
+      body: AnimatedTabBody(index: index, child: _currentPage()),
 
       bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,

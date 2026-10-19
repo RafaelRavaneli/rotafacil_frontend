@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../../widgets/role_navigation_bar.dart';
+import '../../widgets/animated_tab_body.dart';
 import '../common/bookings_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
@@ -47,7 +48,7 @@ class _AgencyShellState extends State<AgencyShell> {
       // Constrói apenas a página selecionada.
       // Isso evita que abas pesadas escondidas bloqueiem
       // a interface inteira no Chrome.
-      body: KeyedSubtree(key: ValueKey<int>(index), child: _currentPage()),
+      body: AnimatedTabBody(index: index, child: _currentPage()),
 
       bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,
