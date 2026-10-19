@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../utils/run_action.dart';
 
 import '../../data/demo_data.dart' show guideByName;
@@ -266,7 +267,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                             ),
                             _ChipMetric(
                               icon: Icons.hiking_rounded,
-                              value: trail.modality,
+                              value: trail.effectiveActivities.join(' • '),
                             ),
                             _ChipMetric(
                               icon: Icons.groups_outlined,

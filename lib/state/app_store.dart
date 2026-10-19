@@ -295,8 +295,9 @@ class AppStore extends ChangeNotifier {
     return trails
         .where(
           (trail) =>
-              owners.contains(trail.guideId) ||
-              owners.contains(trail.createdBy),
+              owners.contains(trail.createdBy) ||
+              (trail.createdBy.trim().isEmpty &&
+                  owners.contains(trail.guideId)),
         )
         .toList();
   }
@@ -559,6 +560,17 @@ class AppStore extends ChangeNotifier {
     await _persistAll();
 
     notifyListeners();
+  }
+
+  Future<void> activateTrail(Trail trail) async {
+    if (!useBackend) {
+      throw StateError('A reativação está disponível no modo conectado.');
+    }
+    await ApiClient.instance.put(
+      '/api/trilhas/${Uri.encodeComponent(trail.id)}',
+      body: const {'ativo': true},
+    );
+    await refreshBackend();
   }
 
   Future<void> addBooking(LocalBooking booking) async {

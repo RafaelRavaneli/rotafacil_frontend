@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../utils/run_action.dart';
 
 import '../../models/trail.dart';
@@ -109,7 +110,9 @@ class TrailsManagementScreen extends StatelessWidget {
                                   _openForm(context, existing: trail);
                                 },
                                 onDelete: () {
-                                  _delete(context, trail);
+                                  TrailStatus.isInactive(trail.status)
+                                      ? _activate(context, trail)
+                                      : _delete(context, trail);
                                 },
                               );
                             },
@@ -191,6 +194,16 @@ class TrailsManagementScreen extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Future<void> _activate(BuildContext context, Trail trail) async {
+    final saved = await runAction(
+      context,
+      () => AppStore.instance.activateTrail(trail),
+    );
+    if (!saved || !context.mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${trail.name} foi reativado.')));
   }
 }
 
@@ -294,7 +307,7 @@ class _TrailRow extends StatelessWidget {
                 onEdit();
               }
 
-              if (value == 'excluir') {
+              if (value == 'status') {
                 onDelete();
               }
             },
@@ -311,13 +324,22 @@ class _TrailRow extends StatelessWidget {
                   ),
                 ),
                 PopupMenuItem(
-                  value: 'excluir',
+                  value: 'status',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline),
-                      SizedBox(width: 8),
+                      Icon(
+                        AppStore.instance.useBackend &&
+                                TrailStatus.isInactive(trail.status)
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        AppStore.instance.useBackend ? 'Desativar' : 'Excluir',
+                        AppStore.instance.useBackend
+                            ? (TrailStatus.isInactive(trail.status)
+                                  ? 'Reativar'
+                                  : 'Desativar')
+                            : 'Excluir',
                       ),
                     ],
                   ),

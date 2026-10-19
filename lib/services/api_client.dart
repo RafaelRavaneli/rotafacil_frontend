@@ -88,7 +88,7 @@ class ApiClient {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return response.bodyBytes;
     }
-    _decode(response);
+    await _decode(response);
     throw ApiException('Erro ao carregar arquivo.', response.statusCode);
   }
 
@@ -169,9 +169,8 @@ class ApiClient {
 
     final streamedResponse = await _client.send(request).timeout(timeout);
 
-    final response = await http.Response.fromStream(
-      streamedResponse,
-    ).timeout(timeout);
+    final response = await http.Response.fromStream(streamedResponse)
+        .timeout(timeout);
 
     return _decode(response);
   }
@@ -186,7 +185,7 @@ class ApiClient {
     return null;
   }
 
-  dynamic _decode(http.Response response) {
+  Future<dynamic> _decode(http.Response response) async {
     dynamic data;
 
     try {
@@ -209,6 +208,13 @@ class ApiClient {
     if (data is Map) {
       message = (data['erro'] ?? data['mensagem'] ?? data['message'] ?? message)
           .toString();
+    }
+
+    final hadAuthenticatedSession =
+        SessionService.instance.token?.isNotEmpty ?? false;
+    if (response.statusCode == 401 && hadAuthenticatedSession) {
+      await SessionService.instance.clear(reason: SessionEndReason.expired);
+      message = 'Sua sessão expirou. Entre novamente.';
     }
 
     throw ApiException(message, response.statusCode);

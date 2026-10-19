@@ -23,12 +23,30 @@ class TouristHomeTab extends StatefulWidget {
 class _TouristHomeTabState extends State<TouristHomeTab> {
   Position? position;
   bool locationLoaded = true;
+  String? locationError;
+
+  void _finishLocationWithError(String message) {
+    if (!mounted) return;
+    setState(() {
+      position = null;
+      locationLoaded = true;
+      locationError = message;
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
 
   Future<void> _loadPosition() async {
-    setState(() => locationLoaded = false);
+    setState(() {
+      locationLoaded = false;
+      locationError = null;
+    });
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        if (mounted) setState(() => locationLoaded = true);
+        _finishLocationWithError(
+          'Ative a localização do dispositivo para ver atividades próximas.',
+        );
         return;
       }
       var permission = await Geolocator.checkPermission();
@@ -37,7 +55,11 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        if (mounted) setState(() => locationLoaded = true);
+        _finishLocationWithError(
+          permission == LocationPermission.deniedForever
+              ? 'A localização está bloqueada. Libere a permissão nas configurações do navegador.'
+              : 'Permissão de localização negada. Autorize o acesso e tente novamente.',
+        );
         return;
       }
       final current = await Geolocator.getCurrentPosition().timeout(
@@ -47,10 +69,13 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
         setState(() {
           position = current;
           locationLoaded = true;
+          locationError = null;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => locationLoaded = true);
+      _finishLocationWithError(
+        'Não foi possível obter sua localização. Verifique o GPS e tente novamente.',
+      );
     }
   }
 
@@ -168,7 +193,8 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                         trails: nearby,
                         loading: !locationLoaded,
                         emptyText: position == null
-                            ? 'Permita a localização para ver atividades próximas.'
+                            ? (locationError ??
+                                  'Permita a localização para ver atividades próximas.')
                             : 'Nenhuma atividade encontrada em até 100 km.',
                         emptyAction: position == null
                             ? () => unawaited(_loadPosition())
@@ -187,7 +213,8 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                         title: 'Roteiros com trilha',
                         subtitle: 'Caminhadas e trekking',
                         trails: trekking,
-                        emptyText: 'Nenhum roteiro com trilha disponível no momento.',
+                        emptyText:
+                            'Nenhum roteiro com trilha disponível no momento.',
                         itemBuilder: (trail) => _card(context, trail, store),
                       ),
                       _TrailCarouselSection(

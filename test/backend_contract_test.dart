@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -36,6 +37,59 @@ void main() {
     );
   });
 
+  test('HTTP 401 encerra sessão ativa com mensagem legível', () async {
+    await SessionService.instance.save(
+      authToken: 'jwt-expirado',
+      selectedRole: 'usuario',
+      userEmail: 'teste@example.test',
+      id: 'u1',
+    );
+    final api = ApiClient(
+      client: MockClient(
+        (_) async => http.Response('{"erro":"Token expirado"}', 401),
+      ),
+    );
+
+    await expectLater(
+      api.get('/protegido'),
+      throwsA(
+        isA<ApiException>()
+            .having((error) => error.statusCode, 'status', 401)
+            .having(
+              (error) => error.message,
+              'mensagem',
+              'Sua sessão expirou. Entre novamente.',
+            ),
+      ),
+    );
+    expect(SessionService.instance.token, isNull);
+    expect(
+      SessionService.instance.consumeEndReason(),
+      SessionEndReason.expired,
+    );
+  });
+
+  test(
+    'Logout em outra aba é detectado pelo armazenamento compartilhado',
+    () async {
+      await SessionService.instance.save(
+        authToken: 'jwt',
+        selectedRole: 'usuario',
+        userEmail: 'teste@example.test',
+        id: 'u1',
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      expect(await SessionService.instance.synchronizeFromStorage(), isTrue);
+      expect(SessionService.instance.role, isNull);
+      expect(
+        SessionService.instance.consumeEndReason(),
+        SessionEndReason.externalLogout,
+      );
+    },
+  );
+
   test('Upload informa o tipo MIME da imagem ao backend', () async {
     final api = ApiClient(
       client: MockClient((request) async {
@@ -57,23 +111,30 @@ void main() {
     expect(result['url'], 'https://example.test/foto.png');
   });
 
-  test(
-    'Trilha inativa não aparece como ativa e aceita coordenadas numéricas em texto',
-    () {
-      final trail = Trail.fromJson({
-        'id': 't1',
-        'nome': 'Trilha',
-        'ativo': false,
-        'preco': 42,
-        'latitude': '-23.5',
-        'longitude': -51.2,
-      });
-      expect(trail.status, TrailStatus.inactive);
-      expect(trail.price, 42);
-      expect(trail.latitude, -23.5);
-      expect(BackendRepository.apiDate('25/09/2026 • 08:00'), '2026-09-25');
-    },
-  );
+  test('Trilha inativa não aparece como ativa e aceita coordenadas numéricas em texto', () {
+    final trail = Trail.fromJson({
+      'id': 't1',
+      'nome': 'Trilha',
+      'ativo': false,
+      'preco': 42,
+      'latitude': '-23.5',
+      'longitude': -51.2,
+    });
+    expect(trail.status, TrailStatus.inactive);
+    expect(trail.price, 42);
+    expect(trail.latitude, -23.5);
+    expect(BackendRepository.apiDate('25/09/2026 • 08:00'), '2026-09-25');
+  });
+
+  test('Detalhe usa todas as atividades cadastradas no roteiro', () {
+    final trail = Trail.fromJson({
+      'id': 't1',
+      'nome': 'Cachoeira',
+      'modalidade': 'Trilha',
+      'atividades': ['Aquatrekking', 'Rapel'],
+    });
+    expect(trail.effectiveActivities, ['Aquatrekking', 'Rapel']);
+  });
 
   test(
     'Carga remota combina perfil, trilhas, favoritos e agendamentos',
@@ -435,78 +496,82 @@ void main() {
   }, skip: !const bool.fromEnvironment('USE_BACKEND'));
 
   for (final role in ['guia', 'agencia']) {
-    test('Agenda de $role usa somente ID autenticado no carregamento', () async {
-      await SessionService.instance.save(
-        authToken: 'jwt',
-        selectedRole: role,
-        userEmail: 'guia@example.test',
-        id: 'g1',
-      );
-      final paths = <String>[];
-      final repository = BackendRepository(
-        api: ApiClient(
-          client: MockClient((request) async {
-            paths.add(request.url.path);
-            expect(request.headers['Authorization'], 'Bearer jwt');
-            if (request.url.path.startsWith('/api/agendamentos/guia/') &&
-                request.url.path != '/api/agendamentos/guia/g1') {
-              return http.Response(
-                '{"erro":"Acesso negado. Você só pode acessar sua própria agenda."}',
-                403,
-              );
-            }
-            final Object data = switch (request.url.path) {
-              '/api/usuarios/g1' => {
-                'id': 'g1',
-                'nome': 'Guia',
-                'tipo': role,
-                'email': 'guia@example.test',
-              },
-              '/api/trilhas/' => [
-                {'id': 't1', 'nome': 'Trilha'},
-              ],
-              '/api/agendamentos/guia/g1' || '/api/agendamentos/agencia/g1' => [
-                {
-                  'id': 'b1',
-                  'id_trilha': 't1',
-                  'id_usuario': 't1',
-                  'status': 'agendado',
-                },
-                {
-                  'id': 'b2',
-                  'id_trilha': 't1',
-                  'id_usuario': 't2',
-                  'status': 'agendado',
-                  'id_guia': 'guia@example.test',
-                },
-              ],
-              '/api/agendamentos/dashboard/g1' => {
-                'total_agendamentos': 2,
-                'por_status': {'agendado': 2, 'cancelado': 0},
-                'valor_declarado_ativo': 50.5,
-              },
-              '/api/favoritos/' ||
-              '/api/agendamentos/usuario/g1' ||
-              '/api/convites-guias' => [],
-              _ => throw StateError('Rota inesperada: ${request.url}'),
-            };
-            return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
-          }),
-        ),
-      );
-      final snapshot = await repository.load();
-      expect(snapshot.bookings.map((b) => b.id).toSet(), {'b1', 'b2'});
-      expect(snapshot.dashboard?.active, 2);
-      expect(snapshot.dashboard?.declaredValue, 50.5);
-      final expectedAgenda = '/api/agendamentos/$role/g1';
-      expect(paths.where((p) => p == expectedAgenda), [expectedAgenda]);
-      if (role == 'agencia') {
-        expect(
-          paths.where((p) => p.startsWith('/api/agendamentos/guia/')),
-          isEmpty,
+    test(
+      'Agenda de $role usa somente ID autenticado no carregamento',
+      () async {
+        await SessionService.instance.save(
+          authToken: 'jwt',
+          selectedRole: role,
+          userEmail: 'guia@example.test',
+          id: 'g1',
         );
-      }
-    });
+        final paths = <String>[];
+        final repository = BackendRepository(
+          api: ApiClient(
+            client: MockClient((request) async {
+              paths.add(request.url.path);
+              expect(request.headers['Authorization'], 'Bearer jwt');
+              if (request.url.path.startsWith('/api/agendamentos/guia/') &&
+                  request.url.path != '/api/agendamentos/guia/g1') {
+                return http.Response(
+                  '{"erro":"Acesso negado. Você só pode acessar sua própria agenda."}',
+                  403,
+                );
+              }
+              final Object data = switch (request.url.path) {
+                '/api/usuarios/g1' => {
+                  'id': 'g1',
+                  'nome': 'Guia',
+                  'tipo': role,
+                  'email': 'guia@example.test',
+                },
+                '/api/trilhas/' => [
+                  {'id': 't1', 'nome': 'Trilha'},
+                ],
+                '/api/agendamentos/guia/g1' ||
+                '/api/agendamentos/agencia/g1' => [
+                  {
+                    'id': 'b1',
+                    'id_trilha': 't1',
+                    'id_usuario': 't1',
+                    'status': 'agendado',
+                  },
+                  {
+                    'id': 'b2',
+                    'id_trilha': 't1',
+                    'id_usuario': 't2',
+                    'status': 'agendado',
+                    'id_guia': 'guia@example.test',
+                  },
+                ],
+                '/api/agendamentos/dashboard/g1' => {
+                  'total_agendamentos': 2,
+                  'por_status': {'agendado': 2, 'cancelado': 0},
+                  'valor_declarado_ativo': 50.5,
+                },
+                '/api/favoritos/' ||
+                '/api/agendamentos/usuario/g1' ||
+                '/api/convites-guias' => [],
+                _ => throw StateError('Rota inesperada: ${request.url}'),
+              };
+              return http.Response.bytes(utf8.encode(jsonEncode(data)), 200);
+            }),
+          ),
+        );
+        final snapshot = await repository.load();
+        expect(snapshot.bookings.map((b) => b.id).toSet(), {'b1', 'b2'});
+        expect(snapshot.dashboard?.active, 2);
+        expect(snapshot.dashboard?.declaredValue, 50.5);
+        final expectedAgenda = '/api/agendamentos/$role/g1';
+        expect(paths.where((p) => p == expectedAgenda), [expectedAgenda]);
+        if (role == 'agencia') {
+          expect(
+            paths.where((p) => p.startsWith('/api/agendamentos/guia/')),
+            isEmpty,
+          );
+        }
+      },
+    );
   }
   test('Agenda mantém bloqueio real de autorização pelo ID', () async {
     await SessionService.instance.save(

@@ -80,6 +80,7 @@ class _NetworkImageBoxState extends State<NetworkImageBox> {
               width: double.infinity,
               height: double.infinity,
               filterQuality: FilterQuality.medium,
+              webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   color: AppColors.green100,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'config/app_config.dart';
@@ -16,8 +18,58 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<ScaffoldMessengerState> appScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
-class RotaFacilApp extends StatelessWidget {
+class RotaFacilApp extends StatefulWidget {
   const RotaFacilApp({super.key});
+
+  @override
+  State<RotaFacilApp> createState() => _RotaFacilAppState();
+}
+
+class _RotaFacilAppState extends State<RotaFacilApp> {
+  Timer? _sessionTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    SessionService.instance.addListener(_handleSessionEnd);
+    _sessionTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => unawaited(SessionService.instance.synchronizeFromStorage()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    SessionService.instance.removeListener(_handleSessionEnd);
+    super.dispose();
+  }
+
+  void _handleSessionEnd() {
+    final reason = SessionService.instance.consumeEndReason();
+    if (reason != SessionEndReason.expired &&
+        reason != SessionEndReason.externalLogout) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = appNavigatorKey.currentState;
+      if (navigator == null) return;
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+        (_) => false,
+      );
+      appScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            reason == SessionEndReason.expired
+                ? 'Sua sessão expirou. Entre novamente.'
+                : 'A sessão foi encerrada em outra aba.',
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

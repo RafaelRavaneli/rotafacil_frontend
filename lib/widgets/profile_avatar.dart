@@ -103,6 +103,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
             width: size,
             height: size,
             fit: BoxFit.cover,
+            webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
             errorBuilder: (_, _, _) {
               return Container(
                 color: AppColors.green100,

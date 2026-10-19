@@ -36,6 +36,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   Uint8List? pickedImageBytes;
   bool removeCurrentImage = false;
   bool saving = false;
+  bool allowPop = false;
+  late final Map<String, String> initialValues;
 
   bool get needsDocument {
     final normalized = widget.role.toLowerCase();
@@ -76,6 +78,64 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     specialties = TextEditingController(text: user.specialties.join(', '));
 
     currentImageDataUrl = user.profileImageDataUrl;
+    initialValues = _currentValues();
+  }
+
+  Map<String, String> _currentValues() => {
+    'name': name.text,
+    'email': email.text,
+    'phone': phone.text,
+    'city': city.text,
+    'state': state.text,
+    'document': document.text,
+    'emergencyName': emergencyName.text,
+    'emergencyPhone': emergencyPhone.text,
+    'professionalDescription': professionalDescription.text,
+    'specialties': specialties.text,
+  };
+
+  bool get hasUnsavedChanges {
+    if (pickedImageBytes != null || removeCurrentImage) return true;
+    final current = _currentValues();
+    return initialValues.entries.any(
+      (entry) => current[entry.key] != entry.value,
+    );
+  }
+
+  void _popWithoutGuard() {
+    if (!mounted) return;
+    setState(() => allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context);
+    });
+  }
+
+  Future<void> _handleBack() async {
+    if (saving) return;
+    if (!hasUnsavedChanges) {
+      _popWithoutGuard();
+      return;
+    }
+
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('Existem alterações que ainda não foram salvas.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Continuar editando'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    if (discard != true || !mounted) return;
+    _popWithoutGuard();
   }
 
   @override
@@ -138,9 +198,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     if (needsDocument &&
         !DocumentValidator.isValidForRole(widget.role, document.text)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$documentLabel inválido.')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('$documentLabel inválido.')));
 
       return;
     }
@@ -198,127 +257,167 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       const SnackBar(content: Text('Perfil atualizado com sucesso.')),
     );
 
-    Navigator.pop(context);
+    _popWithoutGuard();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Editar perfil',
-          style: TextStyle(fontWeight: FontWeight.w900),
+    return PopScope(
+      canPop: allowPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Editar perfil',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Center(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                ProfileAvatar(dataUrl: previewDataUrl, radius: 54),
-                Positioned(
-                  right: -4,
-                  bottom: 0,
-                  child: IconButton.filled(
-                    onPressed: _pickPhoto,
-                    icon: const Icon(Icons.photo_camera_outlined),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ProfileAvatar(dataUrl: previewDataUrl, radius: 54),
+                  Positioned(
+                    right: -4,
+                    bottom: 0,
+                    child: IconButton.filled(
+                      onPressed: _pickPhoto,
+                      icon: const Icon(Icons.photo_camera_outlined),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Center(
-            child: Wrap(
-              spacing: 8,
-              children: [
-                TextButton.icon(
-                  onPressed: _pickPhoto,
-                  icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('Escolher foto'),
-                ),
-                if (previewDataUrl != null)
+            const SizedBox(height: 10),
+            Center(
+              child: Wrap(
+                spacing: 8,
+                children: [
                   TextButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        pickedImageBytes = null;
-                        removeCurrentImage = true;
-                      });
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                    label: const Text('Remover'),
+                    onPressed: _pickPhoto,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: const Text('Escolher foto'),
                   ),
-              ],
+                  if (previewDataUrl != null)
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          pickedImageBytes = null;
+                          removeCurrentImage = true;
+                        });
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Remover'),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          TextField(
-            controller: name,
-            decoration: const InputDecoration(
-              labelText: 'Nome',
-              prefixIcon: Icon(Icons.person_outline_rounded),
+            const SizedBox(height: 18),
+            TextField(
+              controller: name,
+              decoration: const InputDecoration(
+                labelText: 'Nome',
+                prefixIcon: Icon(Icons.person_outline_rounded),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: email,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'E-mail',
-              prefixIcon: Icon(Icons.email_outlined),
-            ),
-          ),
-          if (needsDocument) ...[
             const SizedBox(height: 12),
             TextField(
-              controller: document,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: documentLabel,
-                prefixIcon: const Icon(Icons.badge_outlined),
-                helperText: '$documentLabel é obrigatório para este perfil.',
+              controller: email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'E-mail',
+                prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-          ],
-          const SizedBox(height: 12),
-          TextField(
-            controller: phone,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Telefone',
-              prefixIcon: Icon(Icons.phone_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: city,
-                  decoration: const InputDecoration(labelText: 'Cidade'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: state,
-                  maxLength: 2,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    labelText: 'UF',
-                    counterText: '',
-                  ),
+            if (needsDocument) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: document,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: documentLabel,
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  helperText: '$documentLabel é obrigatório para este perfil.',
                 ),
               ),
             ],
-          ),
-          if (needsDocument) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: phone,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Telefone',
+                prefixIcon: Icon(Icons.phone_outlined),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: city,
+                    decoration: const InputDecoration(labelText: 'Cidade'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: state,
+                    maxLength: 2,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      labelText: 'UF',
+                      counterText: '',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (needsDocument) ...[
+              const SizedBox(height: 18),
+              const Text(
+                'Perfil profissional público',
+                style: TextStyle(
+                  color: AppColors.forest,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Esses dados ajudam o turista a conhecer o responsável. Documento, e-mail e telefone não são publicados.',
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: professionalDescription,
+                maxLines: 4,
+                maxLength: 600,
+                decoration: const InputDecoration(
+                  labelText: 'Apresentação profissional',
+                  alignLabelWithHint: true,
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: specialties,
+                decoration: const InputDecoration(
+                  labelText: 'Especialidades',
+                  helperText: 'Separe por vírgulas. Ex.: trekking, cachoeiras',
+                  prefixIcon: Icon(Icons.workspace_premium_outlined),
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             const Text(
-              'Perfil profissional público',
+              'Contato de emergência',
               style: TextStyle(
                 color: AppColors.forest,
                 fontSize: 17,
@@ -327,75 +426,41 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Esses dados ajudam o turista a conhecer o responsável. Documento, e-mail e telefone não são publicados.',
+              'Disponível somente para responsáveis autorizados durante uma reserva ativa.',
               style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: professionalDescription,
-              maxLines: 4,
-              maxLength: 600,
+              controller: emergencyName,
               decoration: const InputDecoration(
-                labelText: 'Apresentação profissional',
-                alignLabelWithHint: true,
-                prefixIcon: Icon(Icons.description_outlined),
+                labelText: 'Nome do contato',
+                prefixIcon: Icon(Icons.emergency_outlined),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: specialties,
+              controller: emergencyPhone,
+              keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'Especialidades',
-                helperText: 'Separe por vírgulas. Ex.: trekking, cachoeiras',
-                prefixIcon: Icon(Icons.workspace_premium_outlined),
+                labelText: 'Telefone de emergência',
+                prefixIcon: Icon(Icons.phone_in_talk_outlined),
               ),
             ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: saving ? null : _save,
+              icon: const Icon(Icons.save_outlined),
+              label: Text(saving ? 'Salvando...' : 'Salvar alterações'),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'A foto, dados pessoais e documento ficam '
+              'salvos neste dispositivo no modo local.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted, fontSize: 11),
+            ),
           ],
-          const SizedBox(height: 18),
-          const Text(
-            'Contato de emergência',
-            style: TextStyle(
-              color: AppColors.forest,
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Disponível somente para responsáveis autorizados durante uma reserva ativa.',
-            style: TextStyle(color: AppColors.muted, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: emergencyName,
-            decoration: const InputDecoration(
-              labelText: 'Nome do contato',
-              prefixIcon: Icon(Icons.emergency_outlined),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: emergencyPhone,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-              labelText: 'Telefone de emergência',
-              prefixIcon: Icon(Icons.phone_in_talk_outlined),
-            ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: saving ? null : _save,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(saving ? 'Salvando...' : 'Salvar alterações'),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'A foto, dados pessoais e documento ficam '
-            'salvos neste dispositivo no modo local.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted, fontSize: 11),
-          ),
-        ],
+        ),
       ),
     );
   }

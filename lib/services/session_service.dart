@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SessionService {
+enum SessionEndReason { logout, expired, externalLogout }
+
+class SessionService extends ChangeNotifier {
   SessionService._();
 
   static final SessionService instance = SessionService._();
@@ -14,6 +17,13 @@ class SessionService {
   String? role;
   String? email;
   String? userId;
+  SessionEndReason? _endReason;
+
+  SessionEndReason? consumeEndReason() {
+    final reason = _endReason;
+    _endReason = null;
+    return reason;
+  }
 
   Future<void> initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -33,6 +43,7 @@ class SessionService {
     role = selectedRole;
     email = userEmail;
     userId = id;
+    _endReason = null;
 
     final prefs = await SharedPreferences.getInstance();
 
@@ -52,7 +63,9 @@ class SessionService {
     }
   }
 
-  Future<void> clear() async {
+  Future<void> clear({
+    SessionEndReason reason = SessionEndReason.logout,
+  }) async {
     token = null;
     role = null;
     email = null;
@@ -63,5 +76,37 @@ class SessionService {
     await prefs.remove(_roleKey);
     await prefs.remove(_emailKey);
     await prefs.remove(_userIdKey);
+
+    _endReason = reason;
+    notifyListeners();
+  }
+
+  Future<bool> synchronizeFromStorage() async {
+    final hadSession =
+        (role?.isNotEmpty ?? false) && (email?.isNotEmpty ?? false);
+    if (!hadSession) return false;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    final storedRole = prefs.getString(_roleKey);
+    final storedEmail = prefs.getString(_emailKey);
+    final storedToken = prefs.getString(_tokenKey);
+
+    final sessionWasRemoved =
+        storedRole == null ||
+        storedRole.isEmpty ||
+        storedEmail == null ||
+        storedEmail.isEmpty ||
+        ((token?.isNotEmpty ?? false) &&
+            (storedToken == null || storedToken.isEmpty));
+    if (!sessionWasRemoved) return false;
+
+    token = null;
+    role = null;
+    email = null;
+    userId = null;
+    _endReason = SessionEndReason.externalLogout;
+    notifyListeners();
+    return true;
   }
 }
