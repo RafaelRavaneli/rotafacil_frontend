@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_card.dart';
 import '../../utils/run_action.dart';
+import '../../navigation/app_routes.dart';
 import 'trail_details_screen.dart';
 
 class GuideProfileScreen extends StatelessWidget {
@@ -117,11 +118,10 @@ class GuideProfileScreen extends StatelessWidget {
                           context,
                           () => store.toggleFavorite(trail.id),
                         ),
-                        onTap: () => Navigator.push(
+                        onTap: () => AppRoutes.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => TrailDetailsScreen(trail: trail),
-                          ),
+                          AppRoutes.trail(trail.id),
+                          (_) => TrailDetailsScreen(trail: trail),
                         ),
                       ),
                     ),

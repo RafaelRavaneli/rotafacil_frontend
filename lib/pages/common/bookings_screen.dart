@@ -6,6 +6,7 @@ import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/backend_refresh.dart';
 import '../../widgets/booking_summary_card.dart';
+import '../../navigation/app_routes.dart';
 import 'booking_details_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
@@ -214,12 +215,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         padding: const EdgeInsets.only(bottom: 12),
                         child: BookingSummaryCard(
                           booking: booking,
-                          onTap: () => Navigator.push(
+                          onTap: () => AppRoutes.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  BookingDetailsScreen(bookingId: booking.id),
-                            ),
+                            AppRoutes.booking(booking.id),
+                            (_) => BookingDetailsScreen(bookingId: booking.id),
                           ),
                         ),
                       ),

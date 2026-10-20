@@ -6,20 +6,23 @@ import '../../theme/app_colors.dart';
 import '../../widgets/role_navigation_bar.dart';
 import '../../widgets/animated_tab_body.dart';
 import '../../state/app_store.dart';
+import '../../navigation/app_routes.dart';
 import '../common/bookings_screen.dart';
 import '../common/favorites_screen.dart';
 import '../common/profile_tab.dart';
 import 'tourist_home_tab.dart';
 
 class TouristShell extends StatefulWidget {
-  const TouristShell({super.key});
+  const TouristShell({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<TouristShell> createState() => _TouristShellState();
 }
 
 class _TouristShellState extends State<TouristShell> {
-  int index = 0;
+  late int index = widget.initialIndex;
 
   Widget _currentPage() {
     switch (index) {
@@ -49,6 +52,11 @@ class _TouristShellState extends State<TouristShell> {
           setState(() {
             index = value;
           });
+          unawaited(
+            AppRoutes.replaceBrowserLocation(
+              AppRoutes.tabsForRole('turista')[value],
+            ),
+          );
           unawaited(AppStore.instance.refreshBackend());
         },
         destinations: const [

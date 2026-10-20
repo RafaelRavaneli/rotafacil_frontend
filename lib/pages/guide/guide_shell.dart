@@ -6,27 +6,28 @@ import '../../theme/app_colors.dart';
 import '../../widgets/role_navigation_bar.dart';
 import '../../widgets/animated_tab_body.dart';
 import '../../state/app_store.dart';
+import '../../navigation/app_routes.dart';
 import '../common/bookings_screen.dart';
 import '../common/profile_tab.dart';
 import '../common/trails_management_screen.dart';
 import 'guide_dashboard_tab.dart';
 
 class GuideShell extends StatefulWidget {
-  const GuideShell({super.key});
+  const GuideShell({super.key, this.initialIndex = 0});
+
+  final int initialIndex;
 
   @override
   State<GuideShell> createState() => _GuideShellState();
 }
 
 class _GuideShellState extends State<GuideShell> {
-  int index = 0;
+  late int index = widget.initialIndex;
 
   Widget _currentPage() {
     switch (index) {
       case 0:
-        return GuideDashboardTab(
-          onOpenBookings: () => setState(() => index = 2),
-        );
+        return GuideDashboardTab(onOpenBookings: () => _selectTab(2));
       case 1:
         return const TrailsManagementScreen(isAgency: false);
       case 2:
@@ -34,10 +35,17 @@ class _GuideShellState extends State<GuideShell> {
       case 3:
         return const ProfileTab(role: 'Guia');
       default:
-        return GuideDashboardTab(
-          onOpenBookings: () => setState(() => index = 2),
-        );
+        return GuideDashboardTab(onOpenBookings: () => _selectTab(2));
     }
+  }
+
+  void _selectTab(int value) {
+    if (value == index) return;
+    setState(() => index = value);
+    unawaited(
+      AppRoutes.replaceBrowserLocation(AppRoutes.tabsForRole('guia')[value]),
+    );
+    unawaited(AppStore.instance.refreshBackend());
   }
 
   @override
@@ -54,14 +62,7 @@ class _GuideShellState extends State<GuideShell> {
 
       bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,
-        onDestinationSelected: (value) {
-          if (value == index) return;
-
-          setState(() {
-            index = value;
-          });
-          unawaited(AppStore.instance.refreshBackend());
-        },
+        onDestinationSelected: _selectTab,
         destinations: const [
           RoleNavigationDestination(
             icon: Icon(Icons.home_outlined),

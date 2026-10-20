@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/market_search.dart';
 import '../../widgets/trail_card.dart';
 import '../../utils/run_action.dart';
+import '../../navigation/app_routes.dart';
 import 'trail_details_screen.dart';
 import 'trail_search_screen.dart';
 
@@ -173,11 +174,10 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                           ),
                           const SizedBox(height: 22),
                           MarketSearch(
-                            onTap: () => Navigator.push(
+                            onTap: () => AppRoutes.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => const TrailSearchScreen(),
-                              ),
+                              AppRoutes.search,
+                              (_) => const TrailSearchScreen(),
                             ),
                           ),
                           const SizedBox(height: 30),
@@ -247,9 +247,10 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
     trail: trail,
     favorite: store.isFavorite(trail.id),
     onFavorite: () => runAction(context, () => store.toggleFavorite(trail.id)),
-    onTap: () => Navigator.push(
+    onTap: () => AppRoutes.push(
       context,
-      MaterialPageRoute(builder: (_) => TrailDetailsScreen(trail: trail)),
+      AppRoutes.trail(trail.id),
+      (_) => TrailDetailsScreen(trail: trail),
     ),
   );
 }

@@ -8,6 +8,7 @@ import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_results_map.dart';
+import '../../navigation/app_routes.dart';
 import 'trail_details_screen.dart';
 
 class TrailSearchScreen extends StatefulWidget {
@@ -488,11 +489,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                     tileProvider: widget.tileProvider,
                     onSelected: (trail) {
                       setState(() => selectedTrailId = trail.id);
-                      Navigator.push(
+                      AppRoutes.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => TrailDetailsScreen(trail: trail),
-                        ),
+                        AppRoutes.trail(trail.id),
+                        (_) => TrailDetailsScreen(trail: trail),
                       );
                     },
                   ),
@@ -545,9 +545,10 @@ class _ResultCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          Navigator.push(
+          AppRoutes.push(
             context,
-            MaterialPageRoute(builder: (_) => TrailDetailsScreen(trail: trail)),
+            AppRoutes.trail(trail.id),
+            (_) => TrailDetailsScreen(trail: trail),
           );
         },
         child: Padding(

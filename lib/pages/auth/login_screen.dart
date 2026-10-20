@@ -6,13 +6,14 @@ import '../../services/auth_gateway.dart';
 import '../../services/notification_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import 'forgot_password_screen.dart';
+import 'profile_choice_screen.dart';
+import '../../utils/auth_error_message.dart';
+import '../../navigation/app_routes.dart';
 import '../agency/agency_shell.dart';
 import '../admin/admin_shell.dart';
 import '../guide/guide_shell.dart';
 import '../tourist/tourist_shell.dart';
-import 'forgot_password_screen.dart';
-import 'profile_choice_screen.dart';
-import '../../utils/auth_error_message.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.initialEmail = ''});
@@ -100,17 +101,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    final Widget destination = switch (resolvedRole) {
-      'guia' => const GuideShell(),
-      'agencia' => const AgencyShell(),
-      'usuario' => const TouristShell(),
-      'admin' => const AdminShell(),
+    final (path, destination) = switch (resolvedRole) {
+      'guia' => (AppRoutes.homeForRole(resolvedRole), const GuideShell()),
+      'agencia' => (AppRoutes.homeForRole(resolvedRole), const AgencyShell()),
+      'usuario' => (AppRoutes.homeForRole(resolvedRole), const TouristShell()),
+      'admin' => (AppRoutes.welcome, const AdminShell()),
       _ => throw StateError('Perfil não suportado.'),
     };
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => destination),
+      MaterialPageRoute<void>(
+        settings: RouteSettings(name: path),
+        builder: (_) => destination,
+      ),
       (_) => false,
     );
   }

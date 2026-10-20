@@ -6,6 +6,7 @@ import '../../models/trail.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
+import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
 
 class TrailsManagementScreen extends StatelessWidget {
@@ -128,13 +129,10 @@ class TrailsManagementScreen extends StatelessWidget {
   }
 
   void _openForm(BuildContext context, {Trail? existing}) {
-    Navigator.push(
+    AppRoutes.push(
       context,
-      MaterialPageRoute(
-        builder: (context) {
-          return TrailFormScreen(isAgency: isAgency, existing: existing);
-        },
-      ),
+      existing == null ? AppRoutes.newTrail : AppRoutes.editTrail(existing.id),
+      (_) => TrailFormScreen(isAgency: isAgency, existing: existing),
     );
   }
 
@@ -202,8 +200,9 @@ class TrailsManagementScreen extends StatelessWidget {
       () => AppStore.instance.activateTrail(trail),
     );
     if (!saved || !context.mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('${trail.name} foi reativado.')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${trail.name} foi reativado.')));
   }
 }
 

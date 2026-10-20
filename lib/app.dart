@@ -6,8 +6,14 @@ import 'config/app_config.dart';
 import 'pages/agency/agency_shell.dart';
 import 'pages/admin/admin_shell.dart';
 import 'pages/auth/welcome_screen.dart';
+import 'pages/auth/login_screen.dart';
+import 'pages/common/booking_details_screen.dart';
 import 'pages/guide/guide_shell.dart';
+import 'pages/management/trail_form_screen.dart';
+import 'pages/tourist/trail_details_screen.dart';
+import 'pages/tourist/trail_search_screen.dart';
 import 'pages/tourist/tourist_shell.dart';
+import 'navigation/app_routes.dart';
 import 'services/session_service.dart';
 import 'services/api_client.dart';
 import 'state/app_store.dart';
@@ -89,13 +95,26 @@ class _RotaFacilAppState extends State<RotaFacilApp>
       title: 'RotaFácil',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const _SessionBootstrap(),
+      onGenerateInitialRoutes: (location) => [
+        _buildRoute(RouteSettings(name: location)),
+      ],
+      onGenerateRoute: _buildRoute,
     );
+  }
+
+  Route<void> _buildRoute(RouteSettings settings) {
+    final location = settings.name ?? AppRoutes.welcome;
+    final page = location == AppRoutes.login
+        ? const LoginScreen()
+        : _SessionBootstrap(initialLocation: location);
+    return MaterialPageRoute<void>(settings: settings, builder: (_) => page);
   }
 }
 
 class _SessionBootstrap extends StatefulWidget {
-  const _SessionBootstrap();
+  const _SessionBootstrap({required this.initialLocation});
+
+  final String initialLocation;
 
   @override
   State<_SessionBootstrap> createState() => _SessionBootstrapState();
@@ -142,36 +161,70 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
 
       if (AppConfig.useBackend) await AppStore.instance.refreshBackend();
 
-      switch (role) {
-        case 'turista':
-        case 'usuario':
-        case 'tourist':
-          return const TouristShell();
-
-        case 'guia':
-        case 'guide':
-          return const GuideShell();
-
-        case 'agencia':
-        case 'agência':
-        case 'agency':
-          return const AgencyShell();
-
-        case 'admin':
-          return const AdminShell();
-
-        default:
-          // Sessão antiga, corrompida ou com perfil
-          // desconhecido.
-          await session.clear();
-
-          return const WelcomeScreen();
-      }
+      return await _screenForRole(role);
     } on ApiException catch (error) {
       if (error.statusCode == 401) await SessionService.instance.clear();
       rethrow;
     } catch (_) {
       rethrow;
+    }
+  }
+
+  Future<Widget> _screenForRole(String role) async {
+    final uri = Uri.tryParse(widget.initialLocation) ?? Uri();
+    final segments = uri.pathSegments;
+
+    if (segments.length == 2 && segments.first == 'roteiro') {
+      final id = Uri.decodeComponent(segments[1]);
+      final trail = AppStore.instance.trails
+          .where((item) => item.id == id)
+          .firstOrNull;
+      if (trail != null) return TrailDetailsScreen(trail: trail);
+    }
+    if (segments.length == 2 && segments.first == 'reserva') {
+      return BookingDetailsScreen(bookingId: Uri.decodeComponent(segments[1]));
+    }
+    if (uri.path == AppRoutes.search) return const TrailSearchScreen();
+
+    final isAgency = role == 'agencia' || role == 'agência' || role == 'agency';
+    if (uri.path == AppRoutes.newTrail && (isAgency || role == 'guia')) {
+      return TrailFormScreen(isAgency: isAgency);
+    }
+    if (segments.length == 3 &&
+        segments.first == 'roteiros' &&
+        segments.last == 'editar' &&
+        (isAgency || role == 'guia')) {
+      final id = Uri.decodeComponent(segments[1]);
+      final trail = AppStore.instance.managedTrails
+          .where((item) => item.id == id)
+          .firstOrNull;
+      if (trail != null) {
+        return TrailFormScreen(isAgency: isAgency, existing: trail);
+      }
+    }
+
+    final initialIndex = AppRoutes.tabIndex(widget.initialLocation, role);
+    switch (role) {
+      case 'turista':
+      case 'usuario':
+      case 'tourist':
+        return TouristShell(initialIndex: initialIndex);
+
+      case 'guia':
+      case 'guide':
+        return GuideShell(initialIndex: initialIndex);
+
+      case 'agencia':
+      case 'agência':
+      case 'agency':
+        return AgencyShell(initialIndex: initialIndex);
+
+      case 'admin':
+        return const AdminShell();
+
+      default:
+        await SessionService.instance.clear();
+        return const WelcomeScreen();
     }
   }
 

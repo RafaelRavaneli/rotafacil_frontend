@@ -3,6 +3,7 @@ import '../../utils/run_action.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/trail_card.dart';
+import '../../navigation/app_routes.dart';
 import '../tourist/trail_details_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
@@ -105,12 +106,10 @@ class FavoritesScreen extends StatelessWidget {
                               context,
                               () => store.toggleFavorite(trail.id),
                             ),
-                            onTap: () => Navigator.push(
+                            onTap: () => AppRoutes.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    TrailDetailsScreen(trail: trail),
-                              ),
+                              AppRoutes.trail(trail.id),
+                              (_) => TrailDetailsScreen(trail: trail),
                             ),
                           );
                         },

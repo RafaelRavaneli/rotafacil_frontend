@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/profile_avatar.dart';
 import '../../widgets/booking_summary_card.dart';
 import '../agency/guides_screen.dart';
+import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
 import 'booking_details_screen.dart';
 import 'bookings_screen.dart';
@@ -200,11 +201,10 @@ class OperatorDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     FilledButton.icon(
-                      onPressed: () => Navigator.push(
+                      onPressed: () => AppRoutes.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => TrailFormScreen(isAgency: isAgency),
-                        ),
+                        AppRoutes.newTrail,
+                        (_) => TrailFormScreen(isAgency: isAgency),
                       ),
                       icon: const Icon(Icons.add),
                       label: const Text('Criar novo roteiro'),
@@ -282,12 +282,10 @@ class OperatorDashboard extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 10),
                         child: BookingSummaryCard(
                           booking: booking,
-                          onTap: () => Navigator.push(
+                          onTap: () => AppRoutes.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  BookingDetailsScreen(bookingId: booking.id),
-                            ),
+                            AppRoutes.booking(booking.id),
+                            (_) => BookingDetailsScreen(bookingId: booking.id),
                           ),
                         ),
                       ),
