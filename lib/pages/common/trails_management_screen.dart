@@ -20,7 +20,7 @@ class TrailsManagementScreen extends StatefulWidget {
 }
 
 class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
-  String _filter = 'Não arquivados';
+  String _filter = 'Ativos';
   DateTimeRange? _period;
 
   List<Trail> _filteredTrails(List<Trail> trails) {

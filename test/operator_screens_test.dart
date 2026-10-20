@@ -198,6 +198,40 @@ void main() {
     },
   );
 
+  testWidgets('Gestão de roteiros inicia mostrando somente ativos', (
+    tester,
+  ) async {
+    store.trails
+      ..clear()
+      ..addAll([
+        Trail.fromJson({
+          'id': 'ativo',
+          'nome': 'Roteiro ativo',
+          'cidade': 'Maringá',
+          'estado': 'PR',
+          'preco': 120,
+          'imagem_url': '',
+          'ativo': true,
+        }),
+        Trail.fromJson({
+          'id': 'inativo',
+          'nome': 'Roteiro desativado',
+          'cidade': 'Maringá',
+          'estado': 'PR',
+          'preco': 120,
+          'imagem_url': '',
+          'ativo': false,
+        }),
+      ]);
+
+    await tester.pumpWidget(app(const TrailsManagementScreen(isAgency: false)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ativos'), findsOneWidget);
+    expect(find.text('Roteiro ativo'), findsOneWidget);
+    expect(find.text('Roteiro desativado'), findsNothing);
+  }, skip: AppConfig.useBackend);
+
   for (final width in [320.0, 1024.0]) {
     for (final entry in <String, Widget>{
       'guia': const OperatorDashboard(isAgency: false),
