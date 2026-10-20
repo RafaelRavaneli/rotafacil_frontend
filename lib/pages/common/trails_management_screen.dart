@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
+import 'trail_participants_screen.dart';
 import '../../utils/date_time_format.dart';
 
 class TrailsManagementScreen extends StatefulWidget {
@@ -236,6 +237,11 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
                                       : _delete(context, trail);
                                 },
                                 onArchive: () => _archive(context, trail),
+                                onParticipants: () => AppRoutes.push(
+                                  context,
+                                  AppRoutes.trailParticipants(trail.id),
+                                  (_) => TrailParticipantsScreen(trail: trail),
+                                ),
                               );
                             },
                           ),
@@ -351,12 +357,14 @@ class _TrailRow extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onArchive,
+    required this.onParticipants,
   });
 
   final Trail trail;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onArchive;
+  final VoidCallback onParticipants;
 
   @override
   Widget build(BuildContext context) {
@@ -455,9 +463,22 @@ class _TrailRow extends StatelessWidget {
               if (value == 'archive') {
                 onArchive();
               }
+              if (value == 'participants') {
+                onParticipants();
+              }
             },
             itemBuilder: (context) {
               return [
+                const PopupMenuItem(
+                  value: 'participants',
+                  child: Row(
+                    children: [
+                      Icon(Icons.groups_outlined),
+                      SizedBox(width: 8),
+                      Text('Ver inscritos'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'editar',
                   child: Row(

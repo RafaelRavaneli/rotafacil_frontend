@@ -14,6 +14,7 @@ import 'package:rotafacil/pages/common/booking_details_screen.dart';
 import 'package:rotafacil/pages/common/bookings_screen.dart';
 import 'package:rotafacil/pages/common/operator_dashboard.dart';
 import 'package:rotafacil/pages/common/trails_management_screen.dart';
+import 'package:rotafacil/pages/common/trail_participants_screen.dart';
 import 'package:rotafacil/pages/management/trail_form_screen.dart';
 import 'package:rotafacil/state/app_store.dart';
 import 'package:rotafacil/theme/app_theme.dart';
@@ -230,6 +231,63 @@ void main() {
     expect(find.text('Ativos'), findsOneWidget);
     expect(find.text('Roteiro ativo'), findsOneWidget);
     expect(find.text('Roteiro desativado'), findsNothing);
+  }, skip: AppConfig.useBackend);
+
+  testWidgets('Inscritos podem ser filtrados pela data do roteiro', (
+    tester,
+  ) async {
+    final trail = Trail.fromJson({
+      'id': 't1',
+      'nome': 'Roteiro com datas',
+      'cidade': 'Maringá',
+      'estado': 'PR',
+      'datas': [
+        {
+          'id': 'd1',
+          'data_hora_inicio': '2099-10-10T08:00',
+          'data_hora_fim': '2099-10-10T16:00',
+        },
+        {
+          'id': 'd2',
+          'data_hora_inicio': '2099-11-10T08:00',
+          'data_hora_fim': '2099-11-10T16:00',
+        },
+      ],
+    });
+    store.bookings
+      ..clear()
+      ..addAll([
+        LocalBooking(
+          id: 'b1',
+          trailId: 't1',
+          trailName: trail.name,
+          personName: 'Ana',
+          date: '2099-10-10',
+          status: 'Confirmado',
+          roleView: 'guia',
+          departureId: 'd1',
+        ),
+        LocalBooking(
+          id: 'b2',
+          trailId: 't1',
+          trailName: trail.name,
+          personName: 'Bruno',
+          date: '2099-11-10',
+          status: 'Confirmado',
+          roleView: 'guia',
+          departureId: 'd2',
+        ),
+      ]);
+
+    await tester.pumpWidget(app(TrailParticipantsScreen(trail: trail)));
+    expect(find.text('Ana'), findsOneWidget);
+    expect(find.text('Bruno'), findsOneWidget);
+    await tester.tap(find.text('Todas as datas'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('10/10/2099 às 08:00').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Ana'), findsOneWidget);
+    expect(find.text('Bruno'), findsNothing);
   }, skip: AppConfig.useBackend);
 
   for (final width in [320.0, 1024.0]) {

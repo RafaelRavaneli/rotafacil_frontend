@@ -9,6 +9,7 @@ import 'pages/admin/admin_shell.dart';
 import 'pages/auth/welcome_screen.dart';
 import 'pages/auth/login_screen.dart';
 import 'pages/common/booking_details_screen.dart';
+import 'pages/common/trail_participants_screen.dart';
 import 'pages/guide/guide_shell.dart';
 import 'pages/management/trail_form_screen.dart';
 import 'pages/tourist/trail_details_screen.dart';
@@ -213,6 +214,16 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
       if (trail != null) {
         return TrailFormScreen(isAgency: isAgency, existing: trail);
       }
+    }
+    if (segments.length == 3 &&
+        segments.first == 'roteiros' &&
+        segments.last == 'inscritos' &&
+        (isAgency || role == 'guia')) {
+      final id = Uri.decodeComponent(segments[1]);
+      final trail = AppStore.instance.managedTrails
+          .where((item) => item.id == id)
+          .firstOrNull;
+      if (trail != null) return TrailParticipantsScreen(trail: trail);
     }
 
     final initialIndex = AppRoutes.tabIndex(widget.initialLocation, role);

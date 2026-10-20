@@ -13,6 +13,8 @@ class AppRoutes {
   static String newTrail = '/roteiros/novo';
   static String editTrail(String id) =>
       '/roteiros/${Uri.encodeComponent(id)}/editar';
+  static String trailParticipants(String id) =>
+      '/roteiros/${Uri.encodeComponent(id)}/inscritos';
 
   static List<String> tabsForRole(String role) => switch (role) {
     'turista' ||
