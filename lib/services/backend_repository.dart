@@ -125,6 +125,7 @@ class BackendRepository {
             endsAt: row['data_hora_fim']?.toString() ?? '',
             createdAt: DateTime.tryParse(row['createdAt']?.toString() ?? ''),
             guidePhone: row['telefone_guia']?.toString() ?? '',
+            personPhone: row['telefone_participante']?.toString() ?? '',
             agencyId: row['id_agencia']?.toString() ?? '',
             agencyName: row['nome_agencia']?.toString() ?? '',
             evaluated: row['avaliado'] == true,
@@ -304,12 +305,23 @@ class BackendRepository {
     );
   }
 
-  Future<TrailWeather?> weather(String trailId) async {
+  Future<TrailWeather?> weather(String trailId, {DateTime? date}) async {
     final response = Map<String, dynamic>.from(
       await api.get('/api/trilhas/${Uri.encodeComponent(trailId)}/clima')
           as Map,
     );
-    final current = response['previsao_do_dia_da_trilha'];
+    final forecast = response['previsao_completa'];
+    final day = date == null
+        ? null
+        : '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final current = day == null
+        ? response['previsao_do_dia_da_trilha']
+        : (forecast is List
+              ? forecast
+                    .whereType<Map>()
+                    .where((item) => item['data'] == day)
+                    .firstOrNull
+              : null);
     if (current is! Map) return null;
     return TrailWeather.fromJson(Map<String, dynamic>.from(current));
   }

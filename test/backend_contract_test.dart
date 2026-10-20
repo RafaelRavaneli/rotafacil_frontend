@@ -14,6 +14,42 @@ import 'package:rotafacil/services/session_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'Previsão usa dia selecionado sem retornar previsão de outra saída',
+    () async {
+      final repository = BackendRepository(
+        api: ApiClient(
+          client: MockClient(
+            (request) async => http.Response(
+              jsonEncode({
+                'previsao_do_dia_da_trilha': {
+                  'data': '2026-10-21',
+                  'condicao': 'Chuva',
+                },
+                'previsao_completa': [
+                  {'data': '2026-10-21', 'condicao': 'Chuva'},
+                  {'data': '2026-10-25', 'condicao': 'Céu limpo'},
+                ],
+              }),
+              200,
+              headers: {'content-type': 'application/json; charset=utf-8'},
+            ),
+          ),
+        ),
+      );
+      expect(
+        (await repository.weather(
+          't1',
+          date: DateTime(2026, 10, 25),
+        ))?.condition,
+        'Céu limpo',
+      );
+      expect(
+        await repository.weather('t1', date: DateTime(2026, 12, 1)),
+        isNull,
+      );
+    },
+  );
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SessionService.instance.clear();

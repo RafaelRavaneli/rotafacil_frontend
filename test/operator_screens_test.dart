@@ -18,6 +18,8 @@ import 'package:rotafacil/pages/common/trail_participants_screen.dart';
 import 'package:rotafacil/pages/management/trail_form_screen.dart';
 import 'package:rotafacil/state/app_store.dart';
 import 'package:rotafacil/theme/app_theme.dart';
+import 'package:rotafacil/pages/tourist/trail_details_screen.dart';
+import 'package:rotafacil/widgets/trail_weather_card.dart';
 
 LocalBooking reservation({String status = 'Confirmado'}) => LocalBooking(
   id: 'r1',
@@ -112,9 +114,110 @@ void main() {
     expect(find.byType(BookingDetailsScreen), findsOneWidget);
     expect(find.text('r1'), findsOneWidget);
     expect(find.text('Pessoa de teste'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.textContaining('não comprova pagamento'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.textContaining('não comprova pagamento'), findsOneWidget);
     expect(find.text('Fazer check-in'), findsNothing);
     expect(find.text('Fazer check-out'), findsNothing);
+  });
+
+  testWidgets('Reserva usa horário e previsão da saída reservada', (
+    tester,
+  ) async {
+    final trail = Trail.fromJson({
+      ...store.trails.single.toJson(),
+      'recommendedItems': ['Água', 'Calçado fechado'],
+      'latitude': -23.4,
+      'longitude': -51.9,
+      'departures': [
+        {
+          'id': 'd1',
+          'data_hora_inicio': '2099-10-10T08:00',
+          'data_hora_fim': '2099-10-10T16:00',
+        },
+        {
+          'id': 'd2',
+          'data_hora_inicio': '2099-11-10T06:30',
+          'data_hora_fim': '2099-11-11T15:00',
+        },
+      ],
+    });
+    store.trails
+      ..clear()
+      ..add(trail);
+    store.bookings
+      ..clear()
+      ..add(
+        LocalBooking(
+          id: 'r1',
+          trailId: 't1',
+          trailName: trail.name,
+          personName: 'Ana',
+          date: '2099-11-10',
+          status: 'Confirmado',
+          roleView: 'turista',
+          departureId: 'd2',
+        ),
+      );
+    await tester.pumpWidget(app(const BookingDetailsScreen(bookingId: 'r1')));
+    await tester.scrollUntilVisible(
+      find.text('O que levar'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('10/11/2099 às 06:30'), findsOneWidget);
+    expect(find.text('11/11/2099 às 15:00'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byType(TrailWeatherCard),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Água'), findsOneWidget);
+    expect(find.text('Abrir rota no Google Maps'), findsOneWidget);
+    expect(
+      tester.widget<TrailWeatherCard>(find.byType(TrailWeatherCard)).date,
+      DateTime(2099, 11, 10, 6, 30),
+    );
+  });
+
+  testWidgets('Seletor de previsão troca data sem alterar reserva', (
+    tester,
+  ) async {
+    final trail = Trail.fromJson({
+      ...store.trails.single.toJson(),
+      'departures': [
+        {
+          'id': 'd1',
+          'data_hora_inicio': '2099-10-10T08:00',
+          'data_hora_fim': '2099-10-10T16:00',
+        },
+        {
+          'id': 'd2',
+          'data_hora_inicio': '2099-11-10T08:00',
+          'data_hora_fim': '2099-11-10T16:00',
+        },
+      ],
+    });
+    await tester.pumpWidget(app(TrailDetailsScreen(trail: trail)));
+    await tester.scrollUntilVisible(
+      find.byType(DropdownButtonFormField<DateTime>),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.byType(DropdownButtonFormField<DateTime>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<DateTime>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('10/11/2099 às 08:00').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TrailWeatherCard>(find.byType(TrailWeatherCard)).date,
+      DateTime(2099, 11, 10, 8),
+    );
+    expect(store.bookings.single.id, 'r1');
   });
 
   test('Check-in e check-out ficam bloqueados na camada de estado', () async {
@@ -311,11 +414,14 @@ void main() {
     expect(find.textContaining('Aguardando confirmação'), findsOneWidget);
     expect(find.text('Confirmar'), findsOneWidget);
     expect(find.text('Recusar'), findsOneWidget);
+    expect(find.text('Entrar em contato'), findsOneWidget);
+    expect(find.text('Detalhes da reserva'), findsNothing);
     await tester.tap(find.text('Confirmar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Confirmar').last);
     await tester.pumpAndSettle();
     expect(store.bookings.single.status, BookingStatus.confirmed);
+    expect(find.text('Detalhes da reserva'), findsOneWidget);
   }, skip: AppConfig.useBackend);
 
   testWidgets('Finalização da saída conclui somente a data selecionada', (

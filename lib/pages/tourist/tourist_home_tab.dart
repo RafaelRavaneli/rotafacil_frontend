@@ -113,13 +113,13 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
               final rating = b.rating.compareTo(a.rating);
               return rating != 0 ? rating : b.reviews.compareTo(a.reviews);
             });
-          final trekking = trails
+          final waterfalls = trails
               .where(
-                (trail) => _isModality(trail, const [
-                  'trilha',
-                  'trekking',
-                  'caminhada',
-                ]),
+                (trail) =>
+                    _isModality(trail, const ['cachoeira', 'cachoeirismo']) ||
+                    '${trail.name} ${trail.description}'.toLowerCase().contains(
+                      'cachoeira',
+                    ),
               )
               .toList();
           final aquatrekking = trails
@@ -198,11 +198,11 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                         itemBuilder: (trail) => _card(context, trail, store),
                       ),
                       _TrailCarouselSection(
-                        title: 'Roteiros com trilha',
-                        subtitle: 'Caminhadas e trekking',
-                        trails: trekking,
+                        title: 'Roteiros com cachoeira',
+                        subtitle: 'Experiências para conhecer cachoeiras',
+                        trails: waterfalls,
                         emptyText:
-                            'Nenhum roteiro com trilha disponível no momento.',
+                            'Nenhum roteiro com cachoeira disponível no momento.',
                         itemBuilder: (trail) => _card(context, trail, store),
                       ),
                       _TrailCarouselSection(

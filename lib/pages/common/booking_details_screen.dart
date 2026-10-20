@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../utils/date_time_format.dart';
 import '../../utils/run_action.dart';
 import '../../widgets/network_image_box.dart';
+import '../../widgets/trail_weather_card.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   const BookingDetailsScreen({super.key, required this.bookingId});
@@ -289,6 +290,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           final role = SessionService.instance.role?.toLowerCase() ?? '';
           final isOperator = role == 'guia' || role == 'agencia';
           final normalizedStatus = BookingStatus.normalize(booking.status);
+          final departure = trail?.effectiveDepartures
+              .where(
+                (item) => booking.departureId.isNotEmpty
+                    ? item.id == booking.departureId
+                    : formatBrazilianDate(item.startsAt.toIso8601String()) ==
+                          formatBrazilianDate(booking.date),
+              )
+              .firstOrNull;
+          final start =
+              parseAppDateTime(booking.startsAt) ?? departure?.startsAt;
+          final end = parseAppDateTime(booking.endsAt) ?? departure?.endsAt;
+          final weatherDate = start ?? parseAppDateTime(booking.date);
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -366,6 +379,67 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
+                  _Information(
+                    label: 'Início',
+                    value: formatBrazilianDateTime(start),
+                  ),
+                  _Information(
+                    label: 'Término',
+                    value: formatBrazilianDateTime(end),
+                  ),
+                  if (trail != null) ...[
+                    _Information(
+                      label: 'Ponto de encontro',
+                      value: trail.meetingPoint,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'O que levar',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (trail.recommendedItems.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          'Lista ainda não informada pelo responsável.',
+                        ),
+                      )
+                    else
+                      ...trail.recommendedItems.map(
+                        (item) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.check_circle_outline),
+                          title: Text(item),
+                        ),
+                      ),
+                    if (trail.latitude != null && trail.longitude != null)
+                      OutlinedButton.icon(
+                        onPressed: () => runAction(context, () async {
+                          final opened = await launchUrl(
+                            Uri.https('www.google.com', '/maps/dir/', {
+                              'api': '1',
+                              'destination':
+                                  '${trail.latitude},${trail.longitude}',
+                              'travelmode': 'driving',
+                            }),
+                            mode: LaunchMode.externalApplication,
+                          );
+                          if (!opened) {
+                            throw StateError(
+                              'Não foi possível abrir o Google Maps.',
+                            );
+                          }
+                        }),
+                        icon: const Icon(Icons.directions_outlined),
+                        label: const Text('Abrir rota no Google Maps'),
+                      ),
+                    const SizedBox(height: 12),
+                    TrailWeatherCard(trail: trail, date: weatherDate),
+                    const SizedBox(height: 14),
+                  ],
                   const Text(
                     'O valor declarado não comprova pagamento. O aplicativo não realiza cobrança online.',
                     style: TextStyle(color: AppColors.muted, height: 1.5),

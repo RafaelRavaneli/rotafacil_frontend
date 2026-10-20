@@ -91,6 +91,7 @@ class LocalBooking {
     this.endsAt = '',
     this.createdAt,
     this.guidePhone = '',
+    this.personPhone = '',
     this.agencyId = '',
     this.agencyName = '',
     this.evaluated = false,
@@ -111,6 +112,7 @@ class LocalBooking {
   final String endsAt;
   final DateTime? createdAt;
   final String guidePhone;
+  final String personPhone;
   final String agencyId;
   final String agencyName;
   final bool evaluated;
@@ -137,6 +139,7 @@ class LocalBooking {
     'endsAt': endsAt,
     'createdAt': createdAt?.toIso8601String(),
     'guidePhone': guidePhone,
+    'personPhone': personPhone,
     'agencyId': agencyId,
     'agencyName': agencyName,
     'evaluated': evaluated,
@@ -163,6 +166,9 @@ class LocalBooking {
       ),
       guidePhone:
           (json['guidePhone'] ?? json['telefone_guia'])?.toString() ?? '',
+      personPhone:
+          (json['personPhone'] ?? json['telefone_participante'])?.toString() ??
+          '',
       agencyId: (json['agencyId'] ?? json['id_agencia'])?.toString() ?? '',
       agencyName:
           (json['agencyName'] ?? json['nome_agencia'])?.toString() ?? '',

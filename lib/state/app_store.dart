@@ -785,9 +785,9 @@ class AppStore extends ChangeNotifier {
     await refreshBackend();
   }
 
-  Future<TrailWeather?> weatherFor(String trailId) async {
+  Future<TrailWeather?> weatherFor(String trailId, {DateTime? date}) async {
     if (!useBackend) return null;
-    return _backend.weather(trailId);
+    return _backend.weather(trailId, date: date);
   }
 
   Future<EmergencyContact> emergencyContactFor(String userId) {

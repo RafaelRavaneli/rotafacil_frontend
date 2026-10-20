@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../navigation/app_routes.dart';
+import 'booking_details_screen.dart';
 
 import '../../models/local_booking.dart';
 import '../../models/trail.dart';
@@ -21,6 +24,27 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
   String selectedDepartureId = 'all';
   String? busyBookingId;
   bool finishing = false;
+
+  Future<void> _contact(LocalBooking booking) async {
+    var phone = booking.personPhone.replaceAll(RegExp(r'\D'), '');
+    if (phone.length == 10 || phone.length == 11) phone = '55$phone';
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Participante sem telefone cadastrado.')),
+      );
+      return;
+    }
+    await runAction(context, () async {
+      final opened = await launchUrl(
+        Uri.https('wa.me', '/$phone', {
+          'text':
+              'Olá, ${booking.personName}! Sobre sua reserva para ${widget.trail.name}.',
+        }),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened) throw StateError('Não foi possível abrir o WhatsApp.');
+    });
+  }
 
   String _date(DateTime value) =>
       '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
@@ -232,6 +256,38 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
                               title: Text(booking.personName),
                               subtitle: Text(
                                 '${formatBrazilianDate(booking.date)} • ${booking.status}',
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  OutlinedButton.icon(
+                                    onPressed: () => _contact(booking),
+                                    icon: const Icon(Icons.chat_outlined),
+                                    label: const Text('Entrar em contato'),
+                                  ),
+                                  if (BookingStatus.isConfirmed(
+                                        booking.status,
+                                      ) ||
+                                      BookingStatus.normalize(booking.status) ==
+                                          'Em andamento')
+                                    OutlinedButton.icon(
+                                      onPressed: () => AppRoutes.push(
+                                        context,
+                                        AppRoutes.booking(booking.id),
+                                        (_) => BookingDetailsScreen(
+                                          bookingId: booking.id,
+                                        ),
+                                      ),
+                                      icon: const Icon(
+                                        Icons.receipt_long_outlined,
+                                      ),
+                                      label: const Text('Detalhes da reserva'),
+                                    ),
+                                ],
                               ),
                             ),
                             if (BookingStatus.isPending(booking.status))

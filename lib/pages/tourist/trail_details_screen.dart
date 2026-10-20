@@ -11,6 +11,7 @@ import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_location_map.dart';
+import '../../widgets/trail_weather_card.dart';
 import '../../utils/date_time_format.dart';
 import 'guide_profile_screen.dart';
 
@@ -26,16 +27,21 @@ class TrailDetailsScreen extends StatefulWidget {
 class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
   Trail get trail => widget.trail;
   late Future<List<TrailReview>> reviewsFuture;
-  late Future<TrailWeather?> weatherFuture;
+  DateTime? selectedWeatherDate;
 
   @override
   void initState() {
     super.initState();
     final store = AppStore.instance;
     reviewsFuture = store.reviewsFor(trail.id);
-    weatherFuture = trail.latitude == null || trail.longitude == null
-        ? Future<TrailWeather?>.value(null)
-        : store.weatherFor(trail.id);
+    final dates = trail.effectiveDepartures.toList()
+      ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+    selectedWeatherDate =
+        dates
+            .where((item) => !item.startsAt.isBefore(DateTime.now()))
+            .firstOrNull
+            ?.startsAt ??
+        dates.firstOrNull?.startsAt;
   }
 
   Future<void> _book(BuildContext context) async {
@@ -402,30 +408,32 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           ),
                         ],
                         const SizedBox(height: 14),
-                        FutureBuilder<TrailWeather?>(
-                          future: weatherFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const LinearProgressIndicator();
-                            }
-                            final weather = snapshot.data;
-                            if (weather == null) return const SizedBox.shrink();
-                            return Card(
-                              child: ListTile(
-                                leading: const Icon(
-                                  Icons.cloud_outlined,
-                                  color: AppColors.green700,
-                                ),
-                                title: Text(weather.condition),
-                                subtitle: Text(
-                                  '${weather.minimumTemperature?.toStringAsFixed(0) ?? '-'} °C a '
-                                  '${weather.maximumTemperature?.toStringAsFixed(0) ?? '-'} °C • '
-                                  '${weather.rainProbability ?? 0}% de chuva',
-                                ),
-                              ),
-                            );
-                          },
+                        if (trail.effectiveDepartures.length > 1) ...[
+                          DropdownButtonFormField<DateTime>(
+                            initialValue: selectedWeatherDate,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Data da previsão do tempo',
+                              prefixIcon: Icon(Icons.date_range_outlined),
+                            ),
+                            items: trail.effectiveDepartures
+                                .map((item) => item.startsAt)
+                                .toSet()
+                                .map(
+                                  (date) => DropdownMenuItem(
+                                    value: date,
+                                    child: Text(formatBrazilianDateTime(date)),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (date) =>
+                                setState(() => selectedWeatherDate = date),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        TrailWeatherCard(
+                          trail: trail,
+                          date: selectedWeatherDate,
                         ),
                         const SizedBox(height: 18),
                         if (trail.latitude != null && trail.longitude != null)
