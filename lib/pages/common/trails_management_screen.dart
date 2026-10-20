@@ -23,6 +23,10 @@ class TrailsManagementScreen extends StatefulWidget {
 class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
   String _filter = 'Ativos';
   DateTimeRange? _period;
+  String _guide = 'all';
+
+  String _guideKey(Trail trail) =>
+      trail.guideId.isNotEmpty ? trail.guideId : 'name:${trail.guideName}';
 
   List<Trail> _filteredTrails(List<Trail> trails) {
     final statusFiltered = switch (_filter) {
@@ -43,8 +47,11 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
       'Todos' => trails,
       _ => trails.where((trail) => !trail.archived).toList(),
     };
+    final guideFiltered = widget.isAgency && _guide != 'all'
+        ? statusFiltered.where((trail) => _guideKey(trail) == _guide).toList()
+        : statusFiltered;
     final period = _period;
-    if (period == null) return statusFiltered;
+    if (period == null) return guideFiltered;
     final periodEnd = DateTime(
       period.end.year,
       period.end.month,
@@ -53,12 +60,15 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
       59,
       59,
     );
-    return statusFiltered.where((trail) {
-      final start = trail.startsAt;
-      if (start == null) return false;
-      final end = trail.endsAt ?? start;
-      return !end.isBefore(period.start) && !start.isAfter(periodEnd);
-    }).toList();
+    return guideFiltered
+        .where(
+          (trail) => trail.effectiveDepartures.any(
+            (date) =>
+                !date.endsAt.isBefore(period.start) &&
+                !date.startsAt.isAfter(periodEnd),
+          ),
+        )
+        .toList();
   }
 
   Future<void> _selectPeriod(BuildContext context) async {
@@ -88,6 +98,13 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
         animation: store,
         builder: (context, child) {
           final managedTrails = store.managedTrails;
+          final guideOptions = {
+            for (final trail in managedTrails)
+              _guideKey(trail): trail.responsibleName,
+          };
+          if (_guide != 'all' && !guideOptions.containsKey(_guide)) {
+            _guide = 'all';
+          }
           final visibleTrails = _filteredTrails(managedTrails);
           return Align(
             alignment: Alignment.topCenter,
@@ -150,6 +167,32 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
                             if (value != null) setState(() => _filter = value);
                           },
                         ),
+                        if (widget.isAgency) ...[
+                          const SizedBox(height: 10),
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('guide-$_guide'),
+                            initialValue: _guide,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                              labelText: 'Guia responsável',
+                              prefixIcon: Icon(Icons.person_outline),
+                            ),
+                            items: [
+                              const DropdownMenuItem(
+                                value: 'all',
+                                child: Text('Todos os guias'),
+                              ),
+                              ...guideOptions.entries.map(
+                                (entry) => DropdownMenuItem(
+                                  value: entry.key,
+                                  child: Text(entry.value),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) =>
+                                setState(() => _guide = value ?? 'all'),
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         Row(
                           children: [

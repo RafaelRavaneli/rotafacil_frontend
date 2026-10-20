@@ -94,6 +94,7 @@ class LocalBooking {
     this.personPhone = '',
     this.agencyId = '',
     this.agencyName = '',
+    this.agencyPhone = '',
     this.evaluated = false,
   }) : _status = BookingStatus.normalize(status);
 
@@ -115,6 +116,12 @@ class LocalBooking {
   final String personPhone;
   final String agencyId;
   final String agencyName;
+  final String agencyPhone;
+
+  String get contactPhone => agencyId.isNotEmpty ? agencyPhone : guidePhone;
+  String get contactLabel => agencyId.isNotEmpty
+      ? 'Contatar agência pelo WhatsApp'
+      : 'Contatar guia pelo WhatsApp';
   final bool evaluated;
 
   String get status => _status;
@@ -142,6 +149,7 @@ class LocalBooking {
     'personPhone': personPhone,
     'agencyId': agencyId,
     'agencyName': agencyName,
+    'agencyPhone': agencyPhone,
     'evaluated': evaluated,
   };
 
@@ -172,6 +180,8 @@ class LocalBooking {
       agencyId: (json['agencyId'] ?? json['id_agencia'])?.toString() ?? '',
       agencyName:
           (json['agencyName'] ?? json['nome_agencia'])?.toString() ?? '',
+      agencyPhone:
+          (json['agencyPhone'] ?? json['telefone_agencia'])?.toString() ?? '',
       evaluated: json['evaluated'] == true || json['avaliado'] == true,
     );
   }

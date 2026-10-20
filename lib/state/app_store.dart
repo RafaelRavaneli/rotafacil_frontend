@@ -301,6 +301,19 @@ class AppStore extends ChangeNotifier {
         .toList();
   }
 
+  List<Trail> get agendaTrails {
+    final session = SessionService.instance;
+    if (!useBackend || session.role != 'guia') return managedTrails;
+    final aliases = {session.userId, session.email}
+      ..removeWhere((id) => id == null || id.isEmpty);
+    final owned = managedTrails.toSet();
+    return trails
+        .where(
+          (trail) => owned.contains(trail) || aliases.contains(trail.guideId),
+        )
+        .toList();
+  }
+
   void syncAgencyGuides(List<Map<String, dynamic>> invitations) {
     agencyGuides
       ..clear()

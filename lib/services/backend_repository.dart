@@ -127,6 +127,7 @@ class BackendRepository {
             personPhone: row['telefone_participante']?.toString() ?? '',
             agencyId: row['id_agencia']?.toString() ?? '',
             agencyName: row['nome_agencia']?.toString() ?? '',
+            agencyPhone: row['telefone_agencia']?.toString() ?? '',
             evaluated: row['avaliado'] == true,
           );
         }).toList()..sort((a, b) {

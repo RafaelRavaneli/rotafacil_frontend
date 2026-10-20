@@ -12,13 +12,19 @@ import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_location_map.dart';
 import '../../widgets/trail_weather_card.dart';
+import '../../services/session_service.dart';
 import '../../utils/date_time_format.dart';
 import 'guide_profile_screen.dart';
 
 class TrailDetailsScreen extends StatefulWidget {
-  const TrailDetailsScreen({super.key, required this.trail});
+  const TrailDetailsScreen({
+    super.key,
+    required this.trail,
+    this.readOnly = false,
+  });
 
   final Trail trail;
+  final bool readOnly;
 
   @override
   State<TrailDetailsScreen> createState() => _TrailDetailsScreenState();
@@ -26,6 +32,9 @@ class TrailDetailsScreen extends StatefulWidget {
 
 class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
   Trail get trail => widget.trail;
+  bool get readOnly =>
+      widget.readOnly ||
+      const ['guia', 'agencia', 'admin'].contains(SessionService.instance.role);
   late Future<List<TrailReview>> reviewsFuture;
   DateTime? selectedWeatherDate;
 
@@ -224,24 +233,25 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   ),
                 ),
                 actions: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: CircleAvatar(
-                      backgroundColor: AppColors.paper.withValues(alpha: .92),
-                      child: IconButton(
-                        onPressed: () => runAction(
-                          context,
-                          () => store.toggleFavorite(trail.id),
-                        ),
-                        icon: Icon(
-                          favorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color: favorite ? AppColors.red : AppColors.ink,
+                  if (!readOnly)
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircleAvatar(
+                        backgroundColor: AppColors.paper.withValues(alpha: .92),
+                        child: IconButton(
+                          onPressed: () => runAction(
+                            context,
+                            () => store.toggleFavorite(trail.id),
+                          ),
+                          icon: Icon(
+                            favorite
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            color: favorite ? AppColors.red : AppColors.ink,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: NetworkImageBox(
@@ -587,38 +597,40 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
           );
         },
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-          decoration: const BoxDecoration(
-            color: AppColors.paper,
-            border: Border(top: BorderSide(color: AppColors.border)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'R\$ ${trail.price.toStringAsFixed(2)}\npor pessoa',
-                  style: const TextStyle(
-                    color: AppColors.ink,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
+      bottomNavigationBar: readOnly
+          ? null
+          : SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                decoration: const BoxDecoration(
+                  color: AppColors.paper,
+                  border: Border(top: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'R\$ ${trail.price.toStringAsFixed(2)}\npor pessoa',
+                        style: const TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        onPressed: () => _book(context),
+                        icon: const Icon(Icons.hiking_rounded),
+                        label: const Text('Reservar'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                flex: 2,
-                child: FilledButton.icon(
-                  onPressed: () => _book(context),
-                  icon: const Icon(Icons.hiking_rounded),
-                  label: const Text('Reservar'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

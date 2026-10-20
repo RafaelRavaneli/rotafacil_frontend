@@ -17,6 +17,17 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
   late final api = widget.api ?? CommunityApi();
   late Future<List<List<Map<String, dynamic>>>> data;
   bool busy = false;
+  final search = TextEditingController();
+  String query = '';
+
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(String value) =>
+      value.toLowerCase().contains(query.trim().toLowerCase());
   String? activeId;
   bool get agency => SessionService.instance.role == 'agencia';
 
@@ -278,8 +289,19 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
               ),
             );
           }
-          final invites = snapshot.data!.first;
-          final guides = agency ? snapshot.data![1] : <Map<String, dynamic>>[];
+          final allInvites = snapshot.data!.first;
+          final invites = agency
+              ? allInvites
+                    .where(
+                      (item) => _matches(item['nome_guia']?.toString() ?? ''),
+                    )
+                    .toList()
+              : allInvites;
+          final guides = agency
+              ? snapshot.data![1]
+                    .where((item) => _matches(item['nome']?.toString() ?? ''))
+                    .toList()
+              : <Map<String, dynamic>>[];
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -337,6 +359,26 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                     style: const TextStyle(color: AppColors.muted, height: 1.5),
                   ),
                   const SizedBox(height: 24),
+                  if (agency) ...[
+                    TextField(
+                      controller: search,
+                      decoration: InputDecoration(
+                        labelText: 'Buscar guia',
+                        hintText: 'Nome do guia',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          tooltip: 'Limpar busca',
+                          onPressed: () {
+                            search.clear();
+                            setState(() => query = '');
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                      ),
+                      onChanged: (value) => setState(() => query = value),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                   _Section(
                     title: agency ? 'Convites enviados' : 'Convites recebidos',
                     count: invites.length,
@@ -369,15 +411,18 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                     ),
                     const SizedBox(height: 12),
                     if (guides.isEmpty)
-                      const GuideCollectionNotice(
-                        title: 'Nenhum guia cadastrado.',
-                        message:
-                            'Atualize esta tela para consultar novos cadastros.',
+                      GuideCollectionNotice(
+                        title: query.trim().isEmpty
+                            ? 'Nenhum guia cadastrado.'
+                            : 'Nenhum guia encontrado.',
+                        message: query.trim().isEmpty
+                            ? 'Atualize esta tela para consultar novos cadastros.'
+                            : 'Tente outro nome ou limpe a busca.',
                       ),
                     ...guides.map(
                       (g) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _guide(g, invites),
+                        child: _guide(g, allInvites),
                       ),
                     ),
                   ],

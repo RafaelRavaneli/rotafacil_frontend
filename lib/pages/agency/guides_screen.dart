@@ -6,8 +6,17 @@ import '../../utils/run_action.dart';
 import '../../widgets/guide_catalog_card.dart';
 import 'remote_guides_screen.dart';
 
-class GuidesScreen extends StatelessWidget {
+class GuidesScreen extends StatefulWidget {
   const GuidesScreen({super.key});
+
+  @override
+  State<GuidesScreen> createState() => _GuidesScreenState();
+}
+
+class _GuidesScreenState extends State<GuidesScreen> {
+  String query = '';
+  bool _matches(LocalGuide guide) =>
+      guide.name.toLowerCase().contains(query.trim().toLowerCase());
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +64,16 @@ class GuidesScreen extends StatelessWidget {
                     label: const Text('Adicionar guia'),
                   ),
                   const SizedBox(height: 24),
+                  TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Buscar guia',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) => setState(() => query = value),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
-                    '${store.agencyGuides.length} guia(s)',
+                    '${store.agencyGuides.where(_matches).length} guia(s)',
                     style: const TextStyle(
                       color: AppColors.forest,
                       fontSize: 19,
@@ -64,18 +81,20 @@ class GuidesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  if (store.agencyGuides.isEmpty)
+                  if (store.agencyGuides.where(_matches).isEmpty)
                     const GuideCollectionNotice(
                       title: 'Nenhum guia registrado',
                       message:
                           'Adicione um guia para experimentar a organização da equipe.',
                     ),
-                  ...store.agencyGuides.map(
-                    (guide) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _LocalGuideCard(guide: guide),
-                    ),
-                  ),
+                  ...store.agencyGuides
+                      .where(_matches)
+                      .map(
+                        (guide) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _LocalGuideCard(guide: guide),
+                        ),
+                      ),
                 ],
               ),
             ),

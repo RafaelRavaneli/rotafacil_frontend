@@ -33,6 +33,34 @@ void main() {
     AppStore.instance.agencyGuides.clear();
   });
 
+  testWidgets('Busca encontra guia específico no catálogo', (tester) async {
+    final api = CommunityApi(
+      api: ApiClient(
+        client: MockClient(
+          (request) async => response(
+            request.url.path == '/api/guias'
+                ? [
+                    {'id': 'ana', 'nome': 'Guia Ana'},
+                    {'id': 'bruno', 'nome': 'Guia Bruno'},
+                  ]
+                : <Map<String, dynamic>>[],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(app(RemoteGuidesScreen(api: api)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Ana');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Guia Ana'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Guia Ana'), findsOneWidget);
+    expect(find.text('Guia Bruno'), findsNothing);
+  });
+
   testWidgets(
     'Agência confirma envio, mantém contrato e bloqueia envio duplicado',
     (tester) async {
@@ -70,6 +98,8 @@ void main() {
         300,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.ensureVisible(find.text('Convidar'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Convidar'));
       await tester.pumpAndSettle();
       expect(posts, 0);
@@ -175,6 +205,8 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.ensureVisible(find.text('Convidar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Convidar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Enviar convite'));

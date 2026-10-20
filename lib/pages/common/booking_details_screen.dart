@@ -204,8 +204,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
-  Future<void> _contactGuide(LocalBooking booking) async {
-    var phone = booking.guidePhone.replaceAll(RegExp(r'\D'), '');
+  Future<void> _contactResponsible(LocalBooking booking) async {
+    var phone = booking.contactPhone.replaceAll(RegExp(r'\D'), '');
     if (phone.length == 10 || phone.length == 11) phone = '55$phone';
     if (phone.isEmpty) {
       if (mounted) {
@@ -364,8 +364,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             value: booking.personName,
                           ),
                           _Information(
-                            label: 'Responsável pelo roteiro',
-                            value: trail?.guideName == 'Guia responsável'
+                            label: booking.agencyId.isNotEmpty
+                                ? 'Agência responsável pelo roteiro'
+                                : 'Responsável pelo roteiro',
+                            value: booking.agencyId.isNotEmpty
+                                ? booking.agencyName
+                                : trail?.guideName == 'Guia responsável'
                                 ? ''
                                 : (trail?.guideName ?? ''),
                           ),
@@ -477,9 +481,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       BookingStatus.isConfirmed(booking.status)) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
-                      onPressed: () => _contactGuide(booking),
+                      onPressed: () => _contactResponsible(booking),
                       icon: const Icon(Icons.chat_outlined),
-                      label: const Text('Contatar guia pelo WhatsApp'),
+                      label: Text(booking.contactLabel),
                     ),
                   ],
                   if (normalizedStatus == 'Concluído' &&

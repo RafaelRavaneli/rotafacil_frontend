@@ -10,6 +10,7 @@ import '../../widgets/booking_summary_card.dart';
 import '../../widgets/scheduled_trail_card.dart';
 import '../../navigation/app_routes.dart';
 import 'booking_details_screen.dart';
+import '../tourist/trail_details_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key, required this.role, this.onRefresh});
@@ -142,7 +143,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
             final historyBookings = visibleBookings
                 .where((booking) => !BookingStatus.isActive(booking.status))
                 .toList();
-            final schedule = upcomingTrailSchedule(store.managedTrails);
+            final schedule = upcomingTrailSchedule(store.agendaTrails);
             final visibleSchedule = period == null
                 ? schedule
                 : schedule
@@ -256,6 +257,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           child: ScheduledTrailCard(
                             trail: item.trail,
                             departure: item.departure,
+                            onDetails: () => AppRoutes.push(
+                              context,
+                              AppRoutes.trail(item.trail.id),
+                              (_) => TrailDetailsScreen(
+                                trail: item.trail,
+                                readOnly: true,
+                              ),
+                            ),
                           ),
                         ),
                       ),

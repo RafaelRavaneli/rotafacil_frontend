@@ -107,6 +107,48 @@ void main() {
     home: Scaffold(body: page),
   );
 
+  testWidgets('Agência filtra roteiros por guia responsável', (tester) async {
+    final base = store.trails.single.toJson();
+    store.trails
+      ..clear()
+      ..addAll([
+        Trail.fromJson({
+          ...base,
+          'id': 'ana',
+          'name': 'Roteiro Ana',
+          'guideId': 'g1',
+          'guideName': 'Ana',
+        }),
+        Trail.fromJson({
+          ...base,
+          'id': 'bruno',
+          'name': 'Roteiro Bruno',
+          'guideId': 'g2',
+          'guideName': 'Bruno',
+        }),
+      ]);
+    await tester.pumpWidget(app(const TrailsManagementScreen(isAgency: true)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Todos os guias'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bruno').last);
+    await tester.pumpAndSettle();
+    expect(find.text('1 de 2 roteiro(s)'), findsOneWidget);
+    expect(find.text('Roteiro Ana'), findsNothing);
+  }, skip: AppConfig.useBackend);
+
+  testWidgets('Consulta de roteiro na agenda não permite reserva', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      app(TrailDetailsScreen(trail: store.trails.single, readOnly: true)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Reservar'), findsNothing);
+    expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+    expect(find.text('Trilha de demonstração'), findsOneWidget);
+  });
+
   testWidgets('Lista abre detalhe da reserva selecionada', (tester) async {
     await tester.pumpWidget(app(const BookingsScreen(role: 'turista')));
     await tester.tap(find.text('Ver detalhes da reserva'));
@@ -499,15 +541,16 @@ void main() {
             guidePhone: '(44) 99999-0000',
             agencyId: 'a1',
             agencyName: 'Agência Teste',
+            agencyPhone: '(44) 98888-0000',
           ),
         );
       await tester.pumpWidget(app(const BookingDetailsScreen(bookingId: 'r1')));
       await tester.scrollUntilVisible(
-        find.text('Contatar guia pelo WhatsApp'),
+        find.text('Contatar agência pelo WhatsApp'),
         250,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('Contatar guia pelo WhatsApp'), findsOneWidget);
+      expect(find.text('Contatar agência pelo WhatsApp'), findsOneWidget);
       expect(find.textContaining('Avaliar roteiro'), findsNothing);
 
       store.bookings.single.status = 'Concluído';
@@ -522,7 +565,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Roteiro'), findsOneWidget);
       expect(find.text('Guia'), findsOneWidget);
-      expect(find.text('Agência Teste'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Agência Teste'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('0/5'), findsNWidgets(3));
     },
   );
