@@ -75,6 +75,9 @@ class LocalBooking {
     this.valuePaid = 0,
     this.personId = '',
     this.guideId = '',
+    this.departureId = '',
+    this.startsAt = '',
+    this.endsAt = '',
   }) : _status = BookingStatus.normalize(status);
 
   final String id;
@@ -87,6 +90,9 @@ class LocalBooking {
   double valuePaid;
   final String personId;
   final String guideId;
+  final String departureId;
+  final String startsAt;
+  final String endsAt;
 
   String get status => _status;
 
@@ -105,6 +111,9 @@ class LocalBooking {
     'valuePaid': valuePaid,
     'personId': personId,
     'guideId': guideId,
+    'departureId': departureId,
+    'startsAt': startsAt,
+    'endsAt': endsAt,
   };
 
   factory LocalBooking.fromJson(Map<String, dynamic> json) {
@@ -119,6 +128,10 @@ class LocalBooking {
       valuePaid: (json['valuePaid'] as num?)?.toDouble() ?? 0,
       personId: (json['personId'] ?? json['id_usuario'])?.toString() ?? '',
       guideId: (json['guideId'] ?? json['id_guia'])?.toString() ?? '',
+      departureId: (json['departureId'] ?? json['id_data'])?.toString() ?? '',
+      startsAt:
+          (json['startsAt'] ?? json['data_hora_inicio'])?.toString() ?? '',
+      endsAt: (json['endsAt'] ?? json['data_hora_fim'])?.toString() ?? '',
     );
   }
 }

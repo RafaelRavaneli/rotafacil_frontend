@@ -610,6 +610,7 @@ class AppStore extends ChangeNotifier {
         body: {
           'id_trilha': booking.trailId,
           'data_agendada': BackendRepository.apiDate(booking.date),
+          if (booking.departureId.isNotEmpty) 'id_data': booking.departureId,
           'valor_pago': booking.valuePaid,
         },
       );

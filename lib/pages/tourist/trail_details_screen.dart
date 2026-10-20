@@ -39,6 +39,46 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
   }
 
   Future<void> _book(BuildContext context) async {
+    final now = DateTime.now();
+    final available = trail.effectiveDepartures
+        .where((item) => !item.startsAt.isBefore(now))
+        .toList();
+    if (available.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Este roteiro não possui datas disponíveis.'),
+        ),
+      );
+      return;
+    }
+    TrailDeparture? selected = available.length == 1
+        ? available.first
+        : await showModalBottomSheet<TrailDeparture>(
+            context: context,
+            showDragHandle: true,
+            backgroundColor: AppColors.paper,
+            builder: (context) => SafeArea(
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                itemCount: available.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final departure = available[index];
+                  return ListTile(
+                    leading: const Icon(Icons.event_available_outlined),
+                    title: Text(formatBrazilianDateTime(departure.startsAt)),
+                    subtitle: Text(
+                      'Término: ${formatBrazilianDateTime(departure.endsAt)}',
+                    ),
+                    onTap: () => Navigator.pop(context, departure),
+                  );
+                },
+              ),
+            ),
+          );
+    if (selected == null || !context.mounted) return;
+    final departure = selected;
     bool confirmed = false;
     bool submitting = false;
 
@@ -74,11 +114,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      trail.startsAt == null
-                          ? 'Data a combinar'
-                          : formatBrazilianDateTime(trail.startsAt),
-                    ),
+                    child: Text(formatBrazilianDateTime(departure.startsAt)),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -105,12 +141,13 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                         trailId: trail.id,
                         trailName: trail.name,
                         personName: AppStore.instance.tourist.name,
-                        date: trail.date.isEmpty
-                            ? 'Data a combinar'
-                            : trail.date,
+                        date: _apiDate(departure.startsAt),
                         status: 'Confirmado',
                         roleView: 'turista',
                         valuePaid: trail.price,
+                        departureId: departure.id,
+                        startsAt: departure.startsAt.toIso8601String(),
+                        endsAt: departure.endsAt.toIso8601String(),
                       ),
                     ),
                   );
@@ -136,6 +173,9 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
       const SnackBar(content: Text('Reserva salva. Confira a aba Reservas.')),
     );
   }
+
+  String _apiDate(DateTime value) =>
+      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {

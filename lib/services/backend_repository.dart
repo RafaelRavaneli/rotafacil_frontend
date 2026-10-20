@@ -118,6 +118,9 @@ class BackendRepository {
         valuePaid: double.tryParse(row['valor_pago']?.toString() ?? '') ?? 0,
         personId: row['id_usuario']?.toString() ?? '',
         guideId: row['id_guia']?.toString() ?? '',
+        departureId: row['id_data']?.toString() ?? '',
+        startsAt: row['data_hora_inicio']?.toString() ?? '',
+        endsAt: row['data_hora_fim']?.toString() ?? '',
       );
     }).toList();
     final guides = <LocalGuide>[];
