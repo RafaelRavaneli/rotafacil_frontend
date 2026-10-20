@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/local_booking.dart';
 import '../theme/app_colors.dart';
+import '../utils/date_time_format.dart';
 
 class BookingSummaryCard extends StatelessWidget {
   const BookingSummaryCard({
@@ -83,7 +84,9 @@ class BookingSummaryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    booking.date.isEmpty ? 'Data não informada' : booking.date,
+                    booking.date.isEmpty
+                        ? 'Data não informada'
+                        : formatBrazilianDate(booking.date),
                     style: const TextStyle(color: AppColors.muted),
                   ),
                 ],

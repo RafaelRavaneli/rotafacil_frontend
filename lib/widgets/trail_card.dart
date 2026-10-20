@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/trail.dart';
 import '../theme/app_colors.dart';
+import '../utils/date_time_format.dart';
 import 'network_image_box.dart';
 
 class TrailCard extends StatelessWidget {
@@ -123,7 +124,7 @@ class TrailCard extends StatelessWidget {
             Text(
               [
                 trail.distanceLabel,
-                if (trail.date.isNotEmpty) trail.date,
+                if (trail.date.isNotEmpty) formatBrazilianDate(trail.date),
               ].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

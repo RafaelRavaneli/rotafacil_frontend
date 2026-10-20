@@ -4,6 +4,7 @@ import '../../models/availability.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/run_action.dart';
+import '../../utils/date_time_format.dart';
 
 class AvailabilityScreen extends StatefulWidget {
   const AvailabilityScreen({super.key});
@@ -76,10 +77,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
   }
 
   String _dateLabel(String value) {
-    final date = DateTime.tryParse(value);
-    if (date == null) return value;
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return formatBrazilianDate(value);
   }
 
   @override

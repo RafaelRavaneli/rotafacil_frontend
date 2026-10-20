@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
+import '../../utils/date_time_format.dart';
 
 class TrailsManagementScreen extends StatefulWidget {
   const TrailsManagementScreen({super.key, required this.isAgency});
@@ -15,8 +16,7 @@ class TrailsManagementScreen extends StatefulWidget {
   final bool isAgency;
 
   @override
-  State<TrailsManagementScreen> createState() =>
-      _TrailsManagementScreenState();
+  State<TrailsManagementScreen> createState() => _TrailsManagementScreenState();
 }
 
 class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
@@ -25,12 +25,19 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
 
   List<Trail> _filteredTrails(List<Trail> trails) {
     final statusFiltered = switch (_filter) {
-      'Ativos' => trails
-          .where((trail) => TrailStatus.isActive(trail.status) && !trail.archived)
-          .toList(),
-      'Desativados' => trails
-          .where((trail) => TrailStatus.isInactive(trail.status) && !trail.archived)
-          .toList(),
+      'Ativos' =>
+        trails
+            .where(
+              (trail) => TrailStatus.isActive(trail.status) && !trail.archived,
+            )
+            .toList(),
+      'Desativados' =>
+        trails
+            .where(
+              (trail) =>
+                  TrailStatus.isInactive(trail.status) && !trail.archived,
+            )
+            .toList(),
       'Arquivados' => trails.where((trail) => trail.archived).toList(),
       'Todos' => trails,
       _ => trails.where((trail) => !trail.archived).toList(),
@@ -123,20 +130,21 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
                             labelText: 'Exibir roteiros',
                             prefixIcon: Icon(Icons.filter_list_rounded),
                           ),
-                          items: const [
-                            'Não arquivados',
-                            'Ativos',
-                            'Desativados',
-                            'Arquivados',
-                            'Todos',
-                          ]
-                              .map(
-                                (value) => DropdownMenuItem(
-                                  value: value,
-                                  child: Text(value),
-                                ),
-                              )
-                              .toList(),
+                          items:
+                              const [
+                                    'Não arquivados',
+                                    'Ativos',
+                                    'Desativados',
+                                    'Arquivados',
+                                    'Todos',
+                                  ]
+                                  .map(
+                                    (value) => DropdownMenuItem(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
                           onChanged: (value) {
                             if (value != null) setState(() => _filter = value);
                           },
@@ -413,7 +421,7 @@ class _TrailRow extends StatelessWidget {
                 ),
                 if (trail.date.isNotEmpty)
                   Text(
-                    trail.date,
+                    formatBrazilianDate(trail.date),
                     style: const TextStyle(
                       color: AppColors.muted,
                       fontSize: 12,

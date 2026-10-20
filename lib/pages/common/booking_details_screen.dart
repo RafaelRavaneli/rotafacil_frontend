@@ -5,6 +5,7 @@ import '../../models/trail_experience.dart';
 import '../../services/session_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/date_time_format.dart';
 import '../../utils/run_action.dart';
 import '../../widgets/network_image_box.dart';
 
@@ -296,7 +297,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             label: 'Situação',
                             value: booking.status,
                           ),
-                          _Information(label: 'Data', value: booking.date),
+                          _Information(
+                            label: 'Data',
+                            value: formatBrazilianDate(booking.date),
+                          ),
                           _Information(
                             label: 'Nome registrado',
                             value: booking.personName,

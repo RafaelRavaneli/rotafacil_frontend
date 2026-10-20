@@ -11,6 +11,7 @@ import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_location_map.dart';
+import '../../utils/date_time_format.dart';
 import 'guide_profile_screen.dart';
 
 class TrailDetailsScreen extends StatefulWidget {
@@ -72,8 +73,14 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                     color: AppColors.green700,
                   ),
                   const SizedBox(width: 8),
-                  Text(trail.date.isEmpty ? 'Data a combinar' : trail.date),
-                  const Spacer(),
+                  Expanded(
+                    child: Text(
+                      trail.startsAt == null
+                          ? 'Data a combinar'
+                          : formatBrazilianDateTime(trail.startsAt),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Text(
                     'R\$ ${trail.price.toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.w900),

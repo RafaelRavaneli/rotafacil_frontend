@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/app_config.dart';
 import 'pages/agency/agency_shell.dart';
@@ -95,6 +96,17 @@ class _RotaFacilAppState extends State<RotaFacilApp>
       title: 'RotaFácil',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [Locale('pt', 'BR')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      builder: (context, child) {
+        final media = MediaQuery.maybeOf(context);
+        if (media == null || child == null) return child ?? const SizedBox();
+        return MediaQuery(
+          data: media.copyWith(alwaysUse24HourFormat: true),
+          child: child,
+        );
+      },
       onGenerateInitialRoutes: (location) => [
         _buildRoute(RouteSettings(name: location)),
       ],
