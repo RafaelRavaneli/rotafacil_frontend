@@ -12,7 +12,6 @@ import '../agency/guides_screen.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
 import 'notification_center_screen.dart';
-import 'availability_screen.dart';
 import 'trail_participants_screen.dart';
 import 'trails_management_screen.dart';
 
@@ -271,17 +270,6 @@ class OperatorDashboard extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.terrain_outlined),
                       label: const Text('Gerenciar roteiros'),
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AvailabilityScreen(),
-                        ),
-                      ),
-                      icon: const Icon(Icons.event_available_outlined),
-                      label: const Text('Calendário e disponibilidade'),
                     ),
                     if (isAgency) ...[
                       const SizedBox(height: 10),

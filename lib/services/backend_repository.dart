@@ -5,7 +5,6 @@ import '../models/local_guide.dart';
 import '../models/local_booking.dart';
 import '../models/trail.dart';
 import '../models/trail_experience.dart';
-import '../models/availability.dart';
 import '../models/professional_document.dart';
 import '../models/app_notification.dart';
 import '../models/guide.dart';
@@ -350,39 +349,6 @@ class BackendRepository {
     await api.put(
       '/api/agendamentos/${Uri.encodeComponent(bookingId)}/checkout',
     );
-  }
-
-  Future<List<Availability>> availabilities({String? guideId}) async {
-    final response = await api.get(
-      '/api/disponibilidades/',
-      queryParameters: {'guia_id': ?guideId},
-    );
-    return records(response).map(Availability.fromJson).toList();
-  }
-
-  Future<void> createAvailability({
-    required String date,
-    required String startTime,
-    required String endTime,
-    required String type,
-    required String note,
-    int? capacity,
-  }) async {
-    await api.post(
-      '/api/disponibilidades/',
-      body: {
-        'data': date,
-        'horario_inicio': startTime,
-        'horario_fim': endTime,
-        'tipo': type,
-        'observacao': note,
-        'capacidade': ?capacity,
-      },
-    );
-  }
-
-  Future<void> deleteAvailability(String id) async {
-    await api.delete('/api/disponibilidades/${Uri.encodeComponent(id)}');
   }
 
   Future<void> deleteAccount(String userId) async {

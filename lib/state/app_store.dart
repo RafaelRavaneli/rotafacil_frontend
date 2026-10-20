@@ -15,7 +15,6 @@ import '../models/local_booking.dart';
 import '../models/local_guide.dart';
 import '../models/trail.dart';
 import '../models/trail_experience.dart';
-import '../models/availability.dart';
 import '../models/professional_document.dart';
 import '../models/guide.dart';
 import '../utils/role_utils.dart';
@@ -795,39 +794,6 @@ class AppStore extends ChangeNotifier {
       throw StateError('Contato de emergência exige conexão com o servidor.');
     }
     return _backend.emergencyContact(userId);
-  }
-
-  Future<List<Availability>> availabilities({String? guideId}) {
-    if (!useBackend) return Future.value(const []);
-    return _backend.availabilities(guideId: guideId);
-  }
-
-  Future<void> createAvailability({
-    required String date,
-    required String startTime,
-    required String endTime,
-    required String type,
-    required String note,
-    int? capacity,
-  }) {
-    if (!useBackend) {
-      throw StateError('Calendário exige conexão com o servidor.');
-    }
-    return _backend.createAvailability(
-      date: date,
-      startTime: startTime,
-      endTime: endTime,
-      type: type,
-      note: note,
-      capacity: capacity,
-    );
-  }
-
-  Future<void> deleteAvailability(String id) {
-    if (!useBackend) {
-      throw StateError('Calendário exige conexão com o servidor.');
-    }
-    return _backend.deleteAvailability(id);
   }
 
   Future<void> deleteCurrentAccount(String role) async {
