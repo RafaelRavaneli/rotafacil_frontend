@@ -323,6 +323,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             number: cadastur,
             validUntil: cadasturValidity,
             enabled: !loading,
+            labelsAbove: true,
+            labelStyle: const TextStyle(
+              color: AuthScaffold.accent,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 18),
         ],

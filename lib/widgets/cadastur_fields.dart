@@ -9,36 +9,49 @@ class CadasturFields extends StatelessWidget {
     required this.number,
     required this.validUntil,
     this.enabled = true,
+    this.labelsAbove = false,
+    this.labelStyle,
   });
 
   final TextEditingController number;
   final TextEditingController validUntil;
   final bool enabled;
+  final bool labelsAbove;
+  final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
+      if (labelsAbove) ...[
+        Text('Número do Cadastur', style: labelStyle),
+        const SizedBox(height: 6),
+      ],
       TextField(
         controller: number,
         enabled: enabled,
         keyboardType: TextInputType.number,
         maxLength: 40,
         style: const TextStyle(color: AppColors.ink),
-        decoration: const InputDecoration(
-          labelText: 'Número do Cadastur',
+        decoration: InputDecoration(
+          labelText: labelsAbove ? null : 'Número do Cadastur',
           counterText: '',
           helperText: 'Informe o registro conforme o certificado.',
+          helperStyle: labelsAbove ? labelStyle?.copyWith(fontSize: 12) : null,
         ),
       ),
       const SizedBox(height: 12),
+      if (labelsAbove) ...[
+        Text('Validade do Cadastur (opcional)', style: labelStyle),
+        const SizedBox(height: 6),
+      ],
       TextField(
         controller: validUntil,
         enabled: enabled,
         readOnly: true,
         style: const TextStyle(color: AppColors.ink),
         decoration: InputDecoration(
-          labelText: 'Validade do Cadastur (opcional)',
+          labelText: labelsAbove ? null : 'Validade do Cadastur (opcional)',
           hintText: 'DD/MM/AAAA',
           prefixIcon: const Icon(Icons.calendar_today_outlined),
           suffixIcon: IconButton(
