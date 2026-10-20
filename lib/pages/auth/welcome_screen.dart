@@ -1,3 +1,4 @@
+import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -45,7 +46,7 @@ class WelcomeScreen extends StatelessWidget {
           FilledButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProfileChoiceScreen()),
+              AuthPageRoute(builder: (_) => const ProfileChoiceScreen()),
             ),
             child: const Text('Criar conta'),
           ),
@@ -53,7 +54,7 @@ class WelcomeScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              AuthPageRoute(builder: (_) => const LoginScreen()),
             ),
             child: const Text(
               'Fazer login',

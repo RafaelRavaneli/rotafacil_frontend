@@ -1,3 +1,4 @@
+import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute<void>(
+      AuthPageRoute<void>(
         settings: RouteSettings(name: path),
         builder: (_) => destination,
       ),
@@ -199,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AuthPageRoute(
                           builder: (_) => const ForgotPasswordScreen(),
                         ),
                       );
@@ -257,7 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          AuthPageRoute(
                             builder: (_) => const ProfileChoiceScreen(),
                           ),
                         );

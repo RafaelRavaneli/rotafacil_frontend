@@ -114,7 +114,7 @@ class AuthScaffold extends StatelessWidget {
                               ),
                               child: Material(
                                 type: MaterialType.transparency,
-                                child: _AuthEntrance(child: body),
+                                child: body,
                               ),
                             ),
                           ),
@@ -128,30 +128,6 @@ class AuthScaffold extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AuthEntrance extends StatelessWidget {
-  const _AuthEntrance({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (MediaQuery.maybeOf(context)?.disableAnimations == true) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, animatedChild) => Opacity(
-        opacity: value,
-        child: Transform.translate(
-          offset: Offset(0, 14 * (1 - value)),
-          child: animatedChild,
-        ),
-      ),
-      child: child,
     );
   }
 }

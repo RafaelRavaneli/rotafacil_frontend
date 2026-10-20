@@ -1,3 +1,4 @@
+import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +13,7 @@ class ProfileChoiceScreen extends StatelessWidget {
   void _choose(BuildContext context, UserRole role) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => RegisterScreen(role: role)),
+      AuthPageRoute(builder: (_) => RegisterScreen(role: role)),
     );
   }
 
