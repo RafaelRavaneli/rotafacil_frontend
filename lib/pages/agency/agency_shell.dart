@@ -28,7 +28,7 @@ class _AgencyShellState extends State<AgencyShell> {
   Widget _currentPage() {
     switch (index) {
       case 0:
-        return AgencyDashboardTab(onOpenBookings: () => _selectTab(3));
+        return AgencyDashboardTab(onOpenTrails: () => _selectTab(1));
       case 1:
         return const TrailsManagementScreen(isAgency: true);
       case 2:
@@ -38,7 +38,7 @@ class _AgencyShellState extends State<AgencyShell> {
       case 4:
         return const ProfileTab(role: 'Agência');
       default:
-        return AgencyDashboardTab(onOpenBookings: () => _selectTab(3));
+        return AgencyDashboardTab(onOpenTrails: () => _selectTab(1));
     }
   }
 

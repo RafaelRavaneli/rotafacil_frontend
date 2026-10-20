@@ -123,7 +123,10 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
   Widget build(BuildContext context) {
     final departures = widget.trail.effectiveDepartures;
     return Scaffold(
-      appBar: AppBar(title: const Text('Inscritos no roteiro')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => Navigator.maybePop(context)),
+        title: const Text('Inscritos no roteiro'),
+      ),
       body: AnimatedBuilder(
         animation: AppStore.instance,
         builder: (context, _) {

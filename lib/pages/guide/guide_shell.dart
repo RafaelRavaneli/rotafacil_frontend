@@ -27,7 +27,7 @@ class _GuideShellState extends State<GuideShell> {
   Widget _currentPage() {
     switch (index) {
       case 0:
-        return GuideDashboardTab(onOpenBookings: () => _selectTab(2));
+        return GuideDashboardTab(onOpenTrails: () => _selectTab(1));
       case 1:
         return const TrailsManagementScreen(isAgency: false);
       case 2:
@@ -35,7 +35,7 @@ class _GuideShellState extends State<GuideShell> {
       case 3:
         return const ProfileTab(role: 'Guia');
       default:
-        return GuideDashboardTab(onOpenBookings: () => _selectTab(2));
+        return GuideDashboardTab(onOpenTrails: () => _selectTab(1));
     }
   }
 

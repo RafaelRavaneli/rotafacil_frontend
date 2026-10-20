@@ -4,8 +4,10 @@ import '../../models/local_booking.dart';
 import '../../models/trail.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/trail_schedule.dart';
 import '../../widgets/backend_refresh.dart';
 import '../../widgets/booking_summary_card.dart';
+import '../../widgets/scheduled_trail_card.dart';
 import '../../navigation/app_routes.dart';
 import 'booking_details_screen.dart';
 
@@ -64,11 +66,23 @@ class _BookingsScreenState extends State<BookingsScreen> {
         !value.start.isAfter(filter.end);
   }
 
-  Set<DateTime> _markedDays(List<LocalBooking> bookings, List<Trail> trails) {
+  DateTimeRange _departureRange(TrailDeparture departure) => DateTimeRange(
+    start: DateTime(
+      departure.startsAt.year,
+      departure.startsAt.month,
+      departure.startsAt.day,
+    ),
+    end: DateTime(
+      departure.endsAt.year,
+      departure.endsAt.month,
+      departure.endsAt.day,
+    ),
+  );
+
+  Set<DateTime> _markedTrailDays(List<ScheduledTrail> schedule) {
     final days = <DateTime>{};
-    for (final booking in bookings) {
-      final range = _bookingRange(booking, trails);
-      if (range == null) continue;
+    for (final item in schedule) {
+      final range = _departureRange(item.departure);
       var day = range.start;
       while (!day.isAfter(range.end)) {
         days.add(day);
@@ -128,6 +142,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
             final historyBookings = visibleBookings
                 .where((booking) => !BookingStatus.isActive(booking.status))
                 .toList();
+            final schedule = upcomingTrailSchedule(store.managedTrails);
+            final visibleSchedule = period == null
+                ? schedule
+                : schedule
+                      .where(
+                        (item) =>
+                            _overlaps(_departureRange(item.departure), period!),
+                      )
+                      .toList();
 
             return Align(
               alignment: Alignment.topCenter,
@@ -150,14 +173,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     Text(
                       isTourist
                           ? 'Acompanhe seus roteiros e consulte cada reserva.'
-                          : 'Veja dias ocupados e agendamentos do período.',
+                          : 'Veja os próximos roteiros e filtre por período.',
                       style: const TextStyle(color: AppColors.muted),
                     ),
                     if (!isTourist) ...[
                       const SizedBox(height: 20),
                       _AgendaCalendar(
                         month: visibleMonth,
-                        markedDays: _markedDays(allBookings, store.trails),
+                        markedDays: _markedTrailDays(schedule),
                         selectedPeriod: period,
                         onPrevious: () => setState(() {
                           visibleMonth = DateTime(
@@ -202,8 +225,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       const SizedBox(height: 20),
                       Text(
                         period == null
-                            ? 'Todos os agendamentos'
-                            : 'Agendamentos do período',
+                            ? 'Próximos roteiros'
+                            : 'Roteiros do período',
                         style: const TextStyle(
                           color: AppColors.ink,
                           fontSize: 20,
@@ -212,14 +235,31 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    if (visibleBookings.isEmpty)
+                    if (isTourist && visibleBookings.isEmpty)
                       const Card(
                         child: Padding(
                           padding: EdgeInsets.all(24),
                           child: Text('Nenhum agendamento neste período.'),
                         ),
                       ),
-                    if (activeBookings.isNotEmpty) ...[
+                    if (!isTourist && visibleSchedule.isEmpty)
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text('Nenhum roteiro futuro neste período.'),
+                        ),
+                      ),
+                    if (!isTourist)
+                      ...visibleSchedule.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ScheduledTrailCard(
+                            trail: item.trail,
+                            departure: item.departure,
+                          ),
+                        ),
+                      ),
+                    if (isTourist && activeBookings.isNotEmpty) ...[
                       const Text(
                         'Reservas ativas',
                         style: TextStyle(
@@ -230,20 +270,22 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       ),
                       const SizedBox(height: 10),
                     ],
-                    ...activeBookings.map(
-                      (booking) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: BookingSummaryCard(
-                          booking: booking,
-                          onTap: () => AppRoutes.push(
-                            context,
-                            AppRoutes.booking(booking.id),
-                            (_) => BookingDetailsScreen(bookingId: booking.id),
+                    if (isTourist)
+                      ...activeBookings.map(
+                        (booking) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: BookingSummaryCard(
+                            booking: booking,
+                            onTap: () => AppRoutes.push(
+                              context,
+                              AppRoutes.booking(booking.id),
+                              (_) =>
+                                  BookingDetailsScreen(bookingId: booking.id),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    if (historyBookings.isNotEmpty) ...[
+                    if (isTourist && historyBookings.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       const Text(
                         'Histórico',
@@ -255,19 +297,21 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       ),
                       const SizedBox(height: 10),
                     ],
-                    ...historyBookings.map(
-                      (booking) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: BookingSummaryCard(
-                          booking: booking,
-                          onTap: () => AppRoutes.push(
-                            context,
-                            AppRoutes.booking(booking.id),
-                            (_) => BookingDetailsScreen(bookingId: booking.id),
+                    if (isTourist)
+                      ...historyBookings.map(
+                        (booking) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: BookingSummaryCard(
+                            booking: booking,
+                            onTap: () => AppRoutes.push(
+                              context,
+                              AppRoutes.booking(booking.id),
+                              (_) =>
+                                  BookingDetailsScreen(bookingId: booking.id),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

@@ -61,6 +61,8 @@ void main() {
     store.bookings
       ..clear()
       ..add(reservation());
+    final departureStart = DateTime.now().add(const Duration(days: 5));
+    final departureEnd = departureStart.add(const Duration(hours: 6));
     store.trails
       ..clear()
       ..add(
@@ -71,6 +73,13 @@ void main() {
           'estado': 'PR',
           'preco': 120,
           'imagem_url': '',
+          'datas': [
+            {
+              'id': 'd1',
+              'data_hora_inicio': departureStart.toIso8601String(),
+              'data_hora_fim': departureEnd.toIso8601String(),
+            },
+          ],
         }),
       );
   });
@@ -610,29 +619,33 @@ void main() {
       expect(store.bookings.single.status, 'Cancelado');
       await tester.pumpWidget(app(const BookingsScreen(role: 'guia')));
       await tester.pumpAndSettle();
-      await tester.drag(find.byType(ListView).first, const Offset(0, -700));
-      await tester.pumpAndSettle();
-      expect(find.text('Cancelado'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Trilha de demonstração'),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Trilha de demonstração'), findsOneWidget);
+      expect(find.text('Cancelado'), findsNothing);
     },
     skip: AppConfig.useBackend,
   );
 
-  for (final scenario in [(const GuideShell(), 2), (const AgencyShell(), 3)]) {
+  for (final scenario in [(const GuideShell(), 1), (const AgencyShell(), 1)]) {
     testWidgets(
-      'Ver todas as reservas mantém rodapé no perfil ${scenario.$2}',
+      'Ver todos os roteiros mantém rodapé no perfil ${scenario.$2}',
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(theme: AppTheme.light, home: scenario.$1),
         );
         await tester.pumpAndSettle();
         await tester.scrollUntilVisible(
-          find.text('Ver todas as reservas'),
+          find.text('Ver todos os roteiros'),
           250,
           scrollable: find.byType(Scrollable).first,
         );
-        await tester.tap(find.text('Ver todas as reservas'));
+        await tester.tap(find.text('Ver todos os roteiros'));
         await tester.pumpAndSettle();
-        expect(find.byType(BookingsScreen), findsOneWidget);
+        expect(find.byType(TrailsManagementScreen), findsOneWidget);
         expect(find.byType(NavigationBar), findsOneWidget);
         expect(
           tester

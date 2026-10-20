@@ -289,6 +289,14 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                 children: [
                   Row(
                     children: [
+                      if (Navigator.canPop(context)) ...[
+                        IconButton(
+                          tooltip: 'Voltar',
+                          onPressed: () => Navigator.maybePop(context),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       Expanded(
                         child: Text(
                           agency ? 'Guias' : 'Convites',

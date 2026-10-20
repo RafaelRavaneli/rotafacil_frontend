@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import '../../models/trail.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
+import '../../utils/run_action.dart';
+import '../../utils/trail_schedule.dart';
 import '../../widgets/profile_avatar.dart';
-import '../../widgets/booking_summary_card.dart';
+import '../../widgets/scheduled_trail_card.dart';
 import '../agency/guides_screen.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
-import 'booking_details_screen.dart';
-import 'bookings_screen.dart';
 import 'notification_center_screen.dart';
 import 'availability_screen.dart';
+import 'trail_participants_screen.dart';
 import 'trails_management_screen.dart';
 
 /// Shared presentation; existing store and server still determine data access.
@@ -20,10 +21,10 @@ class OperatorDashboard extends StatelessWidget {
   const OperatorDashboard({
     super.key,
     required this.isAgency,
-    this.onOpenBookings,
+    this.onOpenTrails,
   });
   final bool isAgency;
-  final VoidCallback? onOpenBookings;
+  final VoidCallback? onOpenTrails;
 
   void _open(BuildContext context, Widget page, String title) {
     Navigator.push(
@@ -35,6 +36,53 @@ class OperatorDashboard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openParticipants(BuildContext context, Trail trail) {
+    AppRoutes.push(
+      context,
+      AppRoutes.trailParticipants(trail.id),
+      (_) => TrailParticipantsScreen(trail: trail),
+    );
+  }
+
+  void _openEdit(BuildContext context, Trail trail) {
+    AppRoutes.push(
+      context,
+      AppRoutes.editTrail(trail.id),
+      (_) => TrailFormScreen(isAgency: isAgency, existing: trail),
+    );
+  }
+
+  Future<void> _deactivate(BuildContext context, Trail trail) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Desativar roteiro?'),
+        content: Text(
+          'O roteiro "${trail.name}" deixará de aparecer na busca. Reservas ativas impedem a desativação.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Desativar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final saved = await runAction(
+      context,
+      () => AppStore.instance.removeTrail(trail),
+    );
+    if (!saved || !context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('${trail.name} foi desativado.')));
   }
 
   @override
@@ -59,7 +107,12 @@ class OperatorDashboard extends StatelessWidget {
                 .where((b) => BookingStatus.isActive(b.status))
                 .toList();
             final summary = store.operatorDashboardSummary;
-            final reservations = activeBookings.take(3).toList();
+            final now = DateTime.now();
+            final upcomingTrails = upcomingTrailsOnce(
+              trails,
+              now: now,
+              through: now.add(const Duration(days: 30)),
+            );
             return Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
@@ -245,7 +298,7 @@ class OperatorDashboard extends StatelessWidget {
                     ],
                     const SizedBox(height: 24),
                     const Text(
-                      'Reservas',
+                      'Roteiros dos próximos 30 dias',
                       style: TextStyle(
                         fontSize: 20,
                         color: AppColors.forest,
@@ -254,39 +307,41 @@ class OperatorDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Reservas em aberto. Canceladas e concluídas permanecem no histórico.',
+                      'Roteiros com início previsto nos próximos 30 dias.',
                       style: TextStyle(color: AppColors.muted),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed:
-                          onOpenBookings ??
+                          onOpenTrails ??
                           () => _open(
                             context,
-                            BookingsScreen(role: isAgency ? 'agencia' : 'guia'),
-                            'Reservas',
+                            TrailsManagementScreen(isAgency: isAgency),
+                            'Roteiros',
                           ),
                       icon: const Icon(Icons.calendar_month_outlined),
-                      label: const Text('Ver todas as reservas'),
+                      label: const Text('Ver todos os roteiros'),
                     ),
                     const SizedBox(height: 16),
-                    if (reservations.isEmpty)
+                    if (upcomingTrails.isEmpty)
                       const Card(
                         child: Padding(
                           padding: EdgeInsets.all(24),
-                          child: Text('Nenhuma reserva disponível.'),
+                          child: Text(
+                            'Nenhum roteiro previsto para os próximos 30 dias.',
+                          ),
                         ),
                       ),
-                    ...reservations.map(
-                      (booking) => Padding(
+                    ...upcomingTrails.map(
+                      (item) => Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: BookingSummaryCard(
-                          booking: booking,
-                          onTap: () => AppRoutes.push(
-                            context,
-                            AppRoutes.booking(booking.id),
-                            (_) => BookingDetailsScreen(bookingId: booking.id),
-                          ),
+                        child: ScheduledTrailCard(
+                          trail: item.trail,
+                          departure: item.departure,
+                          onParticipants: () =>
+                              _openParticipants(context, item.trail),
+                          onEdit: () => _openEdit(context, item.trail),
+                          onDeactivate: () => _deactivate(context, item.trail),
                         ),
                       ),
                     ),
