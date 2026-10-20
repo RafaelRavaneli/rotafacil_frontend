@@ -3,6 +3,7 @@ import 'package:rotafacil/utils/role_utils.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,12 +19,39 @@ import 'package:rotafacil/pages/tourist/tourist_shell.dart';
 import 'package:rotafacil/services/api_client.dart';
 import 'package:rotafacil/services/auth_gateway.dart';
 import 'package:rotafacil/services/local_auth_service.dart';
+import 'package:rotafacil/services/location_service.dart';
 import 'package:rotafacil/state/app_store.dart';
 import 'package:rotafacil/widgets/role_card.dart';
 
+class _DeniedLocation extends GeolocatorPlatform {
+  @override
+  Future<bool> isLocationServiceEnabled() async => true;
+
+  @override
+  Future<LocationPermission> checkPermission() async =>
+      LocationPermission.denied;
+
+  @override
+  Future<LocationPermission> requestPermission() async =>
+      LocationPermission.denied;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  final originalLocation = GeolocatorPlatform.instance;
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    GeolocatorPlatform.instance = _DeniedLocation();
+  });
+  tearDownAll(() => GeolocatorPlatform.instance = originalLocation);
+
+  test('Resultado da permissão de localização fica armazenado', () async {
+    await expectLater(
+      LocationService.instance.capture(),
+      throwsA(isA<StateError>()),
+    );
+    expect(await LocationService.instance.savedPermission(), 'denied');
+  });
 
   testWidgets('Fazer login abre diretamente e-mail e senha', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: WelcomeScreen()));

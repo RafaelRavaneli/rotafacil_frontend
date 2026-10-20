@@ -10,6 +10,7 @@ import '../../widgets/market_search.dart';
 import '../../widgets/trail_card.dart';
 import '../../utils/run_action.dart';
 import '../../navigation/app_routes.dart';
+import '../../services/location_service.dart';
 import 'trail_details_screen.dart';
 import 'trail_search_screen.dart';
 
@@ -22,9 +23,15 @@ class TouristHomeTab extends StatefulWidget {
 }
 
 class _TouristHomeTabState extends State<TouristHomeTab> {
-  Position? position;
+  UserCoordinates? position;
   bool locationLoaded = true;
   String? locationError;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadPosition());
+  }
 
   void _finishLocationWithError(String message) {
     if (!mounted) return;
@@ -44,28 +51,7 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
       locationError = null;
     });
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        _finishLocationWithError(
-          'Ative a localização do dispositivo para ver atividades próximas.',
-        );
-        return;
-      }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _finishLocationWithError(
-          permission == LocationPermission.deniedForever
-              ? 'A localização está bloqueada. Libere a permissão nas configurações do navegador.'
-              : 'Permissão de localização negada. Autorize o acesso e tente novamente.',
-        );
-        return;
-      }
-      final current = await Geolocator.getCurrentPosition().timeout(
-        const Duration(seconds: 12),
-      );
+      final current = await LocationService.instance.capture();
       if (mounted) {
         setState(() {
           position = current;
@@ -73,9 +59,11 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
           locationError = null;
         });
       }
-    } catch (_) {
+    } catch (error) {
       _finishLocationWithError(
-        'Não foi possível obter sua localização. Verifique o GPS e tente novamente.',
+        error is StateError
+            ? error.message.toString()
+            : 'Não foi possível obter sua localização. Verifique o GPS e tente novamente.',
       );
     }
   }

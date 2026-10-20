@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../config/app_config.dart';
 import '../../services/auth_gateway.dart';
 import '../../services/notification_service.dart';
+import '../../services/location_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import 'forgot_password_screen.dart';
@@ -82,6 +83,13 @@ class _LoginScreenState extends State<LoginScreen> {
       resolvedRole = result.role.toLowerCase().trim();
 
       await AppStore.instance.refreshBackend();
+      if (resolvedRole == 'usuario') {
+        try {
+          await LocationService.instance.capture();
+        } catch (_) {
+          // Localização melhora recomendações, mas não bloqueia o login.
+        }
+      }
       try {
         await NotificationService.instance.registerAfterLogin();
       } catch (_) {
