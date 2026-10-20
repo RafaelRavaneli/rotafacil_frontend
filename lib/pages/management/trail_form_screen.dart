@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../models/trail.dart';
 import '../../utils/run_action.dart';
 import '../../services/session_service.dart';
+import '../../services/api_client.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
@@ -32,6 +35,8 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   final priceController = TextEditingController();
   final recommendedItemsController = TextEditingController();
   final capacityController = TextEditingController(text: '12');
+  final meetingPointController = TextEditingController();
+  final mapController = MapController();
 
   String difficulty = TrailDifficulty.intermediate;
   final Set<String> activities = {'Trilha'};
@@ -44,9 +49,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   double? latitude;
   double? longitude;
   bool locating = false;
+  bool geocoding = false;
   bool saving = false;
   bool accessible = false;
-  final List<TrailPoint> routePoints = [];
 
   @override
   void initState() {
@@ -80,11 +85,11 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       existingImageUrl = trail.imageUrl;
       latitude = trail.latitude;
       longitude = trail.longitude;
+      meetingPointController.text = trail.meetingPoint;
       startDateTime = trail.startsAt;
       endDateTime = trail.endsAt;
       accessible = trail.accessible;
       recommendedItemsController.text = trail.recommendedItems.join(', ');
-      routePoints.addAll(trail.route);
       capacityController.text = trail.capacity.toString();
     }
   }
@@ -153,21 +158,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     priceController.dispose();
     recommendedItemsController.dispose();
     capacityController.dispose();
+    meetingPointController.dispose();
+    mapController.dispose();
     super.dispose();
-  }
-
-  void _addRoutePoint() {
-    if (latitude == null || longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Obtenha a localização antes de adicionar o ponto.'),
-        ),
-      );
-      return;
-    }
-    setState(() {
-      routePoints.add(TrailPoint(latitude: latitude!, longitude: longitude!));
-    });
   }
 
   Future<void> _pickImage() async {
@@ -218,6 +211,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
         latitude = position.latitude;
         longitude = position.longitude;
       });
+      mapController.move(LatLng(position.latitude, position.longitude), 16);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -225,6 +219,86 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
     } finally {
       if (mounted) setState(() => locating = false);
+    }
+  }
+
+  void _selectGeocodingResult(Map<String, dynamic> result) {
+    final lat = double.tryParse(result['latitude']?.toString() ?? '');
+    final lon = double.tryParse(result['longitude']?.toString() ?? '');
+    if (lat == null || lon == null) return;
+    setState(() {
+      latitude = lat;
+      longitude = lon;
+      meetingPointController.text = result['label']?.toString() ?? '';
+      final city = result['cidade']?.toString().trim() ?? '';
+      final state = result['estado']?.toString().trim() ?? '';
+      if (cityController.text.trim().isEmpty && city.isNotEmpty) {
+        cityController.text = city;
+      }
+      if (stateController.text.trim().isEmpty && state.isNotEmpty) {
+        stateController.text = state.length > 2
+            ? state.substring(0, 2).toUpperCase()
+            : state.toUpperCase();
+      }
+    });
+    mapController.move(LatLng(lat, lon), 16);
+  }
+
+  Future<void> _searchMeetingPoint() async {
+    final query = meetingPointController.text.trim();
+    if (query.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Informe um endereço ou ponto de encontro.'),
+        ),
+      );
+      return;
+    }
+    setState(() => geocoding = true);
+    try {
+      final response = await ApiClient.instance.get(
+        '/api/trilhas/geocodificar',
+        queryParameters: {'q': query},
+      );
+      final results = response is List
+          ? response
+                .whereType<Map>()
+                .map((item) => Map<String, dynamic>.from(item))
+                .toList()
+          : <Map<String, dynamic>>[];
+      if (!mounted) return;
+      if (results.isEmpty) {
+        throw StateError('Nenhum local encontrado para essa busca.');
+      }
+      if (results.length == 1) {
+        _selectGeocodingResult(results.first);
+        return;
+      }
+      final selected = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            itemCount: results.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) => ListTile(
+              leading: const Icon(Icons.location_on_outlined),
+              title: Text(results[index]['label']?.toString() ?? 'Local'),
+              onTap: () => Navigator.pop(context, results[index]),
+            ),
+          ),
+        ),
+      );
+      if (selected != null && mounted) _selectGeocodingResult(selected);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+    } finally {
+      if (mounted) setState(() => geocoding = false);
     }
   }
 
@@ -283,6 +357,14 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       );
       return;
     }
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecione o ponto de início do roteiro no mapa.'),
+        ),
+      );
+      return;
+    }
     setState(() => saving = true);
 
     final price =
@@ -326,17 +408,19 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       date: _dateValue(startDateTime!),
       price: price,
       status: current?.status ?? 'Ativa',
+      archived: current?.archived ?? false,
       modality: activities.first,
       activities: activities.toList(),
       latitude: latitude,
       longitude: longitude,
+      meetingPoint: meetingPointController.text.trim(),
       accessible: accessible,
       recommendedItems: recommendedItemsController.text
           .split(',')
           .map((item) => item.trim())
           .where((item) => item.isNotEmpty)
           .toList(),
-      route: List<TrailPoint>.from(routePoints),
+      route: current?.route ?? const [],
       capacity: capacity,
       startTime: _timeValue(startDateTime!),
       endTime: _timeValue(endDateTime!),
@@ -623,68 +707,115 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.green100,
-                  borderRadius: BorderRadius.circular(16),
+              const Text(
+                'Ponto de início',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: AppColors.forest,
+                  fontWeight: FontWeight.w700,
                 ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          color: AppColors.green700,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            latitude == null || longitude == null
-                                ? 'Nenhuma coordenada selecionada.'
-                                : 'Latitude ${latitude!.toStringAsFixed(5)} • Longitude ${longitude!.toStringAsFixed(5)}',
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Busque o endereço e arraste o mapa para posicionar o pin com precisão.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: meetingPointController,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _searchMeetingPoint(),
+                decoration: InputDecoration(
+                  labelText: 'Endereço ou ponto de encontro',
+                  prefixIcon: const Icon(Icons.place_outlined),
+                  suffixIcon: IconButton(
+                    tooltip: 'Buscar local',
+                    onPressed: geocoding ? null : _searchMeetingPoint,
+                    icon: geocoding
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.search),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: locating ? null : _useCurrentLocation,
+                icon: const Icon(Icons.my_location_rounded),
+                label: Text(
+                  locating
+                      ? 'Obtendo localização...'
+                      : 'Usar localização atual',
+                ),
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: SizedBox(
+                  height: 300,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      FlutterMap(
+                        mapController: mapController,
+                        options: MapOptions(
+                          initialCenter: LatLng(
+                            latitude ?? -14.235,
+                            longitude ?? -51.9253,
                           ),
+                          initialZoom: latitude == null ? 4 : 16,
+                          interactionOptions: const InteractionOptions(
+                            flags:
+                                InteractiveFlag.all & ~InteractiveFlag.rotate,
+                          ),
+                          onPositionChanged: (camera, hasGesture) {
+                            if (!hasGesture) return;
+                            setState(() {
+                              latitude = camera.center.latitude;
+                              longitude = camera.center.longitude;
+                            });
+                          },
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: locating ? null : _useCurrentLocation,
-                      icon: const Icon(Icons.my_location_rounded),
-                      label: Text(
-                        locating
-                            ? 'Obtendo localização...'
-                            : 'Usar localização atual',
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.rotafacil.app',
+                          ),
+                          const RichAttributionWidget(
+                            attributions: [
+                              TextSourceAttribution(
+                                'OpenStreetMap contributors',
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _addRoutePoint,
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: const Text('Adicionar ponto ao percurso'),
-                    ),
-                    if (routePoints.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      ...routePoints.asMap().entries.map(
-                        (entry) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.route_outlined),
-                          title: Text('Ponto ${entry.key + 1}'),
-                          subtitle: Text(
-                            '${entry.value.latitude.toStringAsFixed(5)}, ${entry.value.longitude.toStringAsFixed(5)}',
-                          ),
-                          trailing: IconButton(
-                            tooltip: 'Remover ponto',
-                            onPressed: () =>
-                                setState(() => routePoints.removeAt(entry.key)),
-                            icon: const Icon(Icons.delete_outline),
+                      const IgnorePointer(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 42),
+                          child: Icon(
+                            Icons.location_pin,
+                            size: 54,
+                            color: AppColors.forest,
+                            shadows: [
+                              Shadow(color: Colors.white, blurRadius: 5),
+                            ],
                           ),
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                latitude == null || longitude == null
+                    ? 'Busque um local ou mova o mapa para selecionar o início.'
+                    : 'Coordenadas: ${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}',
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
               ),
               if (widget.isAgency) ...[
                 const SizedBox(height: 12),

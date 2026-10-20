@@ -208,6 +208,8 @@ class BackendRepository {
       'acessivel': trail.accessible,
       'itens_recomendados': trail.recommendedItems,
       'trajeto': trail.route.map((point) => point.toJson()).toList(),
+      if (trail.meetingPoint.trim().isNotEmpty)
+        'ponto_encontro': trail.meetingPoint.trim(),
       'capacidade': trail.capacity,
       'horario_inicio': trail.startTime,
       'horario_fim': trail.endTime,

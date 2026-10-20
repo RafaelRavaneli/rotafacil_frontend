@@ -158,6 +158,7 @@ class Trail {
     this.activities = const [],
     this.latitude,
     this.longitude,
+    this.meetingPoint = '',
     this.accessible = false,
     this.recommendedItems = const [],
     this.route = const [],
@@ -199,6 +200,7 @@ class Trail {
   final List<String> activities;
   final double? latitude;
   final double? longitude;
+  final String meetingPoint;
   final bool accessible;
   final List<String> recommendedItems;
   final List<TrailPoint> route;
@@ -266,6 +268,7 @@ class Trail {
     'activities': activities,
     'latitude': latitude,
     'longitude': longitude,
+    'meetingPoint': meetingPoint,
     'accessible': accessible,
     'recommendedItems': recommendedItems,
     'route': route.map((point) => point.toJson()).toList(),
@@ -342,6 +345,8 @@ class Trail {
           : [legacyModality],
       latitude: double.tryParse(json['latitude']?.toString() ?? ''),
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),
+      meetingPoint:
+          (json['meetingPoint'] ?? json['ponto_encontro'])?.toString() ?? '',
       accessible: json['accessible'] == true || json['acessivel'] == true,
       recommendedItems: rawItems is List
           ? rawItems.map((item) => item.toString()).toList()
