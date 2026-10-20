@@ -1,3 +1,5 @@
+import '../../navigation/app_routes.dart';
+import '../../widgets/app_back_button.dart';
 import '../../services/brazil_locations.dart';
 import '../../widgets/brazil_location_fields.dart';
 import '../../utils/auth_error_message.dart';
@@ -513,7 +515,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       ),
     );
 
-    Navigator.pop(context);
+    AppRoutes.back(context, fallbackLocation: '/roteiros');
   }
 
   @override
@@ -522,6 +524,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(fallbackLocation: '/roteiros'),
         title: Text(
           widget.existing == null ? 'Novo roteiro' : 'Editar roteiro',
           style: const TextStyle(fontWeight: FontWeight.w700),

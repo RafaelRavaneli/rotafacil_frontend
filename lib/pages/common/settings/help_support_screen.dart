@@ -1,3 +1,4 @@
+import '../../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../../theme/app_colors.dart';
 
@@ -7,7 +8,10 @@ class HelpSupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Ajuda')),
+    appBar: AppBar(
+      leading: const AppBackButton(fallbackLocation: '/perfil'),
+      title: const Text('Ajuda'),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: const [

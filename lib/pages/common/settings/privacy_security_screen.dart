@@ -1,3 +1,4 @@
+import '../../../widgets/app_back_button.dart';
 import '../../../utils/cadastur_validator.dart';
 import '../../../utils/date_time_format.dart';
 import '../../../widgets/cadastur_fields.dart';
@@ -22,6 +23,7 @@ class PrivacySecurityScreen extends StatelessWidget {
     final store = AppStore.instance;
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Privacidade e segurança',
           style: TextStyle(fontWeight: FontWeight.w900),

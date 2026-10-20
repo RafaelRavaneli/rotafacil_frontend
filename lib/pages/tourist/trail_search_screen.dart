@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import '../../widgets/brazil_location_fields.dart';
 import 'dart:async';
 import 'package:flutter_map/flutter_map.dart' show TileProvider;
@@ -271,6 +272,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppColors.paper,
         title: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),

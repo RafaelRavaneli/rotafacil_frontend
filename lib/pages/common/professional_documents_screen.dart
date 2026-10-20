@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -135,6 +136,7 @@ class _ProfessionalDocumentsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Documentos profissionais',
           style: TextStyle(fontWeight: FontWeight.w900),

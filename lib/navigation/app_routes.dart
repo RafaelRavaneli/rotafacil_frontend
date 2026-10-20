@@ -1,3 +1,4 @@
+import '../services/session_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -40,6 +41,33 @@ class AppRoutes {
       uri: Uri.parse(path),
       replace: true,
     );
+  }
+
+  /// Preserva a pilha normal e oferece uma saída para páginas abertas pela URL.
+  /// maybePop também respeita PopScope e confirmações de dados não salvos.
+  static Future<void> back(
+    BuildContext context, {
+    String? fallbackLocation,
+  }) async {
+    final navigator = Navigator.of(context);
+    if (await navigator.maybePop()) return;
+    if (!context.mounted) return;
+    navigator.pushReplacementNamed(
+      fallbackLocation ?? homeForRole(SessionService.instance.role ?? ''),
+    );
+  }
+
+  static String get bookingListLocation {
+    final role = SessionService.instance.role ?? '';
+    return const [
+          'guia',
+          'guide',
+          'agencia',
+          'agência',
+          'agency',
+        ].contains(role)
+        ? '/agenda'
+        : '/reservas';
   }
 
   static Future<T?> push<T>(

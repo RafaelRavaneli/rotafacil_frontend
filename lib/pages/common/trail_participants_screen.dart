@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../navigation/app_routes.dart';
@@ -24,12 +25,6 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
   String selectedDepartureId = 'all';
   String? busyBookingId;
   bool finishing = false;
-
-  Future<void> _goBack() async {
-    if (await Navigator.maybePop(context)) return;
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/roteiros');
-  }
 
   Future<void> _contact(LocalBooking booking) async {
     var phone = booking.personPhone.replaceAll(RegExp(r'\D'), '');
@@ -154,7 +149,7 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
     final departures = widget.trail.effectiveDepartures;
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: _goBack),
+        leading: const AppBackButton(fallbackLocation: '/roteiros'),
         title: const Text('Inscritos no roteiro'),
       ),
       body: AnimatedBuilder(

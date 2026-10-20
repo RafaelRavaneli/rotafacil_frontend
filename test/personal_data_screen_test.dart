@@ -13,7 +13,10 @@ void main() {
 
   testWidgets('Guia existente informa Cadastur no perfil', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(home: PersonalDataScreen(role: 'Guia')),
+      MaterialApp(
+        home: const PersonalDataScreen(role: 'Guia'),
+        routes: {'/perfil': (_) => const Scaffold(body: Text('Perfil'))},
+      ),
     );
     final number = find.byWidgetPredicate(
       (widget) =>
@@ -34,6 +37,7 @@ void main() {
     await tester.tap(find.text('Salvar alterações'));
     await tester.pumpAndSettle();
     expect(AppStore.instance.guide.cadasturNumber, '12345678000190');
+    expect(find.text('Perfil'), findsOneWidget);
   }, skip: AppConfig.useBackend);
 
   testWidgets('avisa antes de descartar edição de perfil', (tester) async {

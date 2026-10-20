@@ -1,3 +1,5 @@
+import '../../navigation/app_routes.dart';
+import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../config/app_config.dart';
@@ -267,7 +269,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget build(BuildContext context) {
     final store = AppStore.instance;
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes da reserva')),
+      appBar: AppBar(
+        leading: AppBackButton(fallbackLocation: AppRoutes.bookingListLocation),
+        title: const Text('Detalhes da reserva'),
+      ),
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {

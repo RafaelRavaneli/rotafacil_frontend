@@ -1,3 +1,4 @@
+import '../../navigation/app_routes.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/run_action.dart';
@@ -227,7 +228,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   child: CircleAvatar(
                     backgroundColor: AppColors.paper.withValues(alpha: .92),
                     child: IconButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => AppRoutes.back(context),
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
                   ),

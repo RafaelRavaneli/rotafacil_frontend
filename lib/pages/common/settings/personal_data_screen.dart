@@ -1,3 +1,5 @@
+import '../../../navigation/app_routes.dart';
+import '../../../widgets/app_back_button.dart';
 import '../../../widgets/brazil_location_fields.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -118,7 +120,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     if (!mounted) return;
     setState(() => allowPop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppRoutes.back(context, fallbackLocation: '/perfil');
     });
   }
 
@@ -307,6 +309,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          leading: AppBackButton(onPressed: _handleBack),
           title: const Text(
             'Editar perfil',
             style: TextStyle(fontWeight: FontWeight.w900),

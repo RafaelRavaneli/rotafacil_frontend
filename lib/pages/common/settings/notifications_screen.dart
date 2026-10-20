@@ -1,3 +1,4 @@
+import '../../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../../services/notification_service.dart';
 import '../../../state/app_store.dart';
@@ -38,6 +39,7 @@ class NotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Notificações',
           style: TextStyle(fontWeight: FontWeight.w900),

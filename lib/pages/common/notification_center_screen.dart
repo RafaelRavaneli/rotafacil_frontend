@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
@@ -28,6 +29,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     final store = AppStore.instance;
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Notificações',
           style: TextStyle(fontWeight: FontWeight.w900),

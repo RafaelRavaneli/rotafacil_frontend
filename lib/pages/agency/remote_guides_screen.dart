@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../services/community_api.dart';
 import '../../services/session_service.dart';
@@ -311,12 +312,8 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                 children: [
                   Row(
                     children: [
-                      if (Navigator.canPop(context)) ...[
-                        IconButton(
-                          tooltip: 'Voltar',
-                          onPressed: () => Navigator.maybePop(context),
-                          icon: const Icon(Icons.arrow_back_rounded),
-                        ),
+                      if (!agency || Navigator.canPop(context)) ...[
+                        const AppBackButton(fallbackLocation: '/perfil'),
                         const SizedBox(width: 8),
                       ],
                       Expanded(

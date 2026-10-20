@@ -1,3 +1,4 @@
+import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/guide.dart';
@@ -17,7 +18,10 @@ class GuideProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = AppStore.instance;
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil do guia')),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: const Text('Perfil do guia'),
+      ),
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
