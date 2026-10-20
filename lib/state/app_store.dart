@@ -322,9 +322,25 @@ class AppStore extends ChangeNotifier {
   }
 
   final _backend = BackendRepository();
+  Future<void>? _refreshBackendInFlight;
 
   Future<void> refreshBackend() async {
     if (!useBackend) return;
+    final activeRefresh = _refreshBackendInFlight;
+    if (activeRefresh != null) return activeRefresh;
+
+    final refresh = _loadBackend();
+    _refreshBackendInFlight = refresh;
+    try {
+      await refresh;
+    } finally {
+      if (identical(_refreshBackendInFlight, refresh)) {
+        _refreshBackendInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _loadBackend() async {
     final snapshot = await _backend.load();
     agencyGuides
       ..clear()

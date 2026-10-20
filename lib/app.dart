@@ -25,12 +25,14 @@ class RotaFacilApp extends StatefulWidget {
   State<RotaFacilApp> createState() => _RotaFacilAppState();
 }
 
-class _RotaFacilAppState extends State<RotaFacilApp> {
+class _RotaFacilAppState extends State<RotaFacilApp>
+    with WidgetsBindingObserver {
   Timer? _sessionTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SessionService.instance.addListener(_handleSessionEnd);
     _sessionTimer = Timer.periodic(
       const Duration(seconds: 2),
@@ -41,8 +43,16 @@ class _RotaFacilAppState extends State<RotaFacilApp> {
   @override
   void dispose() {
     _sessionTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     SessionService.instance.removeListener(_handleSessionEnd);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !AppConfig.useBackend) return;
+    if (SessionService.instance.userId?.isNotEmpty != true) return;
+    unawaited(AppStore.instance.refreshBackend());
   }
 
   void _handleSessionEnd() {
