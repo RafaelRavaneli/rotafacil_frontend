@@ -1,3 +1,5 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../../utils/run_action.dart';
 import '../../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../../services/notification_service.dart';
@@ -29,6 +31,17 @@ class NotificationsScreen extends StatelessWidget {
       return;
     }
 
+    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+        settings.authorizationStatus != AuthorizationStatus.provisional) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Permissão de notificações negada. Libere o acesso nas configurações do navegador ou dispositivo. Os avisos continuam disponíveis na central.',
+          ),
+        ),
+      );
+      return;
+    }
     await NotificationService.instance.registerAfterLogin();
   }
 
@@ -53,7 +66,8 @@ class NotificationsScreen extends StatelessWidget {
             children: [
               SwitchListTile.adaptive(
                 value: store.pushNotifications,
-                onChanged: (value) => _togglePush(context, value),
+                onChanged: (value) =>
+                    runAction(context, () => _togglePush(context, value)),
                 title: const Text('Notificações do aplicativo'),
                 subtitle: const Text(
                   'Receba avisos do RotaFácil neste dispositivo.',
@@ -61,7 +75,10 @@ class NotificationsScreen extends StatelessWidget {
               ),
               SwitchListTile.adaptive(
                 value: store.bookingNotifications,
-                onChanged: store.setBookingNotifications,
+                onChanged: (value) => runAction(
+                  context,
+                  () => store.setBookingNotifications(value),
+                ),
                 title: const Text('Agendamentos'),
                 subtitle: const Text(
                   'Confirmações, cancelamentos e lembretes.',
@@ -69,7 +86,10 @@ class NotificationsScreen extends StatelessWidget {
               ),
               SwitchListTile.adaptive(
                 value: store.marketingNotifications,
-                onChanged: store.setMarketingNotifications,
+                onChanged: (value) => runAction(
+                  context,
+                  () => store.setMarketingNotifications(value),
+                ),
                 title: const Text('Novidades e recomendações'),
                 subtitle: const Text(
                   'Sugestões de novos roteiros e experiências.',

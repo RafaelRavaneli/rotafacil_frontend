@@ -57,6 +57,13 @@ class GuideProfileScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
+                  if (guide.reviews > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '★ ${guide.rating.toStringAsFixed(1)} · ${guide.reviews} avaliação(ões)',
+                      ),
+                    ),
                   if (guide.city.isNotEmpty || guide.state.isNotEmpty)
                     Text(
                       [

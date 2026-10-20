@@ -213,11 +213,16 @@ void main() {
     expect(find.text('10/11/2099 às 06:30'), findsOneWidget);
     expect(find.text('11/11/2099 às 15:00'), findsOneWidget);
     await tester.scrollUntilVisible(
+      find.text('Água'),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Água'), findsOneWidget);
+    await tester.scrollUntilVisible(
       find.byType(TrailWeatherCard),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Água'), findsOneWidget);
     expect(find.text('Abrir rota no Google Maps'), findsOneWidget);
     expect(
       tester.widget<TrailWeatherCard>(find.byType(TrailWeatherCard)).date,

@@ -34,12 +34,6 @@ class LocationService {
   }
 
   Future<UserCoordinates> capture({bool requestPermission = true}) async {
-    final recent = _recent;
-    if (recent != null &&
-        _capturedAt != null &&
-        DateTime.now().difference(_capturedAt!) < const Duration(minutes: 1)) {
-      return recent;
-    }
     final active = _captureInFlight;
     if (active != null) return active;
     final capture = _capture(requestPermission: requestPermission);
@@ -80,6 +74,12 @@ class LocationService {
       );
     }
 
+    final recent = _recent;
+    if (recent != null &&
+        _capturedAt != null &&
+        DateTime.now().difference(_capturedAt!) < const Duration(minutes: 1)) {
+      return recent;
+    }
     final position = await Geolocator.getCurrentPosition().timeout(
       const Duration(seconds: 12),
     );

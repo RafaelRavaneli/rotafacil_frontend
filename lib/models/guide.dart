@@ -38,8 +38,11 @@ class GuideProfile {
     return GuideProfile(
       id: json['id']?.toString() ?? '',
       name: (json['nome'] ?? json['name'])?.toString() ?? 'Guia',
-      rating: 0,
-      reviews: 0,
+      rating:
+          double.tryParse('${json['nota_media'] ?? json['rating'] ?? 0}') ?? 0,
+      reviews:
+          int.tryParse('${json['total_avaliacoes'] ?? json['reviews'] ?? 0}') ??
+          0,
       imageUrl: (json['foto_url'] ?? json['imageUrl'])?.toString() ?? '',
       bio: (json['descricao_profissional'] ?? json['bio'])?.toString() ?? '',
       specialties: rawSpecialties is List

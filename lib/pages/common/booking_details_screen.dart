@@ -491,6 +491,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       label: Text(booking.contactLabel),
                     ),
                   ],
+                  if (!isOperator &&
+                      BookingStatus.isActive(booking.status)) ...[
+                    const SizedBox(height: 12),
+                    const ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.star_outline_rounded),
+                      title: Text('Avaliação disponível após a conclusão'),
+                      subtitle: Text(
+                        'O responsável precisa finalizar esta saída para você avaliar o roteiro, o guia e a agência.',
+                      ),
+                    ),
+                  ],
                   if (normalizedStatus == 'Concluído' &&
                       !isOperator &&
                       !booking.evaluated) ...[

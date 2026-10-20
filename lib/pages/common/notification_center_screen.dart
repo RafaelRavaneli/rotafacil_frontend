@@ -1,3 +1,5 @@
+import '../../utils/run_action.dart';
+import 'settings/notifications_screen.dart';
 import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 import '../../state/app_store.dart';
@@ -14,11 +16,19 @@ class NotificationCenterScreen extends StatefulWidget {
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   bool loading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refresh();
+    });
+  }
+
   Future<void> _refresh() async {
-    if (!AppStore.instance.useBackend) return;
+    if (loading || !AppStore.instance.useBackend) return;
     setState(() => loading = true);
     try {
-      await AppStore.instance.refreshNotifications();
+      await runAction(context, AppStore.instance.refreshNotifications);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -36,12 +46,22 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: 'Preferências de notificações',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const NotificationsScreen(),
+              ),
+            ),
+          ),
+          IconButton(
             onPressed: loading ? null : _refresh,
             tooltip: 'Atualizar',
             icon: const Icon(Icons.refresh_rounded),
           ),
           TextButton(
-            onPressed: store.markAllNotificationsRead,
+            onPressed: () => runAction(context, store.markAllNotificationsRead),
             child: const Text('Marcar lidas'),
           ),
         ],
@@ -50,8 +70,19 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         animation: store,
         builder: (context, _) {
           if (store.notifications.isEmpty) {
-            return const Center(
-              child: Text('Nenhuma notificação por enquanto.'),
+            return RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(
+                      child: Text('Nenhuma notificação por enquanto.'),
+                    ),
+                  ),
+                ],
+              ),
             );
           }
           return RefreshIndicator(
@@ -84,7 +115,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           size: 9,
                           color: AppColors.green700,
                         ),
-                  onTap: () => store.markNotificationRead(item),
+                  onTap: () => runAction(
+                    context,
+                    () => store.markNotificationRead(item),
+                  ),
                 );
               },
             ),

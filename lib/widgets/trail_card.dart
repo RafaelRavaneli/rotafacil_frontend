@@ -95,7 +95,7 @@ class TrailCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (trail.rating > 0) ...[
+                if (trail.reviews > 0) ...[
                   const Icon(
                     Icons.star_rounded,
                     size: 16,

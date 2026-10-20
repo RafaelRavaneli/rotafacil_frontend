@@ -169,11 +169,11 @@ class NotificationService extends ChangeNotifier {
 
     try {
       await FcmTokenApi.instance.register(currentToken);
-    } catch (error) {
+    } catch (_) {
       await AppStore.instance.addNotification(
         title: 'Aviso de notificações',
         body:
-            'O token FCM foi obtido, mas não foi sincronizado com a API: $error',
+            'Não foi possível ativar os avisos neste dispositivo. Tente novamente nas preferências de notificações.',
       );
     }
   }

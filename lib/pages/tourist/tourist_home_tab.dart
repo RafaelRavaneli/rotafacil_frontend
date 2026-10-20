@@ -108,7 +108,7 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                   _distanceTo(b) ?? double.infinity,
                 ),
               );
-          final bestRated = trails.where((trail) => trail.rating > 0).toList()
+          final bestRated = trails.where((trail) => trail.reviews > 0).toList()
             ..sort((a, b) {
               final rating = b.rating.compareTo(a.rating);
               return rating != 0 ? rating : b.reviews.compareTo(a.reviews);
