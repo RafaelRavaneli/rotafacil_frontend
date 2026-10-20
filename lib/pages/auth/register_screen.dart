@@ -229,112 +229,131 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return AuthScaffold(
       title: 'Cadastro • ${widget.role.title}',
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!credentialsStep) ...[
-            _field(
-              widget.role == UserRole.agency ? 'Razão Social' : 'Nome completo',
-              nameController,
-            ),
-            _field(
-              'Telefone',
-              phoneController,
-              hint: '(00) 00000-0000',
-              keyboard: TextInputType.phone,
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: _field('Cidade', cityController, hint: 'Maringá'),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _field(
-                    'UF',
-                    stateController,
-                    hint: 'PR',
-                    maxLength: 2,
-                  ),
-                ),
-              ],
-            ),
-            if (needsDocument)
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        reverseDuration: const Duration(milliseconds: 240),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: Column(
+          key: ValueKey<bool>(credentialsStep),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!credentialsStep) ...[
               _field(
-                documentLabel,
-                documentController,
-                hint: widget.role == UserRole.guide
-                    ? '000.000.000-00'
-                    : '00.000.000/0000-00',
-                keyboard: TextInputType.number,
+                widget.role == UserRole.agency
+                    ? 'Razão Social'
+                    : 'Nome completo',
+                nameController,
               ),
-            const SizedBox(height: 24),
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: 100,
-                height: 42,
-                child: FilledButton(
-                  onPressed: _continue,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F682B),
-                    padding: EdgeInsets.zero,
+              _field(
+                'Telefone',
+                phoneController,
+                hint: '(00) 00000-0000',
+                keyboard: TextInputType.phone,
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _field('Cidade', cityController, hint: 'Maringá'),
                   ),
-                  child: const Icon(
-                    Icons.arrow_forward,
-                    semanticLabel: 'Continuar',
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _field(
+                      'UF',
+                      stateController,
+                      hint: 'PR',
+                      maxLength: 2,
+                    ),
+                  ),
+                ],
+              ),
+              if (needsDocument)
+                _field(
+                  documentLabel,
+                  documentController,
+                  hint: widget.role == UserRole.guide
+                      ? '000.000.000-00'
+                      : '00.000.000/0000-00',
+                  keyboard: TextInputType.number,
+                ),
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(
+                  width: 100,
+                  height: 42,
+                  child: FilledButton(
+                    onPressed: _continue,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F682B),
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward,
+                      semanticLabel: 'Continuar',
+                    ),
                   ),
                 ),
               ),
-            ),
-          ] else ...[
-            _field(
-              'E-mail',
-              emailController,
-              keyboard: TextInputType.emailAddress,
-            ),
-            _field(
-              'Senha',
-              passwordController,
-              hint: 'Mínimo de 6 caracteres',
-              secret: true,
-            ),
-            CheckboxListTile(
-              value: acceptTerms,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              activeColor: const Color(0xFF4F682B),
-              side: const BorderSide(color: Color(0xFFD2FA87)),
-              title: const Text(
-                'Aceito os Termos de Uso e Política de Privacidade',
-                style: TextStyle(fontSize: 12, color: Color(0xFFFFFEF7)),
+            ] else ...[
+              _field(
+                'E-mail',
+                emailController,
+                keyboard: TextInputType.emailAddress,
               ),
-              onChanged: loading
-                  ? null
-                  : (value) => setState(() => acceptTerms = value ?? false),
-            ),
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: loading ? null : _create,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF4F682B),
+              _field(
+                'Senha',
+                passwordController,
+                hint: 'Mínimo de 6 caracteres',
+                secret: true,
               ),
-              child: Text(loading ? 'Criando...' : 'Criar conta'),
-            ),
-            TextButton(
-              onPressed: loading
-                  ? null
-                  : () => setState(() => credentialsStep = false),
-              child: const Text(
-                'Voltar aos dados',
-                style: TextStyle(color: Color(0xFFD2FA87)),
+              CheckboxListTile(
+                value: acceptTerms,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: const Color(0xFF4F682B),
+                side: const BorderSide(color: Color(0xFFD2FA87)),
+                title: const Text(
+                  'Aceito os Termos de Uso e Política de Privacidade',
+                  style: TextStyle(fontSize: 12, color: Color(0xFFFFFEF7)),
+                ),
+                onChanged: loading
+                    ? null
+                    : (value) => setState(() => acceptTerms = value ?? false),
               ),
-            ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: loading ? null : _create,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F682B),
+                ),
+                child: Text(loading ? 'Criando...' : 'Criar conta'),
+              ),
+              TextButton(
+                onPressed: loading
+                    ? null
+                    : () => setState(() => credentialsStep = false),
+                child: const Text(
+                  'Voltar aos dados',
+                  style: TextStyle(color: Color(0xFFD2FA87)),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
