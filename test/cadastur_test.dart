@@ -10,6 +10,7 @@ void main() {
       await expectLater(
         AuthGateway.instance.register(
           role: role,
+          acceptedLegal: true,
           name: 'Pessoa',
           email: 'pessoa@example.test',
           password: 'senha123',

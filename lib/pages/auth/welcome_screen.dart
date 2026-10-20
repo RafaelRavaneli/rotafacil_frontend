@@ -1,4 +1,6 @@
+import '../common/legal_document_screen.dart';
 import '../../navigation/auth_page_route.dart';
+import '../../navigation/app_routes.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +10,11 @@ import 'login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
+
+  void _open(BuildContext context, WidgetBuilder builder) {
+    if (!AppRoutes.canPush(context)) return;
+    Navigator.push(context, AuthPageRoute(builder: builder));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,23 +51,18 @@ class WelcomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           FilledButton(
-            onPressed: () => Navigator.push(
-              context,
-              AuthPageRoute(builder: (_) => const ProfileChoiceScreen()),
-            ),
+            onPressed: () => _open(context, (_) => const ProfileChoiceScreen()),
             child: const Text('Criar conta'),
           ),
           const SizedBox(height: 12),
           TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              AuthPageRoute(builder: (_) => const LoginScreen()),
-            ),
+            onPressed: () => _open(context, (_) => const LoginScreen()),
             child: const Text(
               'Fazer login',
               style: TextStyle(color: AppColors.paper),
             ),
           ),
+          const LegalLinks(light: true),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/notification_service.dart';
+import '../../navigation/app_routes.dart';
 import '../../services/session_service.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
@@ -229,6 +230,7 @@ class ProfileTab extends StatelessWidget {
   }
 
   void _open(BuildContext context, Widget screen) {
+    if (!AppRoutes.canPush(context)) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }

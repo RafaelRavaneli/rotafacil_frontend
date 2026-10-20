@@ -74,7 +74,8 @@ class AppRoutes {
     BuildContext context,
     String path,
     WidgetBuilder builder,
-  ) {
+  ) async {
+    if (!canPush(context)) return null;
     return Navigator.push<T>(
       context,
       MaterialPageRoute<T>(
@@ -82,5 +83,15 @@ class AppRoutes {
         builder: builder,
       ),
     );
+  }
+
+  static bool canPush(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route?.isCurrent == false ||
+        route?.animation?.status == AnimationStatus.forward ||
+        route?.animation?.status == AnimationStatus.reverse) {
+      return false;
+    }
+    return true;
   }
 }

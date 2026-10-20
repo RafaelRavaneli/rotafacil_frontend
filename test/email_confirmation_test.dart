@@ -35,66 +35,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Confirmação envia código por e-mail e retorna sucesso ao fluxo anterior',
-    (tester) async {
-      final calls = <String>[];
-      final gateway = AuthGateway(
-        api: ApiClient(
-          client: MockClient((request) async {
-            calls.add(request.url.path);
-            final body = jsonDecode(request.body);
-            expect(body['email'], 'ana@example.test');
-            expect(request.headers['Authorization'], isNull);
-            if (request.url.path.endsWith('/confirmar')) {
-              expect(body['token'], 'codigo-recebido-pelo-email');
-            }
-            return http.Response('{}', 200);
-          }),
+  testWidgets('Confirmação solicita link sem campo de código', (tester) async {
+    final gateway = AuthGateway(
+      api: ApiClient(
+        client: MockClient((request) async {
+          expect(request.url.path, '/api/auth/email/solicitar');
+          expect(jsonDecode(request.body)['email'], 'ana@example.test');
+          return http.Response('{}', 200);
+        }),
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: VerifyEmailScreen(
+          initialEmail: 'ana@example.test',
+          gateway: gateway,
         ),
-      );
-      bool? verified;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: TextButton(
-                onPressed: () async {
-                  verified = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => VerifyEmailScreen(
-                        initialEmail: ' ANA@example.test ',
-                        gateway: gateway,
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Abrir confirmação'),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.tap(find.text('Abrir confirmação'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Enviar código'));
-      await tester.tap(find.text('Enviar código'));
-      await tester.pumpAndSettle();
-      expect(find.text('Reenviar código'), findsOneWidget);
-      await tester.enterText(
-        find.byType(TextField).at(1),
-        'codigo-recebido-pelo-email',
-      );
-      await tester.ensureVisible(
-        find.widgetWithText(FilledButton, 'Confirmar e-mail'),
-      );
-      await tester.tap(find.widgetWithText(FilledButton, 'Confirmar e-mail'));
-      await tester.pumpAndSettle();
-      expect(verified, isTrue);
-      expect(calls, ['/api/auth/email/solicitar', '/api/auth/email/confirmar']);
-    },
-  );
+      ),
+    );
+    await tester.ensureVisible(find.text('Enviar link'));
+    await tester.tap(find.text('Enviar link'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reenviar link'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.textContaining('Abra o e-mail'), findsOneWidget);
+  });
 
   testWidgets('Falha de envio mantém dados e permite nova tentativa', (
     tester,
@@ -107,7 +72,7 @@ void main() {
           return http.Response(
             calls == 1 ? '{"erro":"Envio indisponível"}' : '{}',
             calls == 1 ? 503 : 200,
-              headers: {'content-type': 'application/json; charset=utf-8'},
+            headers: {'content-type': 'application/json; charset=utf-8'},
           );
         }),
       ),
@@ -120,17 +85,17 @@ void main() {
         ),
       ),
     );
-    await tester.ensureVisible(find.text('Enviar código'));
-    await tester.tap(find.text('Enviar código'));
+    await tester.ensureVisible(find.text('Enviar link'));
+    await tester.tap(find.text('Enviar link'));
     await tester.pumpAndSettle();
     expect(find.text('Envio indisponível'), findsOneWidget);
     expect(
       tester.widget<TextField>(find.byType(TextField).first).controller!.text,
       'ana@example.test',
     );
-    await tester.tap(find.text('Enviar código'));
+    await tester.tap(find.text('Enviar link'));
     await tester.pumpAndSettle();
     expect(calls, 2);
-    expect(find.text('Reenviar código'), findsOneWidget);
+    expect(find.text('Reenviar link'), findsOneWidget);
   });
 }

@@ -17,32 +17,43 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
 
-  final code = TextEditingController();
+  DateTime? nextSend;
   bool requested = false;
   bool loading = false;
 
   @override
   void dispose() {
-    code.dispose();
     email.dispose();
     password.dispose();
     super.dispose();
   }
 
   Future<void> _reset() async {
+    if (loading) return;
     final normalizedEmail = email.text.trim();
 
-    if (AppConfig.useBackend && !requested) {
+    if (AppConfig.useBackend) {
+      if (nextSend != null && DateTime.now().isBefore(nextSend!)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aguarde um minuto antes de reenviar o link.'),
+          ),
+        );
+        return;
+      }
       if (normalizedEmail.isEmpty) return;
       setState(() => loading = true);
       try {
         await AuthGateway.instance.requestPasswordReset(normalizedEmail);
         if (!mounted) return;
-        setState(() => requested = true);
+        setState(() {
+          requested = true;
+          nextSend = DateTime.now().add(const Duration(minutes: 1));
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Se o e-mail estiver cadastrado, você receberá um código.',
+              'Se o e-mail estiver cadastrado, você receberá um link. Abra o e-mail para definir uma nova senha.',
             ),
           ),
         );
@@ -75,7 +86,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await AuthGateway.instance.resetPassword(
         email: normalizedEmail,
         newPassword: password.text,
-        token: code.text,
       );
 
       if (!mounted) return;
@@ -110,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const SizedBox(height: 8),
           const Text(
             AppConfig.useBackend
-                ? 'Solicite o código por e-mail e use-o para definir sua nova senha.'
+                ? 'Receba um link por e-mail para escolher uma nova senha e entrar na sua conta.'
                 : 'Informe seu e-mail e escolha uma nova senha.',
             style: TextStyle(color: AppColors.paper),
           ),
@@ -125,39 +135,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          if (AppConfig.useBackend && requested)
-            AuthLabeledField(
-              label: 'Código recebido por e-mail',
-              child: TextField(
-                style: const TextStyle(color: AppColors.ink),
-                controller: code,
-                decoration: const InputDecoration(),
-              ),
-            ),
-          if (!AppConfig.useBackend || requested)
+          if (!AppConfig.useBackend)
             AuthLabeledField(
               label: 'Nova senha',
               child: TextField(
-                style: const TextStyle(color: AppColors.ink),
                 controller: password,
                 obscureText: true,
-                decoration: const InputDecoration(),
+                style: const TextStyle(color: AppColors.ink),
               ),
             ),
           if (AppConfig.useBackend && requested)
-            TextButton(
-              onPressed: loading
-                  ? null
-                  : () => setState(() {
-                      requested = false;
-                      code.clear();
-                    }),
-              child: const Text('Solicitar outro código'),
-            ),
-          if (AppConfig.useBackend && !requested)
-            TextButton(
-              onPressed: () => setState(() => requested = true),
-              child: const Text('Já tenho um código'),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'Confira sua caixa de entrada e a pasta de spam. O link vale por 30 minutos.',
+                style: TextStyle(color: AppColors.paper),
+              ),
             ),
           const SizedBox(height: 20),
           FilledButton(
@@ -165,8 +158,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Text(
               loading
                   ? 'Aguarde...'
-                  : AppConfig.useBackend && !requested
-                  ? 'Enviar código'
+                  : AppConfig.useBackend
+                  ? (requested ? 'Reenviar link' : 'Enviar link')
                   : 'Redefinir senha',
             ),
           ),

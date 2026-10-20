@@ -1,4 +1,5 @@
 import '../../auth/verify_email_screen.dart';
+import '../legal_document_screen.dart';
 import '../../../config/app_config.dart';
 import '../../../navigation/auth_page_route.dart';
 import '../../../widgets/app_back_button.dart';
@@ -38,6 +39,7 @@ class PrivacySecurityScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              const LegalLinks(),
               SwitchListTile.adaptive(
                 value: store.profileVisible,
                 onChanged: store.setProfileVisible,

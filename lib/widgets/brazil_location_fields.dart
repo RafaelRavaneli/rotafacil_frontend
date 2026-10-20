@@ -72,22 +72,33 @@ class BrazilLocationFields extends StatelessWidget {
     ) {
       final input = TextField(
         controller: controller,
-        style: labelsAbove
-            ? const TextStyle(color: Color(0xFF25332C), fontSize: 14)
-            : null,
+        style: const TextStyle(color: Color(0xFF25332C), fontSize: 14),
         readOnly: true,
         enabled: enabled,
         onTap: () => _choose(context, choosingState),
         decoration: InputDecoration(
           labelText: labelsAbove ? null : label,
           hintText: choosingState ? 'UF' : 'Selecione a cidade',
+          hintStyle: const TextStyle(color: Color(0xFF526057), fontSize: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 14,
+          ),
           filled: labelsAbove ? true : null,
           fillColor: labelsAbove ? const Color(0xFFFFFEF7) : null,
           isDense: labelsAbove,
           border: labelsAbove
               ? OutlineInputBorder(borderRadius: BorderRadius.circular(9))
               : null,
-          suffixIcon: const Icon(Icons.expand_more),
+          suffixIcon: const Icon(
+            Icons.expand_more,
+            size: 18,
+            color: Color(0xFF25332C),
+          ),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 28,
+            minHeight: 36,
+          ),
         ),
       );
       return labelsAbove
@@ -105,9 +116,9 @@ class BrazilLocationFields extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(flex: 3, child: field('Cidade', city, false)),
+        SizedBox(width: 92, child: field('UF', state, true)),
         const SizedBox(width: 10),
-        Expanded(child: field('UF', state, true)),
+        Expanded(child: field('Cidade', city, false)),
       ],
     );
   }

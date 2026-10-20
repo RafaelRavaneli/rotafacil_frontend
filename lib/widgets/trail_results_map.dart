@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,6 +22,49 @@ LatLng? trailMapPosition(Trail trail) {
   return LatLng(latitude, longitude);
 }
 
+class TrailMapGroup {
+  TrailMapGroup(this.position, this.trails);
+  final LatLng position;
+  final List<Trail> trails;
+}
+
+/// Agrupa marcadores que ocupariam a mesma área visual no zoom atual.
+List<TrailMapGroup> groupTrailMarkers(List<Trail> trails, double zoom) {
+  final groups = <TrailMapGroup>[];
+  final worldSize = 256 * math.pow(2, zoom);
+  Offset project(LatLng point) {
+    final sinLatitude = math.sin(
+      point.latitude.clamp(-85.0511, 85.0511) * math.pi / 180,
+    );
+    return Offset(
+      (point.longitude + 180) / 360 * worldSize,
+      (.5 - math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * math.pi)) *
+          worldSize,
+    );
+  }
+
+  for (final trail in trails) {
+    final position = trailMapPosition(trail);
+    if (position == null) continue;
+    final pixel = project(position);
+    final group = groups.where((group) {
+      final other = project(group.position);
+      final dx = (pixel.dx - other.dx).abs();
+      return math.sqrt(
+            math.pow(math.min(dx, worldSize - dx), 2) +
+                math.pow(pixel.dy - other.dy, 2),
+          ) <
+          60;
+    }).firstOrNull;
+    if (group == null) {
+      groups.add(TrailMapGroup(position, [trail]));
+    } else {
+      group.trails.add(trail);
+    }
+  }
+  return groups;
+}
+
 class TrailResultsMap extends StatefulWidget {
   const TrailResultsMap({
     super.key,
@@ -41,6 +85,50 @@ class TrailResultsMap extends StatefulWidget {
 
 class _TrailResultsMapState extends State<TrailResultsMap> {
   bool tileError = false;
+
+  Future<void> _openGroup(TrailMapGroup group) async {
+    if (group.trails.length == 1) {
+      widget.onSelected(group.trails.single);
+      return;
+    }
+    final selected = await showModalBottomSheet<Trail>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * .6,
+        child: Column(
+          children: [
+            ListTile(
+              title: Text('${group.trails.length} roteiros nesta região'),
+              trailing: IconButton(
+                tooltip: 'Fechar',
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: group.trails.length,
+                itemBuilder: (context, index) {
+                  final trail = group.trails[index];
+                  return ListTile(
+                    title: Text(trail.name),
+                    subtitle: Text(
+                      '${trail.responsibleName} • ${trail.distanceLabel}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.pop(context, trail),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null && mounted) widget.onSelected(selected);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,29 +188,50 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
                     }
                   },
                 ),
-                MarkerLayer(
-                  markers: mapped
-                      .map(
-                        (trail) => Marker(
-                          point: trailMapPosition(trail)!,
-                          width: 52,
-                          height: 52,
-                          child: Tooltip(
-                            message: 'Abrir roteiro: ${trail.name}',
-                            child: IconButton(
-                              onPressed: () => widget.onSelected(trail),
-                              style: IconButton.styleFrom(
-                                backgroundColor: widget.selectedId == trail.id
-                                    ? AppColors.earth
-                                    : AppColors.forest,
-                                foregroundColor: AppColors.white,
+                Builder(
+                  builder: (context) {
+                    final groups = groupTrailMarkers(
+                      mapped,
+                      MapCamera.of(context).zoom,
+                    );
+                    return MarkerLayer(
+                      markers: groups
+                          .map(
+                            (group) => Marker(
+                              point: group.position,
+                              width: 52,
+                              height: 52,
+                              child: Tooltip(
+                                message: group.trails.length == 1
+                                    ? 'Abrir roteiro: ${group.trails.single.name}'
+                                    : '${group.trails.length} roteiros nesta região',
+                                child: IconButton(
+                                  onPressed: () => _openGroup(group),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        group.trails.any(
+                                          (trail) =>
+                                              widget.selectedId == trail.id,
+                                        )
+                                        ? AppColors.earth
+                                        : AppColors.forest,
+                                    foregroundColor: AppColors.white,
+                                  ),
+                                  icon: group.trails.length == 1
+                                      ? const Icon(Icons.terrain)
+                                      : Text(
+                                          '${group.trails.length}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                ),
                               ),
-                              icon: const Icon(Icons.terrain),
                             ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                          )
+                          .toList(),
+                    );
+                  },
                 ),
                 RichAttributionWidget(
                   attributions: [

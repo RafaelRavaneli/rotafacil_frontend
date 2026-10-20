@@ -40,7 +40,7 @@ void main() {
             .every((f) => f.readOnly),
         isTrue,
       );
-      await tester.runAsync(() => tester.tap(find.byType(TextField).at(1)));
+      await tester.runAsync(() => tester.tap(find.byType(TextField).first));
       await tester.pumpAndSettle();
       expect(find.text('Selecionar estado'), findsOneWidget);
       await tester.enterText(find.byType(TextField).last, 'sao paulo');
@@ -49,7 +49,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(state.text, 'SP');
       expect(city.text, isEmpty);
-      await tester.runAsync(() => tester.tap(find.byType(TextField).first));
+      await tester.runAsync(() => tester.tap(find.byType(TextField).at(1)));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).last, 'campinas');
       await tester.pumpAndSettle();

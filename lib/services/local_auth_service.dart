@@ -82,6 +82,7 @@ class LocalAuthService {
     required String email,
     required String password,
     String document = '',
+    Map<String, dynamic>? legalAcceptance,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final accounts = await _accounts();
@@ -100,6 +101,11 @@ class LocalAuthService {
       'email': email.trim(),
       'passwordHash': _hash(password),
       'document': DocumentValidator.digitsOnly(document),
+      if (legalAcceptance != null)
+        'aceite_legal': {
+          ...legalAcceptance,
+          'registrado_em': DateTime.now().toUtc().toIso8601String(),
+        },
     };
 
     await prefs.setString(_accountsKey, jsonEncode(accounts));

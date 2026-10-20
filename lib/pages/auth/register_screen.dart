@@ -1,3 +1,4 @@
+import '../common/legal_document_screen.dart';
 import 'verify_email_screen.dart';
 import '../../widgets/brazil_location_fields.dart';
 import '../../navigation/auth_page_route.dart';
@@ -63,6 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _create() async {
+    if (loading) return;
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.length < 6 ||
@@ -103,6 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       registration = await AuthGateway.instance.register(
         role: widget.role,
+        acceptedLegal: acceptTerms,
         name: nameController.text.trim(),
         email: emailController.text.trim(),
         password: passwordController.text,
@@ -277,13 +280,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               curve: Curves.easeInOutCubic,
               alignment: Alignment.topCenter,
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                reverseDuration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 360),
+                reverseDuration: const Duration(milliseconds: 320),
                 switchInCurve: Curves.easeInOutCubic,
                 switchOutCurve: Curves.easeInOutCubic,
                 layoutBuilder: (currentChild, previousChildren) => Stack(
                   alignment: Alignment.topCenter,
-                  children: [...previousChildren, ?currentChild],
+                  children: [?currentChild],
                 ),
                 transitionBuilder: (child, animation) =>
                     FadeTransition(opacity: animation, child: child),
@@ -371,6 +374,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hint: 'Mínimo de 6 caracteres',
           secret: true,
         ),
+        const LegalLinks(light: true),
         CheckboxListTile(
           value: acceptTerms,
           contentPadding: EdgeInsets.zero,
@@ -378,7 +382,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           activeColor: const Color(0xFF4F682B),
           side: const BorderSide(color: Color(0xFFD2FA87)),
           title: const Text(
-            'Aceito os Termos de Uso e Política de Privacidade',
+            'Li e aceito os Termos de Uso e estou ciente da Política de Privacidade',
             style: TextStyle(fontSize: 12, color: Color(0xFFFFFEF7)),
           ),
           onChanged: loading

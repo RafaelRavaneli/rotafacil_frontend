@@ -4,6 +4,7 @@ import '../config/app_config.dart';
 import '../models/user_role.dart';
 import '../utils/document_validator.dart';
 import '../utils/cadastur_validator.dart';
+import 'legal_documents.dart';
 import 'api_client.dart';
 import 'local_auth_service.dart';
 import 'session_service.dart';
@@ -105,17 +106,25 @@ class AuthGateway {
     String document = '',
     String cadasturNumber = '',
     String cadasturValidUntil = '',
+    bool acceptedLegal = false,
   }) async {
+    if (!acceptedLegal) {
+      throw StateError(
+        'Leia e aceite os Termos de Uso e a Política de Privacidade.',
+      );
+    }
     if (role == UserRole.guide || role == UserRole.agency) {
       final error = CadasturValidator.error(cadasturNumber);
       if (error != null) throw StateError(error);
     }
+    final legalAcceptance = await LegalDocuments.acceptance();
     if (!AppConfig.useBackend) {
       await LocalAuthService.instance.register(
         role: role.title,
         email: email,
         password: password,
         document: document,
+        legalAcceptance: legalAcceptance,
       );
 
       return AuthRegisterResult(
@@ -127,6 +136,7 @@ class AuthGateway {
     }
 
     final body = <String, dynamic>{
+      ...legalAcceptance,
       'nome': name,
       'email': email,
       'senha': password,
@@ -199,6 +209,64 @@ class AuthGateway {
       '/api/auth/email/confirmar',
       auth: false,
       body: {'email': email.trim().toLowerCase(), 'token': token.trim()},
+    );
+  }
+
+  Future<AuthLoginResult> confirmEmailAndLogin(
+    String email,
+    String token,
+  ) async {
+    final data = await _api.post(
+      '/api/auth/email/confirmar',
+      auth: false,
+      body: {
+        'email': email.trim().toLowerCase(),
+        'token': token.trim(),
+        'iniciar_sessao': true,
+      },
+    );
+    return _saveLinkSession(data);
+  }
+
+  Future<AuthLoginResult> resetPasswordAndLogin({
+    required String token,
+    required String newPassword,
+  }) async {
+    final data = await _api.post(
+      '/api/auth/senha/redefinir',
+      auth: false,
+      body: {
+        'token': token.trim(),
+        'nova_senha': newPassword,
+        'iniciar_sessao': true,
+      },
+    );
+    return _saveLinkSession(data);
+  }
+
+  Future<AuthLoginResult> _saveLinkSession(dynamic data) async {
+    if (data is! Map ||
+        !{'usuario', 'guia', 'agencia', 'admin'}.contains(data['tipo']) ||
+        data['token'] is! String ||
+        (data['token'] as String).isEmpty ||
+        data['email'] is! String ||
+        (data['email'] as String).isEmpty ||
+        data['id'] is! String ||
+        (data['id'] as String).isEmpty) {
+      throw StateError(
+        'Não foi possível iniciar a sessão. Faça login com sua senha.',
+      );
+    }
+    await SessionService.instance.save(
+      authToken: data['token'] as String,
+      selectedRole: data['tipo'] as String,
+      userEmail: data['email'] as String,
+      id: data['id'] as String,
+    );
+    return AuthLoginResult(
+      role: data['tipo'] as String,
+      email: data['email'] as String,
+      name: data['nome']?.toString(),
     );
   }
 

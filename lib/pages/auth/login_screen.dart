@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (loading) return;
     final email = emailController.text.trim();
     final password = passwordController.text;
 

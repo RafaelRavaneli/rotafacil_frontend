@@ -22,16 +22,11 @@ class AnimatedTabBody extends StatelessWidget {
       layoutBuilder: (currentChild, previousChildren) => Stack(
         fit: StackFit.expand,
         children: currentChild == null
-            ? previousChildren
-            : <Widget>[...previousChildren, currentChild],
+            ? const <Widget>[]
+            : <Widget>[currentChild],
       ),
-      transitionBuilder: (transitionChild, animation) => FadeTransition(
-        opacity: animation,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.985, end: 1).animate(animation),
-          child: transitionChild,
-        ),
-      ),
+      transitionBuilder: (transitionChild, animation) =>
+          FadeTransition(opacity: animation, child: transitionChild),
       child: keyedChild,
     );
   }

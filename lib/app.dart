@@ -8,6 +8,10 @@ import 'pages/agency/agency_shell.dart';
 import 'pages/admin/admin_shell.dart';
 import 'pages/auth/welcome_screen.dart';
 import 'pages/auth/login_screen.dart';
+import 'pages/auth/account_link_screen.dart';
+import 'pages/auth/verify_email_screen.dart';
+import 'pages/auth/forgot_password_screen.dart';
+import 'pages/common/legal_document_screen.dart';
 import 'pages/common/booking_details_screen.dart';
 import 'pages/common/trail_participants_screen.dart';
 import 'pages/guide/guide_shell.dart';
@@ -117,7 +121,31 @@ class _RotaFacilAppState extends State<RotaFacilApp>
 
   Route<void> _buildRoute(RouteSettings settings) {
     final location = settings.name ?? AppRoutes.welcome;
-    final page = location == AppRoutes.login
+    final uri = Uri.tryParse(location) ?? Uri();
+    final path = uri.path;
+    if (path == '/confirmar-email' || path == '/redefinir-senha') {
+      return MaterialPageRoute<void>(
+        settings: RouteSettings(name: path),
+        builder: (_) => AccountLinkScreen(
+          email: uri.queryParameters['email'] ?? '',
+          token: uri.queryParameters['token'] ?? '',
+          recoverPassword: path == '/redefinir-senha',
+        ),
+      );
+    }
+    if (path == '/verificar-email' || path == '/recuperar-senha') {
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => path == '/verificar-email'
+            ? const VerifyEmailScreen()
+            : const ForgotPasswordScreen(),
+      );
+    }
+    final page = path == '/termos' || path == '/privacidade'
+        ? LegalDocumentScreen(
+            documentKey: path == '/termos' ? 'termos' : 'privacidade',
+          )
+        : location == AppRoutes.login
         ? const LoginScreen()
         : _SessionBootstrap(initialLocation: location);
     return MaterialPageRoute<void>(settings: settings, builder: (_) => page);

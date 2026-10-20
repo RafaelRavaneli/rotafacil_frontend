@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../navigation/auth_page_route.dart';
 import '../../services/auth_gateway.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/auth_error_message.dart';
 import '../../widgets/auth_scaffold.dart';
-import 'login_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({
@@ -24,70 +22,41 @@ class VerifyEmailScreen extends StatefulWidget {
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   late final email = TextEditingController(text: widget.initialEmail);
-  final code = TextEditingController();
   bool loading = false;
   late bool sent = widget.initiallySent;
   DateTime? nextSend;
   @override
   void dispose() {
     email.dispose();
-    code.dispose();
     super.dispose();
   }
 
-  Future<void> _submit({required bool send}) async {
+  Future<void> _send() async {
     if (loading) return;
-    final normalizedEmail = email.text.trim().toLowerCase();
-    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(normalizedEmail) ||
-        (!send && code.text.trim().isEmpty)) {
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Informe um e-mail válido e o código recebido para confirmar.',
-          ),
-        ),
+        const SnackBar(content: Text('Informe um e-mail válido.')),
       );
       return;
     }
-    if (send && nextSend != null && DateTime.now().isBefore(nextSend!)) {
+    if (nextSend != null && DateTime.now().isBefore(nextSend!)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Aguarde um minuto antes de reenviar o código.'),
+          content: Text('Aguarde um minuto antes de reenviar o link.'),
         ),
       );
       return;
     }
     setState(() => loading = true);
     try {
-      final gateway = widget.gateway ?? AuthGateway.instance;
-      if (send) {
-        await gateway.requestEmailConfirmation(normalizedEmail);
-        if (!mounted) return;
-        setState(() {
-          sent = true;
-          nextSend = DateTime.now().add(const Duration(minutes: 1));
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Se o endereço precisar de confirmação, enviaremos um código. Confira também a pasta de spam.',
-            ),
-          ),
-        );
-      } else {
-        await gateway.confirmEmail(normalizedEmail, code.text);
-        if (!mounted) return;
-        if (widget.returnToLogin) {
-          Navigator.pushReplacement(
-            context,
-            AuthPageRoute<void>(
-              builder: (_) => LoginScreen(initialEmail: normalizedEmail),
-            ),
-          );
-        } else {
-          Navigator.pop(context, true);
-        }
-      }
+      await (widget.gateway ?? AuthGateway.instance).requestEmailConfirmation(
+        email.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        sent = true;
+        nextSend = DateTime.now().add(const Duration(minutes: 1));
+      });
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -108,8 +77,8 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       children: [
         Text(
           sent
-              ? 'Copie o código recebido por e-mail. Ele vale por 30 minutos.'
-              : 'Envie um código para confirmar que este e-mail pertence a você.',
+              ? 'Se o endereço precisar de confirmação, enviaremos um link. Abra o e-mail e toque no link para confirmar e entrar. Confira também o spam. O link vale por 30 minutos.'
+              : 'Receba um link para confirmar seu e-mail e entrar na sua conta.',
           style: const TextStyle(color: AppColors.paper),
         ),
         const SizedBox(height: 20),
@@ -122,25 +91,16 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             keyboardType: TextInputType.emailAddress,
           ),
         ),
-        const SizedBox(height: 14),
-        AuthLabeledField(
-          label: 'Código recebido por e-mail',
-          child: TextField(
-            controller: code,
-            enabled: !loading,
-            style: const TextStyle(color: AppColors.ink),
-            autocorrect: false,
-            enableSuggestions: false,
-          ),
-        ),
         const SizedBox(height: 20),
         FilledButton(
-          onPressed: loading ? null : () => _submit(send: false),
-          child: Text(loading ? 'Aguarde...' : 'Confirmar e-mail'),
-        ),
-        TextButton(
-          onPressed: loading ? null : () => _submit(send: true),
-          child: Text(sent ? 'Reenviar código' : 'Enviar código'),
+          onPressed: loading ? null : _send,
+          child: Text(
+            loading
+                ? 'Aguarde...'
+                : sent
+                ? 'Reenviar link'
+                : 'Enviar link',
+          ),
         ),
       ],
     ),

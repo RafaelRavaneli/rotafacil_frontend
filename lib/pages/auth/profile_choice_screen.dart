@@ -1,4 +1,5 @@
 import '../../navigation/auth_page_route.dart';
+import '../../navigation/app_routes.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,7 @@ class ProfileChoiceScreen extends StatelessWidget {
   const ProfileChoiceScreen({super.key});
 
   void _choose(BuildContext context, UserRole role) {
+    if (!AppRoutes.canPush(context)) return;
     Navigator.push(
       context,
       AuthPageRoute(builder: (_) => RegisterScreen(role: role)),
