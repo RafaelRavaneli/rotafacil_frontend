@@ -125,7 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          if (AppConfig.useBackend)
+          if (AppConfig.useBackend && requested)
             AuthLabeledField(
               label: 'Código recebido por e-mail',
               child: TextField(
@@ -143,6 +143,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(),
               ),
+            ),
+          if (AppConfig.useBackend && requested)
+            TextButton(
+              onPressed: loading
+                  ? null
+                  : () => setState(() {
+                      requested = false;
+                      code.clear();
+                    }),
+              child: const Text('Solicitar outro código'),
             ),
           if (AppConfig.useBackend && !requested)
             TextButton(

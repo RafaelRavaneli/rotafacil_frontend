@@ -8,10 +8,11 @@ import '../config/app_config.dart';
 import 'session_service.dart';
 
 class ApiException implements Exception {
-  ApiException(this.message, this.statusCode);
+  ApiException(this.message, this.statusCode, {this.code});
 
   final String message;
   final int statusCode;
+  final String? code;
 
   @override
   String toString() => message;
@@ -169,8 +170,9 @@ class ApiClient {
 
     final streamedResponse = await _client.send(request).timeout(timeout);
 
-    final response = await http.Response.fromStream(streamedResponse)
-        .timeout(timeout);
+    final response = await http.Response.fromStream(
+      streamedResponse,
+    ).timeout(timeout);
 
     return _decode(response);
   }
@@ -217,6 +219,10 @@ class ApiClient {
       message = 'Sua sessão expirou. Entre novamente.';
     }
 
-    throw ApiException(message, response.statusCode);
+    throw ApiException(
+      message,
+      response.statusCode,
+      code: data is Map ? data['codigo']?.toString() : null,
+    );
   }
 }

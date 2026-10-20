@@ -11,6 +11,7 @@ class AppUser {
     required this.state,
     required String role,
     this.document = '',
+    this.emailConfirmed = false,
     this.cadasturNumber = '',
     this.cadasturValidUntil = '',
     this.profileImageDataUrl,
@@ -27,6 +28,7 @@ class AppUser {
   String state;
   String role;
   String document;
+  bool emailConfirmed;
   String cadasturNumber;
   String cadasturValidUntil;
   String? profileImageDataUrl;
@@ -43,6 +45,7 @@ class AppUser {
     'state': state,
     'role': role,
     'document': document,
+    'emailConfirmed': emailConfirmed,
     'cadasturNumber': cadasturNumber,
     'cadasturValidUntil': cadasturValidUntil,
     'profileImageDataUrl': profileImageDataUrl,
@@ -56,6 +59,8 @@ class AppUser {
     return AppUser(
       name: (json['name'] ?? json['nome'])?.toString() ?? '',
       email: json['email']?.toString() ?? '',
+      emailConfirmed:
+          json['email_confirmado'] == true || json['emailConfirmed'] == true,
       phone: (json['phone'] ?? json['telefone'])?.toString() ?? '',
       city: (json['city'] ?? json['cidade'])?.toString() ?? '',
       state: (json['state'] ?? json['estado'])?.toString() ?? '',

@@ -1,3 +1,4 @@
+import 'verify_email_screen.dart';
 import '../../widgets/brazil_location_fields.dart';
 import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
@@ -156,7 +157,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Navigator.pushReplacement(
       context,
       AuthPageRoute(
-        builder: (_) => LoginScreen(initialEmail: registration.email),
+        builder: (_) => registration.requiresEmailConfirmation
+            ? VerifyEmailScreen(
+                initialEmail: registration.email,
+                initiallySent: registration.confirmationSent,
+                returnToLogin: true,
+              )
+            : LoginScreen(initialEmail: registration.email),
       ),
     );
   }

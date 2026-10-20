@@ -1,3 +1,6 @@
+import '../../auth/verify_email_screen.dart';
+import '../../../config/app_config.dart';
+import '../../../navigation/auth_page_route.dart';
 import '../../../widgets/app_back_button.dart';
 import '../../../utils/cadastur_validator.dart';
 import '../../../utils/date_time_format.dart';
@@ -43,6 +46,36 @@ class PrivacySecurityScreen extends StatelessWidget {
                   'Controla a visibilidade das informações públicas do perfil.',
                 ),
               ),
+              if (AppConfig.useBackend)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    store.userForRole(role).emailConfirmed
+                        ? Icons.mark_email_read_outlined
+                        : Icons.mark_email_unread_outlined,
+                  ),
+                  title: Text(
+                    store.userForRole(role).emailConfirmed
+                        ? 'E-mail confirmado'
+                        : 'Confirmar e-mail',
+                  ),
+                  subtitle: Text(store.userForRole(role).email),
+                  onTap: store.userForRole(role).emailConfirmed
+                      ? null
+                      : () async {
+                          final verified = await Navigator.push<bool>(
+                            context,
+                            AuthPageRoute<bool>(
+                              builder: (_) => VerifyEmailScreen(
+                                initialEmail: store.userForRole(role).email,
+                              ),
+                            ),
+                          );
+                          if (verified == true && context.mounted) {
+                            await runAction(context, store.refreshBackend);
+                          }
+                        },
+                ),
               const Divider(height: 30),
               ListTile(
                 contentPadding: EdgeInsets.zero,

@@ -1,3 +1,5 @@
+import 'verify_email_screen.dart';
+import '../../services/api_client.dart';
 import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -100,6 +102,16 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       setState(() => loading = false);
+      if (error is ApiException && error.code == 'EMAIL_NAO_CONFIRMADO') {
+        final verified = await Navigator.push<bool>(
+          context,
+          AuthPageRoute<bool>(
+            builder: (_) => VerifyEmailScreen(initialEmail: email),
+          ),
+        );
+        if (verified == true && mounted) await _login();
+        return;
+      }
 
       ScaffoldMessenger.of(
         context,
@@ -228,6 +240,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : const Text('Entrar'),
                 ),
+                if (AppConfig.useBackend)
+                  TextButton(
+                    onPressed: loading
+                        ? null
+                        : () => Navigator.push(
+                            context,
+                            AuthPageRoute<bool>(
+                              builder: (_) => VerifyEmailScreen(
+                                initialEmail: emailController.text.trim(),
+                              ),
+                            ),
+                          ),
+                    child: const Text('Confirmar meu e-mail'),
+                  ),
                 const SizedBox(height: 18),
                 if (!AppConfig.useBackend)
                   Container(

@@ -23,6 +23,8 @@ class AuthRegisterResult {
     required this.email,
     required this.fromBackend,
     this.userId,
+    this.requiresEmailConfirmation = false,
+    this.confirmationSent = false,
   });
 
   final String role;
@@ -30,6 +32,8 @@ class AuthRegisterResult {
   final String email;
   final String? userId;
   final bool fromBackend;
+  final bool requiresEmailConfirmation;
+  final bool confirmationSent;
 }
 
 class AuthGateway {
@@ -164,6 +168,8 @@ class AuthGateway {
     final responseRole = (data['tipo'] ?? data['role'])?.toString().trim();
 
     return AuthRegisterResult(
+      requiresEmailConfirmation: data['confirmacao_email_necessaria'] == true,
+      confirmationSent: data['confirmacao_email_enviada'] == true,
       role: responseRole == null || responseRole.isEmpty
           ? role.apiValue
           : responseRole,
@@ -177,6 +183,22 @@ class AuthGateway {
           ? null
           : responseId.toString(),
       fromBackend: true,
+    );
+  }
+
+  Future<void> requestEmailConfirmation(String email) async {
+    await _api.post(
+      '/api/auth/email/solicitar',
+      auth: false,
+      body: {'email': email.trim().toLowerCase()},
+    );
+  }
+
+  Future<void> confirmEmail(String email, String token) async {
+    await _api.post(
+      '/api/auth/email/confirmar',
+      auth: false,
+      body: {'email': email.trim().toLowerCase(), 'token': token.trim()},
     );
   }
 
