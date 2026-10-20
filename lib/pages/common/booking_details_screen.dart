@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../config/app_config.dart';
 import '../../models/local_booking.dart';
 import '../../models/trail_experience.dart';
@@ -116,39 +117,53 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _review(LocalBooking booking) async {
-    var rating = 5;
+    var trailRating = 0;
+    var guideRating = 0;
+    var agencyRating = 0;
     final comment = TextEditingController();
-    final data = await showDialog<(int, String)?>(
+    final data = await showDialog<(int, int, int?, String)?>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Avaliar roteiro'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Wrap(
-                children: List.generate(
-                  5,
-                  (index) => IconButton(
-                    tooltip: '${index + 1} estrela${index == 0 ? '' : 's'}',
-                    onPressed: () => setDialogState(() => rating = index + 1),
-                    icon: Icon(
-                      index < rating ? Icons.star_rounded : Icons.star_border,
-                      color: AppColors.earth,
-                    ),
+          title: const Text('Avaliar experiência'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _RatingSelector(
+                  label: 'Roteiro',
+                  value: trailRating,
+                  onChanged: (value) =>
+                      setDialogState(() => trailRating = value),
+                ),
+                _RatingSelector(
+                  label: 'Guia',
+                  value: guideRating,
+                  onChanged: (value) =>
+                      setDialogState(() => guideRating = value),
+                ),
+                if (booking.agencyId.isNotEmpty)
+                  _RatingSelector(
+                    label: booking.agencyName.isEmpty
+                        ? 'Agência'
+                        : booking.agencyName,
+                    value: agencyRating,
+                    onChanged: (value) =>
+                        setDialogState(() => agencyRating = value),
+                  ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: comment,
+                  maxLength: 500,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Comentário',
+                    alignLabelWithHint: true,
                   ),
                 ),
-              ),
-              TextField(
-                controller: comment,
-                maxLength: 500,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Comentário',
-                  alignLabelWithHint: true,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -156,8 +171,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               child: const Text('Cancelar'),
             ),
             FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, (rating, comment.text.trim())),
+              onPressed: () => Navigator.pop(dialogContext, (
+                trailRating,
+                guideRating,
+                booking.agencyId.isEmpty ? null : agencyRating,
+                comment.text.trim(),
+              )),
               child: const Text('Publicar avaliação'),
             ),
           ],
@@ -169,15 +188,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final saved = await runAction(
       context,
       () => AppStore.instance.reviewTrail(
+        bookingId: booking.id,
         trailId: booking.trailId,
-        rating: data.$1,
-        comment: data.$2,
+        trailRating: data.$1,
+        guideRating: data.$2,
+        agencyRating: data.$3,
+        comment: data.$4,
       ),
     );
     if (saved && mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Avaliação publicada.')));
+    }
+  }
+
+  Future<void> _contactGuide(LocalBooking booking) async {
+    var phone = booking.guidePhone.replaceAll(RegExp(r'\D'), '');
+    if (phone.length == 10 || phone.length == 11) phone = '55$phone';
+    if (phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('O responsável não informou WhatsApp.')),
+        );
+      }
+      return;
+    }
+    final uri = Uri.https('wa.me', '/$phone', {
+      'text':
+          'Olá! Minha reserva no roteiro ${booking.trailName} foi confirmada. Identificação: ${booking.id}.',
+    });
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o WhatsApp.')),
+      );
     }
   }
 
@@ -354,12 +399,33 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       ),
                     ),
                   ],
-                  if (normalizedStatus == 'Concluído' && !isOperator) ...[
+                  if (!isOperator &&
+                      BookingStatus.isConfirmed(booking.status)) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _contactGuide(booking),
+                      icon: const Icon(Icons.chat_outlined),
+                      label: const Text('Contatar guia pelo WhatsApp'),
+                    ),
+                  ],
+                  if (normalizedStatus == 'Concluído' &&
+                      !isOperator &&
+                      !booking.evaluated) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => _review(booking),
                       icon: const Icon(Icons.star_outline_rounded),
-                      label: const Text('Avaliar roteiro'),
+                      label: const Text('Avaliar roteiro, guia e agência'),
+                    ),
+                  ],
+                  if (normalizedStatus == 'Concluído' &&
+                      !isOperator &&
+                      booking.evaluated) ...[
+                    const SizedBox(height: 12),
+                    const ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.check_circle_outline),
+                      title: Text('Avaliação enviada'),
                     ),
                   ],
                   if (isOperator &&
@@ -390,6 +456,63 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       ),
     );
   }
+}
+
+class _RatingSelector extends StatelessWidget {
+  const _RatingSelector({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            Text('$value/5'),
+          ],
+        ),
+        Wrap(
+          spacing: 0,
+          children: [
+            IconButton(
+              tooltip: '0 estrelas',
+              onPressed: () => onChanged(0),
+              icon: Icon(
+                Icons.star_outline_rounded,
+                color: value == 0 ? AppColors.earth : AppColors.muted,
+              ),
+            ),
+            ...List.generate(
+              5,
+              (index) => IconButton(
+                tooltip: '${index + 1} estrela${index == 0 ? '' : 's'}',
+                onPressed: () => onChanged(index + 1),
+                icon: Icon(
+                  index < value ? Icons.star_rounded : Icons.star_border,
+                  color: AppColors.earth,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class _Information extends StatelessWidget {

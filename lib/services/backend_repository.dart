@@ -124,6 +124,10 @@ class BackendRepository {
             startsAt: row['data_hora_inicio']?.toString() ?? '',
             endsAt: row['data_hora_fim']?.toString() ?? '',
             createdAt: DateTime.tryParse(row['createdAt']?.toString() ?? ''),
+            guidePhone: row['telefone_guia']?.toString() ?? '',
+            agencyId: row['id_agencia']?.toString() ?? '',
+            agencyName: row['nome_agencia']?.toString() ?? '',
+            evaluated: row['avaliado'] == true,
           );
         }).toList()..sort((a, b) {
           final activeOrder = (BookingStatus.isActive(b.status) ? 1 : 0)
@@ -258,13 +262,45 @@ class BackendRepository {
   }
 
   Future<void> addReview({
+    required String bookingId,
     required String trailId,
-    required int rating,
+    required int trailRating,
+    required int guideRating,
+    int? agencyRating,
     required String comment,
   }) async {
     await api.post(
       '/api/avaliacoes/',
-      body: {'id_trilha': trailId, 'nota': rating, 'comentario': comment},
+      body: {
+        'id_agendamento': bookingId,
+        'id_trilha': trailId,
+        'nota': trailRating,
+        'nota_guia': guideRating,
+        'nota_agencia': ?agencyRating,
+        'comentario': comment,
+      },
+    );
+  }
+
+  Future<void> respondBooking(String bookingId, String status) async {
+    await api.put(
+      '/api/agendamentos/${Uri.encodeComponent(bookingId)}/responder',
+      body: {'status': status},
+    );
+  }
+
+  Future<void> finishDeparture({
+    required String trailId,
+    required String departureId,
+    required String date,
+  }) async {
+    await api.put(
+      '/api/agendamentos/finalizar-saida',
+      body: {
+        'id_trilha': trailId,
+        if (departureId.isNotEmpty) 'id_data': departureId,
+        if (departureId.isEmpty) 'data_agendada': apiDate(date),
+      },
     );
   }
 

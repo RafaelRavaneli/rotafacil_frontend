@@ -142,7 +142,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                         trailName: trail.name,
                         personName: AppStore.instance.tourist.name,
                         date: _apiDate(departure.startsAt),
-                        status: 'Confirmado',
+                        status: BookingStatus.pending,
                         roleView: 'turista',
                         valuePaid: trail.price,
                         departureId: departure.id,
@@ -159,7 +159,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   if (!sheetContext.mounted) return;
                   Navigator.pop(sheetContext);
                 },
-                child: const Text('Confirmar'),
+                child: const Text('Solicitar reserva'),
               ),
             ],
           ),
@@ -170,7 +170,11 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
     if (!context.mounted || !confirmed) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reserva salva. Confira a aba Reservas.')),
+      const SnackBar(
+        content: Text(
+          'Solicitação enviada. Aguarde a confirmação do responsável.',
+        ),
+      ),
     );
   }
 

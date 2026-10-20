@@ -1,9 +1,10 @@
 class BookingStatus {
   const BookingStatus._();
 
-  static const String pending = 'Pendente';
+  static const String pending = 'Aguardando confirmação';
   static const String confirmed = 'Confirmado';
   static const String cancelled = 'Cancelado';
+  static const String rejected = 'Recusado';
 
   static String normalize(String? value) {
     final raw = value?.trim() ?? '';
@@ -15,6 +16,8 @@ class BookingStatus {
     switch (raw.toLowerCase()) {
       case 'pendente':
       case 'pending':
+      case 'aguardando confirmação':
+      case 'aguardando confirmacao':
         return pending;
 
       case 'confirmado':
@@ -34,6 +37,10 @@ class BookingStatus {
       case 'cancelled':
       case 'canceled':
         return cancelled;
+      case 'recusado':
+      case 'recusada':
+      case 'rejected':
+        return rejected;
 
       default:
         return raw;
@@ -50,7 +57,7 @@ class BookingStatus {
 
   static bool isActive(String? value) {
     final status = normalize(value);
-    return status != cancelled && status != 'Concluído';
+    return status != cancelled && status != rejected && status != 'Concluído';
   }
 
   static bool canCancel(String? value) {
@@ -60,6 +67,10 @@ class BookingStatus {
 
   static bool isCancelled(String? value) {
     return normalize(value) == cancelled;
+  }
+
+  static bool isCompleted(String? value) {
+    return normalize(value) == 'Concluído';
   }
 }
 
@@ -79,6 +90,10 @@ class LocalBooking {
     this.startsAt = '',
     this.endsAt = '',
     this.createdAt,
+    this.guidePhone = '',
+    this.agencyId = '',
+    this.agencyName = '',
+    this.evaluated = false,
   }) : _status = BookingStatus.normalize(status);
 
   final String id;
@@ -95,6 +110,10 @@ class LocalBooking {
   final String startsAt;
   final String endsAt;
   final DateTime? createdAt;
+  final String guidePhone;
+  final String agencyId;
+  final String agencyName;
+  final bool evaluated;
 
   String get status => _status;
 
@@ -117,6 +136,10 @@ class LocalBooking {
     'startsAt': startsAt,
     'endsAt': endsAt,
     'createdAt': createdAt?.toIso8601String(),
+    'guidePhone': guidePhone,
+    'agencyId': agencyId,
+    'agencyName': agencyName,
+    'evaluated': evaluated,
   };
 
   factory LocalBooking.fromJson(Map<String, dynamic> json) {
@@ -138,6 +161,12 @@ class LocalBooking {
       createdAt: DateTime.tryParse(
         (json['createdAt'] ?? json['criado_em'])?.toString() ?? '',
       ),
+      guidePhone:
+          (json['guidePhone'] ?? json['telefone_guia'])?.toString() ?? '',
+      agencyId: (json['agencyId'] ?? json['id_agencia'])?.toString() ?? '',
+      agencyName:
+          (json['agencyName'] ?? json['nome_agencia'])?.toString() ?? '',
+      evaluated: json['evaluated'] == true || json['avaliado'] == true,
     );
   }
 }

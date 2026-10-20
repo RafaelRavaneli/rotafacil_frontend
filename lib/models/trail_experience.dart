@@ -11,7 +11,11 @@ class TrailReview {
 
   factory TrailReview.fromJson(Map<String, dynamic> json) => TrailReview(
     userName: json['nome_usuario']?.toString() ?? 'Participante',
-    rating: int.tryParse(json['nota']?.toString() ?? '') ?? 0,
+    rating:
+        int.tryParse(
+          (json['nota_roteiro'] ?? json['nota'])?.toString() ?? '',
+        ) ??
+        0,
     comment: json['comentario']?.toString() ?? '',
   );
 }

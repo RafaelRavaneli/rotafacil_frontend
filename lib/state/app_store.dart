@@ -730,17 +730,57 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> reviewTrail({
+    required String bookingId,
     required String trailId,
-    required int rating,
+    required int trailRating,
+    required int guideRating,
+    int? agencyRating,
     required String comment,
   }) async {
     if (!useBackend) {
       throw StateError('Avaliações exigem conexão com o servidor.');
     }
     await _backend.addReview(
+      bookingId: bookingId,
       trailId: trailId,
-      rating: rating,
+      trailRating: trailRating,
+      guideRating: guideRating,
+      agencyRating: agencyRating,
       comment: comment,
+    );
+    await refreshBackend();
+  }
+
+  Future<void> respondBooking(LocalBooking booking, String status) async {
+    if (!useBackend) {
+      booking.status = status;
+      notifyListeners();
+      return;
+    }
+    await _backend.respondBooking(booking.id, status);
+    await refreshBackend();
+  }
+
+  Future<void> finishDeparture({
+    required Trail trail,
+    required TrailDeparture departure,
+  }) async {
+    if (!useBackend) {
+      for (final booking in bookings.where(
+        (item) =>
+            item.trailId == trail.id &&
+            item.departureId == departure.id &&
+            BookingStatus.isConfirmed(item.status),
+      )) {
+        booking.status = 'Concluído';
+      }
+      notifyListeners();
+      return;
+    }
+    await _backend.finishDeparture(
+      trailId: trail.id,
+      departureId: departure.id.startsWith('legacy-') ? '' : departure.id,
+      date: departure.startsAt.toIso8601String(),
     );
     await refreshBackend();
   }

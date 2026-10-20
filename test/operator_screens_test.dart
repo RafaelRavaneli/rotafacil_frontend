@@ -290,6 +290,128 @@ void main() {
     expect(find.text('Bruno'), findsNothing);
   }, skip: AppConfig.useBackend);
 
+  testWidgets('Guia confirma solicitação pendente nos inscritos', (
+    tester,
+  ) async {
+    store.bookings
+      ..clear()
+      ..add(reservation(status: 'Pendente'));
+    await tester.pumpWidget(
+      app(TrailParticipantsScreen(trail: store.trails.single)),
+    );
+    expect(find.textContaining('Aguardando confirmação'), findsOneWidget);
+    expect(find.text('Confirmar'), findsOneWidget);
+    expect(find.text('Recusar'), findsOneWidget);
+    await tester.tap(find.text('Confirmar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmar').last);
+    await tester.pumpAndSettle();
+    expect(store.bookings.single.status, BookingStatus.confirmed);
+  }, skip: AppConfig.useBackend);
+
+  testWidgets('Finalização da saída conclui somente a data selecionada', (
+    tester,
+  ) async {
+    final trail = Trail.fromJson({
+      'id': 't1',
+      'nome': 'Roteiro com datas',
+      'cidade': 'Maringá',
+      'estado': 'PR',
+      'datas': [
+        {
+          'id': 'd1',
+          'data_hora_inicio': '2026-10-10T08:00',
+          'data_hora_fim': '2026-10-10T16:00',
+        },
+        {
+          'id': 'd2',
+          'data_hora_inicio': '2026-11-10T08:00',
+          'data_hora_fim': '2026-11-10T16:00',
+        },
+      ],
+    });
+    store.bookings
+      ..clear()
+      ..addAll([
+        LocalBooking(
+          id: 'b1',
+          trailId: 't1',
+          trailName: trail.name,
+          personName: 'Ana',
+          date: '2026-10-10',
+          status: 'Confirmado',
+          roleView: 'guia',
+          departureId: 'd1',
+        ),
+        LocalBooking(
+          id: 'b2',
+          trailId: 't1',
+          trailName: trail.name,
+          personName: 'Bruno',
+          date: '2026-11-10',
+          status: 'Confirmado',
+          roleView: 'guia',
+          departureId: 'd2',
+        ),
+      ]);
+    await tester.pumpWidget(app(TrailParticipantsScreen(trail: trail)));
+    await tester.tap(find.text('Todas as datas'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('10/10/2026 às 08:00').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finalizar esta saída'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Finalizar saída'));
+    await tester.pumpAndSettle();
+    expect(store.bookings.first.status, 'Concluído');
+    expect(store.bookings.last.status, 'Confirmado');
+  }, skip: AppConfig.useBackend);
+
+  testWidgets(
+    'Detalhe libera WhatsApp após confirmação e avaliação ao concluir',
+    (tester) async {
+      store.bookings
+        ..clear()
+        ..add(
+          LocalBooking(
+            id: 'r1',
+            trailId: 't1',
+            trailName: 'Roteiro avaliado',
+            personName: 'Pessoa de teste',
+            date: '10/10/2026',
+            status: 'Confirmado',
+            roleView: 'turista',
+            guidePhone: '(44) 99999-0000',
+            agencyId: 'a1',
+            agencyName: 'Agência Teste',
+          ),
+        );
+      await tester.pumpWidget(app(const BookingDetailsScreen(bookingId: 'r1')));
+      await tester.scrollUntilVisible(
+        find.text('Contatar guia pelo WhatsApp'),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Contatar guia pelo WhatsApp'), findsOneWidget);
+      expect(find.textContaining('Avaliar roteiro'), findsNothing);
+
+      store.bookings.single.status = 'Concluído';
+      store.notifyListeners();
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Avaliar roteiro, guia e agência'),
+        250,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Avaliar roteiro, guia e agência'));
+      await tester.pumpAndSettle();
+      expect(find.text('Roteiro'), findsOneWidget);
+      expect(find.text('Guia'), findsOneWidget);
+      expect(find.text('Agência Teste'), findsOneWidget);
+      expect(find.text('0/5'), findsNWidgets(3));
+    },
+  );
+
   for (final width in [320.0, 1024.0]) {
     for (final entry in <String, Widget>{
       'guia': const OperatorDashboard(isAgency: false),
