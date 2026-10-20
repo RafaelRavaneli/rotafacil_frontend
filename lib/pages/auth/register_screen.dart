@@ -1,3 +1,4 @@
+import '../../widgets/brazil_location_fields.dart';
 import '../../navigation/auth_page_route.dart';
 import '../../widgets/auth_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -296,18 +297,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hint: '(00) 00000-0000',
           keyboard: TextInputType.phone,
         ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: _field('Cidade', cityController, hint: 'Maringá'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: BrazilLocationFields(
+            enabled: !loading,
+            city: cityController,
+            state: stateController,
+            labelsAbove: true,
+            labelStyle: const TextStyle(
+              color: AuthScaffold.accent,
+              fontSize: 13,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _field('UF', stateController, hint: 'PR', maxLength: 2),
-            ),
-          ],
+          ),
         ),
         if (needsDocument)
           _field(

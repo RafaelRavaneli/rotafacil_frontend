@@ -1,3 +1,5 @@
+import '../../services/brazil_locations.dart';
+import '../../widgets/brazil_location_fields.dart';
 import '../../utils/auth_error_message.dart';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -222,23 +224,37 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     }
   }
 
-  void _selectGeocodingResult(Map<String, dynamic> result) {
+  Future<void> _selectGeocodingResult(Map<String, dynamic> result) async {
     final lat = double.tryParse(result['latitude']?.toString() ?? '');
     final lon = double.tryParse(result['longitude']?.toString() ?? '');
     if (lat == null || lon == null) return;
+    final states = await BrazilLocations.load();
+    if (!mounted) return;
     setState(() {
       latitude = lat;
       longitude = lon;
       meetingPointController.text = result['label']?.toString() ?? '';
-      final city = result['cidade']?.toString().trim() ?? '';
-      final state = result['estado']?.toString().trim() ?? '';
-      if (cityController.text.trim().isEmpty && city.isNotEmpty) {
-        cityController.text = city;
-      }
-      if (stateController.text.trim().isEmpty && state.isNotEmpty) {
-        stateController.text = state.length > 2
-            ? state.substring(0, 2).toUpperCase()
-            : state.toUpperCase();
+      final selectedState = BrazilLocations.findState(
+        states,
+        stateController.text.trim().isEmpty
+            ? result['estado']?.toString() ?? ''
+            : stateController.text,
+      );
+      if (selectedState != null) {
+        if (stateController.text.trim().isEmpty) {
+          stateController.text = selectedState.uf;
+        }
+        if (cityController.text.trim().isEmpty) {
+          final query = BrazilLocations.normalize(
+            result['cidade']?.toString() ?? '',
+          );
+          for (final city in selectedState.cities) {
+            if (BrazilLocations.normalize(city) == query) {
+              cityController.text = city;
+              break;
+            }
+          }
+        }
       }
     });
     mapController.move(LatLng(lat, lon), 16);
@@ -271,7 +287,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
         throw StateError('Nenhum local encontrado para essa busca.');
       }
       if (results.length == 1) {
-        _selectGeocodingResult(results.first);
+        await _selectGeocodingResult(results.first);
         return;
       }
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
@@ -291,7 +307,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           ),
         ),
       );
-      if (selected != null && mounted) _selectGeocodingResult(selected);
+      if (selected != null && mounted) await _selectGeocodingResult(selected);
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -673,28 +689,10 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 label: const Text('Adicionar esta data'),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: cityController,
-                      decoration: const InputDecoration(labelText: 'Cidade'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: stateController,
-                      maxLength: 2,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: const InputDecoration(
-                        labelText: 'UF',
-                        counterText: '',
-                      ),
-                    ),
-                  ),
-                ],
+              BrazilLocationFields(
+                enabled: !saving,
+                city: cityController,
+                state: stateController,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(

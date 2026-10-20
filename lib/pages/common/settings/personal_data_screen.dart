@@ -1,3 +1,4 @@
+import '../../../widgets/brazil_location_fields.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -399,29 +400,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: city,
-                    decoration: const InputDecoration(labelText: 'Cidade'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: state,
-                    maxLength: 2,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: 'UF',
-                      counterText: '',
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            BrazilLocationFields(enabled: !saving, city: city, state: state),
             if (needsDocument) ...[
               const SizedBox(height: 18),
               const Text(

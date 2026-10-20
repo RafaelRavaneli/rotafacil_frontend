@@ -1,3 +1,4 @@
+import '../../widgets/brazil_location_fields.dart';
 import 'dart:async';
 import 'package:flutter_map/flutter_map.dart' show TileProvider;
 import 'package:flutter/material.dart';
@@ -315,33 +316,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: city,
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        labelText: 'Cidade',
-                        prefixIcon: Icon(Icons.location_city_outlined),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: state,
-                      maxLength: 2,
-                      textCapitalization: TextCapitalization.characters,
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        labelText: 'UF',
-                        counterText: '',
-                      ),
-                    ),
-                  ),
-                ],
+              BrazilLocationFields(
+                city: city,
+                state: state,
+                onChanged: () => setState(() {}),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
