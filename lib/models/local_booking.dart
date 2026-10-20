@@ -78,6 +78,7 @@ class LocalBooking {
     this.departureId = '',
     this.startsAt = '',
     this.endsAt = '',
+    this.createdAt,
   }) : _status = BookingStatus.normalize(status);
 
   final String id;
@@ -93,6 +94,7 @@ class LocalBooking {
   final String departureId;
   final String startsAt;
   final String endsAt;
+  final DateTime? createdAt;
 
   String get status => _status;
 
@@ -114,6 +116,7 @@ class LocalBooking {
     'departureId': departureId,
     'startsAt': startsAt,
     'endsAt': endsAt,
+    'createdAt': createdAt?.toIso8601String(),
   };
 
   factory LocalBooking.fromJson(Map<String, dynamic> json) {
@@ -132,6 +135,9 @@ class LocalBooking {
       startsAt:
           (json['startsAt'] ?? json['data_hora_inicio'])?.toString() ?? '',
       endsAt: (json['endsAt'] ?? json['data_hora_fim'])?.toString() ?? '',
+      createdAt: DateTime.tryParse(
+        (json['createdAt'] ?? json['criado_em'])?.toString() ?? '',
+      ),
     );
   }
 }

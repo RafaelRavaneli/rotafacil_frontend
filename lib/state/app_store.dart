@@ -605,7 +605,7 @@ class AppStore extends ChangeNotifier {
 
   Future<void> addBooking(LocalBooking booking) async {
     if (useBackend) {
-      await ApiClient.instance.post(
+      final response = await ApiClient.instance.post(
         '/api/agendamentos/',
         body: {
           'id_trilha': booking.trailId,
@@ -615,6 +615,17 @@ class AppStore extends ChangeNotifier {
         },
       );
       await refreshBackend();
+      final createdId = response is Map ? response['id']?.toString() : null;
+      if (createdId != null && createdId.isNotEmpty) {
+        final created = bookings
+            .where((item) => item.id == createdId)
+            .firstOrNull;
+        if (created == null || !BookingStatus.isActive(created.status)) {
+          throw StateError(
+            'A reserva foi criada, mas não voltou como ativa. Atualize a tela antes de tentar novamente.',
+          );
+        }
+      }
       return;
     }
 

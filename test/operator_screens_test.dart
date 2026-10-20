@@ -367,6 +367,37 @@ void main() {
     expect(find.text('Nova reserva remota'), findsOneWidget);
   });
 
+  testWidgets('Reserva ativa aparece antes do histórico cancelado', (
+    tester,
+  ) async {
+    store.bookings.insert(
+      0,
+      LocalBooking(
+        id: 'cancelada-antiga',
+        trailId: 't1',
+        trailName: 'Reserva anterior',
+        personName: 'Pessoa de teste',
+        date: '25/10/2026',
+        status: 'Cancelado',
+        roleView: 'turista',
+      ),
+    );
+
+    await tester.pumpWidget(app(const BookingsScreen(role: 'turista')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reservas ativas'), findsOneWidget);
+    expect(find.text('Histórico'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Reservas ativas')).dy,
+      lessThan(tester.getTopLeft(find.text('Histórico')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('Confirmado')).dy,
+      lessThan(tester.getTopLeft(find.text('Cancelado')).dy),
+    );
+  });
+
   testWidgets(
     'Falha de atualização mantém reservas e permite tentar novamente',
     (tester) async {

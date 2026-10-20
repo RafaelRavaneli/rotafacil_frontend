@@ -103,26 +103,35 @@ class BackendRepository {
       }
     }
     final byId = {for (final trail in trails) trail.id: trail};
-    final bookings = bookingRows.values.map((row) {
-      final trail = byId[row['id_trilha']];
-      return LocalBooking(
-        id: row['id'].toString(),
-        trailId: row['id_trilha'].toString(),
-        trailName: trail?.name ?? 'Roteiro indisponível',
-        personName:
-            row['nome_usuario']?.toString() ??
-            (row['id_usuario'] == id ? user.name : 'Participante'),
-        date: row['data_agendada']?.toString() ?? '',
-        status: row['status']?.toString() ?? '',
-        roleView: role,
-        valuePaid: double.tryParse(row['valor_pago']?.toString() ?? '') ?? 0,
-        personId: row['id_usuario']?.toString() ?? '',
-        guideId: row['id_guia']?.toString() ?? '',
-        departureId: row['id_data']?.toString() ?? '',
-        startsAt: row['data_hora_inicio']?.toString() ?? '',
-        endsAt: row['data_hora_fim']?.toString() ?? '',
-      );
-    }).toList();
+    final bookings =
+        bookingRows.values.map((row) {
+          final trail = byId[row['id_trilha']];
+          return LocalBooking(
+            id: row['id'].toString(),
+            trailId: row['id_trilha'].toString(),
+            trailName: trail?.name ?? 'Roteiro indisponível',
+            personName:
+                row['nome_usuario']?.toString() ??
+                (row['id_usuario'] == id ? user.name : 'Participante'),
+            date: row['data_agendada']?.toString() ?? '',
+            status: row['status']?.toString() ?? '',
+            roleView: role,
+            valuePaid:
+                double.tryParse(row['valor_pago']?.toString() ?? '') ?? 0,
+            personId: row['id_usuario']?.toString() ?? '',
+            guideId: row['id_guia']?.toString() ?? '',
+            departureId: row['id_data']?.toString() ?? '',
+            startsAt: row['data_hora_inicio']?.toString() ?? '',
+            endsAt: row['data_hora_fim']?.toString() ?? '',
+            createdAt: DateTime.tryParse(row['createdAt']?.toString() ?? ''),
+          );
+        }).toList()..sort((a, b) {
+          final activeOrder = (BookingStatus.isActive(b.status) ? 1 : 0)
+              .compareTo(BookingStatus.isActive(a.status) ? 1 : 0);
+          if (activeOrder != 0) return activeOrder;
+          return (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+              .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0));
+        });
     final guides = <LocalGuide>[];
     if (role == 'agencia') {
       final invites = records(await api.get('/api/convites-guias'));

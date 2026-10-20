@@ -47,9 +47,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   DateTimeRange? _bookingRange(LocalBooking booking, List<Trail> trails) {
     final trail = _trailFor(booking, trails);
-    final start = trail?.startsAt ?? _parseDate(booking.date);
+    final start =
+        DateTime.tryParse(booking.startsAt) ??
+        _parseDate(booking.date) ??
+        trail?.startsAt;
     if (start == null) return null;
-    final end = trail?.endsAt ?? start;
+    final end = DateTime.tryParse(booking.endsAt) ?? start;
     return DateTimeRange(
       start: DateTime(start.year, start.month, start.day),
       end: DateTime(end.year, end.month, end.day),
@@ -119,6 +122,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     final range = _bookingRange(booking, store.trails);
                     return range != null && _overlaps(range, period!);
                   }).toList();
+            final activeBookings = visibleBookings
+                .where((booking) => BookingStatus.isActive(booking.status))
+                .toList();
+            final historyBookings = visibleBookings
+                .where((booking) => !BookingStatus.isActive(booking.status))
+                .toList();
 
             return Align(
               alignment: Alignment.topCenter,
@@ -210,7 +219,43 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           child: Text('Nenhum agendamento neste período.'),
                         ),
                       ),
-                    ...visibleBookings.map(
+                    if (activeBookings.isNotEmpty) ...[
+                      const Text(
+                        'Reservas ativas',
+                        style: TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    ...activeBookings.map(
+                      (booking) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: BookingSummaryCard(
+                          booking: booking,
+                          onTap: () => AppRoutes.push(
+                            context,
+                            AppRoutes.booking(booking.id),
+                            (_) => BookingDetailsScreen(bookingId: booking.id),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (historyBookings.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Histórico',
+                        style: TextStyle(
+                          color: AppColors.ink,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    ...historyBookings.map(
                       (booking) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: BookingSummaryCard(
