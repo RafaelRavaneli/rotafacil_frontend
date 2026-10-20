@@ -1,3 +1,4 @@
+import '../../utils/date_time_format.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -205,6 +206,15 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
                               Text(
                                 '${document.documentType} • ${document.fileName}',
                               ),
+                              Text(
+                                document.cadasturNumber.isEmpty
+                                    ? 'Cadastur não informado'
+                                    : 'Cadastur: ${document.cadasturNumber}',
+                              ),
+                              if (document.cadasturValidUntil.isNotEmpty)
+                                Text(
+                                  'Validade do Cadastur: ${formatBrazilianDate(document.cadasturValidUntil)}',
+                                ),
                               if (document.reviewNote.isNotEmpty)
                                 Text('Observação: ${document.reviewNote}'),
                               const SizedBox(height: 10),

@@ -263,9 +263,11 @@ void main() {
         email: 'guia@example.test',
         password: 'senha123',
         document: '529.982.247-25',
+        cadasturNumber: '12.345.678/0001-90',
       );
       expect(result.userId, 'u1');
       expect(jsonDecode(requests[0].body)['documento'], '52998224725');
+      expect(jsonDecode(requests[0].body)['cadastur_numero'], '12345678000190');
       expect(jsonDecode(requests[0].body).containsKey('cpf'), false);
       await gateway.requestPasswordReset('guia@example.test');
       expect(requests[1].url.path, '/api/auth/senha/solicitar');

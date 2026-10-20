@@ -207,6 +207,12 @@ void main() {
         find.byType(TextField).at(4),
         '11.222.333/0001-81',
       );
+      await tester.ensureVisible(find.byIcon(Icons.arrow_forward));
+      await tester.tap(find.byIcon(Icons.arrow_forward));
+      await tester.pumpAndSettle();
+      expect(find.text('E-mail'), findsNothing);
+      await tester.enterText(find.byType(TextField).at(5), '123456789');
+      await tester.ensureVisible(find.byIcon(Icons.arrow_forward));
       await tester.tap(find.byIcon(Icons.arrow_forward));
       await tester.pumpAndSettle();
       expect(find.text('E-mail'), findsOneWidget);

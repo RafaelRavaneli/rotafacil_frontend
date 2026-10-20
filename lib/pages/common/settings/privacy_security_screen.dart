@@ -1,3 +1,6 @@
+import '../../../utils/cadastur_validator.dart';
+import '../../../utils/date_time_format.dart';
+import '../../../widgets/cadastur_fields.dart';
 import 'package:flutter/material.dart';
 import '../../../services/auth_gateway.dart';
 import '../../../services/notification_service.dart';
@@ -157,6 +160,8 @@ class _ChangeAccountTypeDialog extends StatefulWidget {
 
 class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
   final document = TextEditingController();
+  final cadastur = TextEditingController();
+  final cadasturValidity = TextEditingController();
   late UserRole selected;
   bool loading = false;
 
@@ -170,6 +175,8 @@ class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
   @override
   void dispose() {
     document.dispose();
+    cadastur.dispose();
+    cadasturValidity.dispose();
     super.dispose();
   }
 
@@ -187,11 +194,29 @@ class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
       return;
     }
 
+    if (needsDocument) {
+      final error = CadasturValidator.error(cadastur.text);
+      if (error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+        return;
+      }
+    }
     setState(() => loading = true);
     final changed = await runAction(
       context,
       () => AppStore.instance.changeAccountType(
         type: selected.apiValue,
+        cadasturNumber: needsDocument
+            ? CadasturValidator.normalize(cadastur.text)
+            : null,
+        cadasturValidUntil: needsDocument
+            ? (parseAppDateTime(
+                    cadasturValidity.text,
+                  )?.toIso8601String().split('T').first ??
+                  '')
+            : null,
         document: needsDocument
             ? DocumentValidator.digitsOnly(document.text)
             : null,
@@ -221,47 +246,55 @@ class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
     final needsDocument = selected != UserRole.tourist;
     return AlertDialog(
       title: const Text('Alterar tipo da conta'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Atividades e vínculos do perfil atual serão encerrados. Reservas históricas permanecem.',
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<UserRole>(
-            initialValue: selected,
-            items: options
-                .map(
-                  (item) =>
-                      DropdownMenuItem(value: item, child: Text(item.title)),
-                )
-                .toList(),
-            onChanged: loading
-                ? null
-                : (value) {
-                    if (value == null) return;
-                    setState(() {
-                      selected = value;
-                      document.clear();
-                    });
-                  },
-            decoration: const InputDecoration(labelText: 'Novo tipo'),
-          ),
-          if (needsDocument) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: document,
-              enabled: !loading,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: DocumentValidator.labelForRole(selected.title),
-              ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Atividades e vínculos do perfil atual serão encerrados. Reservas históricas permanecem.',
             ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<UserRole>(
+              initialValue: selected,
+              items: options
+                  .map(
+                    (item) =>
+                        DropdownMenuItem(value: item, child: Text(item.title)),
+                  )
+                  .toList(),
+              onChanged: loading
+                  ? null
+                  : (value) {
+                      if (value == null) return;
+                      setState(() {
+                        selected = value;
+                        document.clear();
+                      });
+                    },
+              decoration: const InputDecoration(labelText: 'Novo tipo'),
+            ),
+            if (needsDocument) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: document,
+                enabled: !loading,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: DocumentValidator.labelForRole(selected.title),
+                ),
+              ),
+              const SizedBox(height: 12),
+              CadasturFields(
+                number: cadastur,
+                validUntil: cadasturValidity,
+                enabled: !loading,
+              ),
+            ],
+            const SizedBox(height: 12),
+            const Text('Após a alteração, faça login novamente.'),
           ],
-          const SizedBox(height: 12),
-          const Text('Após a alteração, faça login novamente.'),
-        ],
+        ),
       ),
       actions: [
         TextButton(

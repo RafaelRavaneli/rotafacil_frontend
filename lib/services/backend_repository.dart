@@ -359,10 +359,17 @@ class BackendRepository {
     required String userId,
     required String type,
     String? document,
+    String? cadasturNumber,
+    String? cadasturValidUntil,
   }) async {
     await api.put(
       '/api/usuarios/${Uri.encodeComponent(userId)}/tipo',
-      body: {'tipo': type, 'documento': ?document},
+      body: {
+        'tipo': type,
+        'documento': ?document,
+        'cadastur_numero': ?cadasturNumber,
+        'cadastur_validade': ?cadasturValidUntil,
+      },
     );
   }
 

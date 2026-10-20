@@ -12,6 +12,8 @@ class ProfessionalDocument {
     required this.createdAt,
     this.userName = '',
     this.userEmail = '',
+    this.cadasturNumber = '',
+    this.cadasturValidUntil = '',
   });
 
   final String id;
@@ -26,6 +28,8 @@ class ProfessionalDocument {
   final DateTime? createdAt;
   final String userName;
   final String userEmail;
+  final String cadasturNumber;
+  final String cadasturValidUntil;
 
   factory ProfessionalDocument.fromJson(Map<String, dynamic> json) {
     return ProfessionalDocument(
@@ -41,6 +45,8 @@ class ProfessionalDocument {
       createdAt: DateTime.tryParse(json['criado_em']?.toString() ?? ''),
       userName: json['nome_usuario']?.toString() ?? '',
       userEmail: json['email_usuario']?.toString() ?? '',
+      cadasturNumber: json['cadastur_numero']?.toString() ?? '',
+      cadasturValidUntil: json['cadastur_validade']?.toString() ?? '',
     );
   }
 }

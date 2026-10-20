@@ -10,6 +10,9 @@ import '../../../state/app_store.dart';
 import '../../../theme/app_colors.dart';
 import '../../../utils/document_validator.dart';
 import '../../../widgets/profile_avatar.dart';
+import '../../../widgets/cadastur_fields.dart';
+import '../../../utils/cadastur_validator.dart';
+import '../../../utils/date_time_format.dart';
 
 class PersonalDataScreen extends StatefulWidget {
   const PersonalDataScreen({super.key, required this.role});
@@ -27,6 +30,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   late final TextEditingController city;
   late final TextEditingController state;
   late final TextEditingController document;
+  late final TextEditingController cadastur;
+  late final TextEditingController cadasturValidity;
   late final TextEditingController emergencyName;
   late final TextEditingController emergencyPhone;
   late final TextEditingController professionalDescription;
@@ -71,6 +76,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       text: DocumentValidator.formatForRole(widget.role, user.document),
     );
     emergencyName = TextEditingController(text: user.emergencyContactName);
+    cadastur = TextEditingController(text: user.cadasturNumber);
+    cadasturValidity = TextEditingController(
+      text: formatBrazilianDate(user.cadasturValidUntil),
+    );
     emergencyPhone = TextEditingController(text: user.emergencyContactPhone);
     professionalDescription = TextEditingController(
       text: user.professionalDescription,
@@ -88,6 +97,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     'city': city.text,
     'state': state.text,
     'document': document.text,
+    'cadastur': cadastur.text,
+    'cadasturValidity': cadasturValidity.text,
     'emergencyName': emergencyName.text,
     'emergencyPhone': emergencyPhone.text,
     'professionalDescription': professionalDescription.text,
@@ -146,6 +157,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     city.dispose();
     state.dispose();
     document.dispose();
+    cadastur.dispose();
+    cadasturValidity.dispose();
     emergencyName.dispose();
     emergencyPhone.dispose();
     professionalDescription.dispose();
@@ -198,12 +211,27 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     if (needsDocument &&
         !DocumentValidator.isValidForRole(widget.role, document.text)) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('$documentLabel inválido.')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$documentLabel inválido.')));
 
       return;
     }
 
+    final hasCadastur =
+        needsDocument &&
+        (cadastur.text.trim().isNotEmpty ||
+            cadasturValidity.text.isNotEmpty ||
+            initialValues['cadastur']!.isNotEmpty);
+    final cadasturError = hasCadastur
+        ? CadasturValidator.error(cadastur.text)
+        : null;
+    if (cadasturError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(cadasturError)));
+      return;
+    }
     setState(() => saving = true);
 
     final normalizedDocument = DocumentValidator.digitsOnly(document.text);
@@ -217,6 +245,15 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         city: city.text.trim(),
         state: state.text.trim().toUpperCase(),
         document: needsDocument ? normalizedDocument : null,
+        cadasturNumber: hasCadastur
+            ? CadasturValidator.normalize(cadastur.text)
+            : null,
+        cadasturValidUntil: hasCadastur
+            ? (parseAppDateTime(
+                    cadasturValidity.text,
+                  )?.toIso8601String().split('T').first ??
+                  '')
+            : null,
         profileImageDataUrl: previewDataUrl,
         updateProfileImage: true,
         emergencyContactName: emergencyName.text.trim(),
@@ -344,6 +381,12 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                   prefixIcon: const Icon(Icons.badge_outlined),
                   helperText: '$documentLabel é obrigatório para este perfil.',
                 ),
+              ),
+              const SizedBox(height: 16),
+              CadasturFields(
+                number: cadastur,
+                validUntil: cadasturValidity,
+                enabled: !saving,
               ),
             ],
             const SizedBox(height: 12),

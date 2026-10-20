@@ -392,6 +392,8 @@ class AppStore extends ChangeNotifier {
     required String city,
     required String state,
     String? document,
+    String? cadasturNumber,
+    String? cadasturValidUntil,
     String? profileImageDataUrl,
     bool updateProfileImage = false,
     String? emergencyContactName,
@@ -408,6 +410,8 @@ class AppStore extends ChangeNotifier {
         'cidade': city,
         'estado': state,
         if (document != null && document.isNotEmpty) 'documento': document,
+        'cadastur_numero': ?cadasturNumber,
+        'cadastur_validade': ?cadasturValidUntil,
         if (updateProfileImage)
           'foto_url': profileImageDataUrl == null
               ? null
@@ -441,6 +445,10 @@ class AppStore extends ChangeNotifier {
 
     if (document != null) {
       user.document = document;
+    }
+    if (cadasturNumber != null) user.cadasturNumber = cadasturNumber;
+    if (cadasturValidUntil != null) {
+      user.cadasturValidUntil = cadasturValidUntil;
     }
 
     if (updateProfileImage) {
@@ -835,6 +843,8 @@ class AppStore extends ChangeNotifier {
   Future<void> changeAccountType({
     required String type,
     String? document,
+    String? cadasturNumber,
+    String? cadasturValidUntil,
   }) async {
     if (!useBackend) {
       throw StateError(
@@ -849,6 +859,8 @@ class AppStore extends ChangeNotifier {
       userId: userId,
       type: type,
       document: document,
+      cadasturNumber: cadasturNumber,
+      cadasturValidUntil: cadasturValidUntil,
     );
   }
 

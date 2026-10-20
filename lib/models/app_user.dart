@@ -11,6 +11,8 @@ class AppUser {
     required this.state,
     required String role,
     this.document = '',
+    this.cadasturNumber = '',
+    this.cadasturValidUntil = '',
     this.profileImageDataUrl,
     this.emergencyContactName = '',
     this.emergencyContactPhone = '',
@@ -25,6 +27,8 @@ class AppUser {
   String state;
   String role;
   String document;
+  String cadasturNumber;
+  String cadasturValidUntil;
   String? profileImageDataUrl;
   String emergencyContactName;
   String emergencyContactPhone;
@@ -39,6 +43,8 @@ class AppUser {
     'state': state,
     'role': role,
     'document': document,
+    'cadasturNumber': cadasturNumber,
+    'cadasturValidUntil': cadasturValidUntil,
     'profileImageDataUrl': profileImageDataUrl,
     'emergencyContactName': emergencyContactName,
     'emergencyContactPhone': emergencyContactPhone,
@@ -55,6 +61,12 @@ class AppUser {
       state: (json['state'] ?? json['estado'])?.toString() ?? '',
       role: (json['role'] ?? json['tipo'])?.toString() ?? 'Turista',
       document: (json['document'] ?? json['documento'])?.toString() ?? '',
+      cadasturNumber:
+          (json['cadasturNumber'] ?? json['cadastur_numero'])?.toString() ?? '',
+      cadasturValidUntil:
+          (json['cadasturValidUntil'] ?? json['cadastur_validade'])
+              ?.toString() ??
+          '',
       profileImageDataUrl: (json['profileImageDataUrl'] ?? json['foto_url'])
           ?.toString(),
       emergencyContactName:

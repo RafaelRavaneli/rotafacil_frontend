@@ -7,6 +7,9 @@ import '../../services/auth_gateway.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/document_validator.dart';
+import '../../utils/cadastur_validator.dart';
+import '../../utils/date_time_format.dart';
+import '../../widgets/cadastur_fields.dart';
 import 'login_screen.dart';
 import '../../utils/auth_error_message.dart';
 
@@ -27,6 +30,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final stateController = TextEditingController();
   final passwordController = TextEditingController();
   final documentController = TextEditingController();
+  final cadastur = TextEditingController();
+  final cadasturValidity = TextEditingController();
 
   bool acceptTerms = false;
   bool obscure = true;
@@ -50,6 +55,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     stateController.dispose();
     passwordController.dispose();
     documentController.dispose();
+    cadastur.dispose();
+    cadasturValidity.dispose();
     super.dispose();
   }
 
@@ -101,6 +108,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         city: cityController.text.trim(),
         state: stateController.text.trim().toUpperCase(),
         document: documentController.text.trim(),
+        cadasturNumber: cadastur.text,
+        cadasturValidUntil:
+            parseAppDateTime(
+              cadasturValidity.text,
+            )?.toIso8601String().split('T').first ??
+            '',
       );
     } catch (error) {
       if (!mounted) return;
@@ -123,6 +136,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         city: cityController.text.trim(),
         state: stateController.text.trim().toUpperCase(),
         document: DocumentValidator.digitsOnly(documentController.text),
+        cadasturNumber: needsDocument
+            ? CadasturValidator.normalize(cadastur.text)
+            : null,
+        cadasturValidUntil: needsDocument
+            ? (parseAppDateTime(
+                    cadasturValidity.text,
+                  )?.toIso8601String().split('T').first ??
+                  '')
+            : null,
       );
     }
 
@@ -157,6 +179,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     FocusScope.of(context).unfocus();
+    if (needsDocument) {
+      final error = CadasturValidator.error(cadastur.text);
+      if (error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+        return;
+      }
+    }
     setState(() => credentialsStep = true);
   }
 
@@ -287,6 +318,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 : '00.000.000/0000-00',
             keyboard: TextInputType.number,
           ),
+        if (needsDocument) ...[
+          CadasturFields(
+            number: cadastur,
+            validUntil: cadasturValidity,
+            enabled: !loading,
+          ),
+          const SizedBox(height: 18),
+        ],
         const SizedBox(height: 24),
         Align(
           alignment: Alignment.centerRight,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../config/app_config.dart';
 import '../models/user_role.dart';
 import '../utils/document_validator.dart';
+import '../utils/cadastur_validator.dart';
 import 'api_client.dart';
 import 'local_auth_service.dart';
 import 'session_service.dart';
@@ -98,7 +99,13 @@ class AuthGateway {
     String? city,
     String? state,
     String document = '',
+    String cadasturNumber = '',
+    String cadasturValidUntil = '',
   }) async {
+    if (role == UserRole.guide || role == UserRole.agency) {
+      final error = CadasturValidator.error(cadasturNumber);
+      if (error != null) throw StateError(error);
+    }
     if (!AppConfig.useBackend) {
       await LocalAuthService.instance.register(
         role: role.title,
@@ -123,6 +130,10 @@ class AuthGateway {
       'cidade': city,
       'estado': state,
       'tipo': role.apiValue,
+      if (role != UserRole.tourist) ...{
+        'cadastur_numero': CadasturValidator.normalize(cadasturNumber),
+        'cadastur_validade': cadasturValidUntil,
+      },
     };
 
     if (role == UserRole.guide) {
