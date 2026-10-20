@@ -44,6 +44,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   String? guideId;
   DateTime? startDateTime;
   DateTime? endDateTime;
+  final List<TrailDeparture> departures = [];
   Uint8List? imageBytes;
   String? existingImageUrl;
   double? latitude;
@@ -86,8 +87,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       latitude = trail.latitude;
       longitude = trail.longitude;
       meetingPointController.text = trail.meetingPoint;
-      startDateTime = trail.startsAt;
-      endDateTime = trail.endsAt;
+      departures.addAll(trail.effectiveDepartures);
       accessible = trail.accessible;
       recommendedItemsController.text = trail.recommendedItems.join(', ');
       capacityController.text = trail.capacity.toString();
@@ -309,6 +309,51 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     return '$day/$month/${value.year} às ${_timeValue(value)}';
   }
 
+  bool _addDeparture({bool showErrors = true}) {
+    final start = startDateTime;
+    final end = endDateTime;
+    if (start == null || end == null) {
+      if (showErrors) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Informe início e fim da nova saída.')),
+        );
+      }
+      return false;
+    }
+    if (!end.isAfter(start)) {
+      if (showErrors) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('O fim deve ser posterior ao início.')),
+        );
+      }
+      return false;
+    }
+    final overlaps = departures.any(
+      (item) => start.isBefore(item.endsAt) && end.isAfter(item.startsAt),
+    );
+    if (overlaps) {
+      if (showErrors) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Esta saída se sobrepõe a outra data.')),
+        );
+      }
+      return false;
+    }
+    setState(() {
+      departures.add(
+        TrailDeparture(
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          startsAt: start,
+          endsAt: end,
+        ),
+      );
+      departures.sort((a, b) => a.startsAt.compareTo(b.startsAt));
+      startDateTime = null;
+      endDateTime = null;
+    });
+    return true;
+  }
+
   Future<void> _save() async {
     if (nameController.text.trim().isEmpty ||
         descriptionController.text.trim().isEmpty ||
@@ -337,16 +382,13 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       );
       return;
     }
-    if (startDateTime == null || endDateTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe início e fim do roteiro.')),
-      );
-      return;
+    if (startDateTime != null || endDateTime != null) {
+      if (!_addDeparture()) return;
     }
-    if (!endDateTime!.isAfter(startDateTime!)) {
+    if (departures.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('O fim deve ser posterior ao início do roteiro.'),
+          content: Text('Adicione pelo menos uma data ao roteiro.'),
         ),
       );
       return;
@@ -379,6 +421,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     }
 
     final current = widget.existing;
+    final firstDeparture = departures.first;
 
     final trail = Trail(
       id: current?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
@@ -405,7 +448,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           (AppStore.instance.useBackend
               ? SessionService.instance.userId ?? ''
               : ''),
-      date: _dateValue(startDateTime!),
+      date: _dateValue(firstDeparture.startsAt),
       price: price,
       status: current?.status ?? 'Ativa',
       archived: current?.archived ?? false,
@@ -422,11 +465,12 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
           .toList(),
       route: current?.route ?? const [],
       capacity: capacity,
-      startTime: _timeValue(startDateTime!),
-      endTime: _timeValue(endDateTime!),
-      endDate: _dateValue(endDateTime!),
-      startDateTime: startDateTime!.toIso8601String(),
-      endDateTime: endDateTime!.toIso8601String(),
+      startTime: _timeValue(firstDeparture.startsAt),
+      endTime: _timeValue(firstDeparture.endsAt),
+      endDate: _dateValue(firstDeparture.endsAt),
+      startDateTime: firstDeparture.startsAt.toIso8601String(),
+      endDateTime: firstDeparture.endsAt.toIso8601String(),
+      departures: List.unmodifiable(departures),
     );
 
     final saved = await runAction(context, () async {
@@ -568,11 +612,44 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              const Text(
+                'Datas do roteiro',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: AppColors.forest,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Cadastre todas as saídas deste mesmo roteiro.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+              if (departures.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                ...departures.map(
+                  (departure) => Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: const Icon(Icons.event_available_outlined),
+                      title: Text(_dateTimeLabel(departure.startsAt)),
+                      subtitle: Text('Até ${_dateTimeLabel(departure.endsAt)}'),
+                      trailing: IconButton(
+                        tooltip: 'Remover data',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () =>
+                            setState(() => departures.remove(departure)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
               InkWell(
                 onTap: () => _pickDateTime(start: true),
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Início do roteiro',
+                    labelText: 'Início da nova saída',
                     prefixIcon: Icon(Icons.event_available_outlined),
                   ),
                   child: Text(_dateTimeLabel(startDateTime)),
@@ -583,11 +660,17 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 onTap: () => _pickDateTime(start: false),
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Fim do roteiro',
+                    labelText: 'Fim da nova saída',
                     prefixIcon: Icon(Icons.event_busy_outlined),
                   ),
                   child: Text(_dateTimeLabel(endDateTime)),
                 ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _addDeparture,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Adicionar esta data'),
               ),
               const SizedBox(height: 12),
               Row(

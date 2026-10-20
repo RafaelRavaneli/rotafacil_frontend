@@ -201,6 +201,7 @@ class BackendRepository {
       'data_fim': apiDate(trail.endDate.isEmpty ? trail.date : trail.endDate),
       'data_hora_inicio': trail.startDateTime,
       'data_hora_fim': trail.endDateTime,
+      'datas': trail.effectiveDepartures.map((item) => item.toJson()).toList(),
       'imagem_url': await uploadImage(trail.imageUrl),
       'preco': trail.price,
       'ativo': TrailStatus.isActive(trail.status),

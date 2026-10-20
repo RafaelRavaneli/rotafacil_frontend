@@ -131,6 +131,38 @@ class TrailPoint {
   );
 }
 
+class TrailDeparture {
+  const TrailDeparture({
+    required this.id,
+    required this.startsAt,
+    required this.endsAt,
+  });
+
+  final String id;
+  final DateTime startsAt;
+  final DateTime endsAt;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'data_hora_inicio': startsAt.toIso8601String(),
+    'data_hora_fim': endsAt.toIso8601String(),
+  };
+
+  factory TrailDeparture.fromJson(Map<String, dynamic> json) {
+    final startsAt = DateTime.parse(
+      (json['data_hora_inicio'] ?? json['startDateTime']).toString(),
+    );
+    final endsAt = DateTime.parse(
+      (json['data_hora_fim'] ?? json['endDateTime']).toString(),
+    );
+    return TrailDeparture(
+      id: json['id']?.toString() ?? '',
+      startsAt: startsAt,
+      endsAt: endsAt,
+    );
+  }
+}
+
 class Trail {
   const Trail({
     required this.id,
@@ -168,6 +200,7 @@ class Trail {
     this.endDate = '',
     this.startDateTime = '',
     this.endDateTime = '',
+    this.departures = const [],
   });
 
   final String id;
@@ -210,17 +243,29 @@ class Trail {
   final String endDate;
   final String startDateTime;
   final String endDateTime;
+  final List<TrailDeparture> departures;
 
   List<String> get effectiveActivities => activities.isNotEmpty
       ? List.unmodifiable(activities)
       : [modality.trim().isEmpty ? 'Trilha' : modality];
 
+  List<TrailDeparture> get effectiveDepartures {
+    if (departures.isNotEmpty) return List.unmodifiable(departures);
+    final start =
+        DateTime.tryParse(startDateTime) ??
+        _combineDateAndTime(date, startTime);
+    final end =
+        DateTime.tryParse(endDateTime) ??
+        _combineDateAndTime(endDate.isEmpty ? date : endDate, endTime);
+    if (start == null || end == null) return const [];
+    return [TrailDeparture(id: 'legacy-$id', startsAt: start, endsAt: end)];
+  }
+
   DateTime? get startsAt =>
-      DateTime.tryParse(startDateTime) ?? _combineDateAndTime(date, startTime);
+      effectiveDepartures.isEmpty ? null : effectiveDepartures.first.startsAt;
 
   DateTime? get endsAt =>
-      DateTime.tryParse(endDateTime) ??
-      _combineDateAndTime(endDate.isEmpty ? date : endDate, endTime);
+      effectiveDepartures.isEmpty ? null : effectiveDepartures.first.endsAt;
 
   String get location => '$city - $state';
 
@@ -278,6 +323,7 @@ class Trail {
     'endDate': endDate,
     'startDateTime': startDateTime,
     'endDateTime': endDateTime,
+    'departures': departures.map((item) => item.toJson()).toList(),
   };
 
   factory Trail.fromJson(Map<String, dynamic> json) {
@@ -294,6 +340,7 @@ class Trail {
     final rawItems = json['recommendedItems'] ?? json['itens_recomendados'];
     final rawRoute = json['route'] ?? json['trajeto'];
     final rawActivities = json['activities'] ?? json['atividades'];
+    final rawDepartures = json['departures'] ?? json['datas'];
     final legacyModality =
         (json['modality'] ?? json['modalidade'])?.toString() ?? 'Trilha';
 
@@ -373,6 +420,15 @@ class Trail {
           (json['startDateTime'] ?? json['data_hora_inicio'])?.toString() ?? '',
       endDateTime:
           (json['endDateTime'] ?? json['data_hora_fim'])?.toString() ?? '',
+      departures: rawDepartures is List
+          ? rawDepartures
+                .whereType<Map>()
+                .map(
+                  (item) =>
+                      TrailDeparture.fromJson(Map<String, dynamic>.from(item)),
+                )
+                .toList()
+          : const [],
     );
   }
 
