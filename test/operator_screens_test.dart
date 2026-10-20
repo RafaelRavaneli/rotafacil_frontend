@@ -103,6 +103,20 @@ void main() {
     expect(find.text('r1'), findsOneWidget);
     expect(find.text('Pessoa de teste'), findsOneWidget);
     expect(find.textContaining('não comprova pagamento'), findsOneWidget);
+    expect(find.text('Fazer check-in'), findsNothing);
+    expect(find.text('Fazer check-out'), findsNothing);
+  });
+
+  test('Check-in e check-out ficam bloqueados na camada de estado', () async {
+    expect(
+      () => store.checkInBooking(store.bookings.single),
+      throwsA(isA<StateError>()),
+    );
+    store.bookings.single.status = 'Em andamento';
+    expect(
+      () => store.checkOutBooking(store.bookings.single),
+      throwsA(isA<StateError>()),
+    );
   });
 
   testWidgets('Cancelamento exige confirmação e atualiza o detalhe', (

@@ -6,6 +6,11 @@ class AppConfig {
     defaultValue: false,
   );
 
+  static const bool enableCheckInCheckout = bool.fromEnvironment(
+    'ENABLE_CHECKIN_CHECKOUT',
+    defaultValue: false,
+  );
+
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://127.0.0.1:5000',

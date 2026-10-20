@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_config.dart';
 import '../../models/local_booking.dart';
 import '../../models/trail_experience.dart';
 import '../../services/session_service.dart';
@@ -327,7 +328,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       style: TextStyle(color: AppColors.muted),
                     ),
                   ],
-                  if (BookingStatus.isConfirmed(booking.status)) ...[
+                  if (AppConfig.enableCheckInCheckout &&
+                      isOperator &&
+                      BookingStatus.isConfirmed(booking.status)) ...[
                     const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: acting ? null : () => _checkIn(booking),
@@ -335,7 +338,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       label: Text(acting ? 'Registrando...' : 'Fazer check-in'),
                     ),
                   ],
-                  if (normalizedStatus == 'Em andamento') ...[
+                  if (AppConfig.enableCheckInCheckout &&
+                      isOperator &&
+                      normalizedStatus == 'Em andamento') ...[
                     const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: acting ? null : () => _checkOut(booking),

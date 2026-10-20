@@ -634,6 +634,11 @@ class AppStore extends ChangeNotifier {
     double? latitude,
     double? longitude,
   }) async {
+    if (!AppConfig.enableCheckInCheckout) {
+      throw StateError(
+        'Check-in e check-out estão temporariamente indisponíveis.',
+      );
+    }
     if (useBackend) {
       await _backend.checkIn(
         booking.id,
@@ -652,6 +657,11 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> checkOutBooking(LocalBooking booking) async {
+    if (!AppConfig.enableCheckInCheckout) {
+      throw StateError(
+        'Check-in e check-out estão temporariamente indisponíveis.',
+      );
+    }
     if (useBackend) {
       await _backend.checkOut(booking.id);
       await refreshBackend();
