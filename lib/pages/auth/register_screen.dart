@@ -264,19 +264,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       title: 'Cadastro • ${widget.role.title}',
       body: MediaQuery.maybeOf(context)?.disableAnimations == true
           ? _buildStep()
-          : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 280),
-              reverseDuration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.985, end: 1).animate(animation),
-                  child: child,
+          : AnimatedSize(
+              duration: const Duration(milliseconds: 360),
+              reverseDuration: const Duration(milliseconds: 320),
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                reverseDuration: const Duration(milliseconds: 300),
+                switchInCurve: Curves.easeInOutCubic,
+                switchOutCurve: Curves.easeInOutCubic,
+                layoutBuilder: (currentChild, previousChildren) => Stack(
+                  alignment: Alignment.topCenter,
+                  children: [...previousChildren, ?currentChild],
                 ),
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: _buildStep(),
               ),
-              child: _buildStep(),
             ),
     );
   }
@@ -384,7 +389,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         TextButton(
           onPressed: loading
               ? null
-              : () => setState(() => credentialsStep = false),
+              : () {
+                  FocusScope.of(context).unfocus();
+                  setState(() => credentialsStep = false);
+                },
           child: const Text(
             'Voltar aos dados',
             style: TextStyle(color: Color(0xFFD2FA87)),
