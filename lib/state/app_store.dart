@@ -799,7 +799,7 @@ class AppStore extends ChangeNotifier {
     }
     await _backend.finishDeparture(
       trailId: trail.id,
-      departureId: departure.id.startsWith('legacy-') ? '' : departure.id,
+      departureId: departure.id,
       date: departure.startsAt.toIso8601String(),
     );
     await refreshBackend();

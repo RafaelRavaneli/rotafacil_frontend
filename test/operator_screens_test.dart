@@ -444,6 +444,52 @@ void main() {
     expect(find.text('Bruno'), findsNothing);
   }, skip: AppConfig.useBackend);
 
+  testWidgets('Voltar dos inscritos abertos diretamente retorna aos roteiros', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: TrailParticipantsScreen(trail: store.trails.single),
+        routes: {
+          '/roteiros': (_) => const Scaffold(body: Text('Lista de roteiros')),
+        },
+      ),
+    );
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Lista de roteiros'), findsOneWidget);
+  });
+
+  testWidgets(
+    'Voltar dos inscritos preserva a tela anterior quando há histórico',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        TrailParticipantsScreen(trail: store.trails.single),
+                  ),
+                ),
+                child: const Text('Abrir inscritos'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Abrir inscritos'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir inscritos'), findsOneWidget);
+    },
+  );
+
   testWidgets('Guia confirma solicitação pendente nos inscritos', (
     tester,
   ) async {

@@ -25,6 +25,12 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
   String? busyBookingId;
   bool finishing = false;
 
+  Future<void> _goBack() async {
+    if (await Navigator.maybePop(context)) return;
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/roteiros');
+  }
+
   Future<void> _contact(LocalBooking booking) async {
     var phone = booking.personPhone.replaceAll(RegExp(r'\D'), '');
     if (phone.length == 10 || phone.length == 11) phone = '55$phone';
@@ -148,7 +154,7 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
     final departures = widget.trail.effectiveDepartures;
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.maybePop(context)),
+        leading: BackButton(onPressed: _goBack),
         title: const Text('Inscritos no roteiro'),
       ),
       body: AnimatedBuilder(

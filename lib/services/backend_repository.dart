@@ -300,7 +300,7 @@ class BackendRepository {
       body: {
         'id_trilha': trailId,
         if (departureId.isNotEmpty) 'id_data': departureId,
-        if (departureId.isEmpty) 'data_agendada': apiDate(date),
+        'data_agendada': apiDate(date).split('T').first,
       },
     );
   }
