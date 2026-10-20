@@ -153,6 +153,7 @@ class Trail {
     required this.date,
     this.price = 189,
     this.status = TrailStatus.active,
+    this.archived = false,
     this.modality = 'Trilha',
     this.activities = const [],
     this.latitude,
@@ -193,6 +194,7 @@ class Trail {
   final String date;
   final double price;
   final String status;
+  final bool archived;
   final String modality;
   final List<String> activities;
   final double? latitude;
@@ -259,6 +261,7 @@ class Trail {
     'date': date,
     'price': price,
     'status': status,
+    'archived': archived,
     'modality': modality,
     'activities': activities,
     'latitude': latitude,
@@ -332,6 +335,7 @@ class Trail {
       status: json['ativo'] == false
           ? TrailStatus.inactive
           : TrailStatus.normalize(json['status']?.toString()),
+      archived: json['archived'] == true || json['arquivado'] == true,
       modality: legacyModality,
       activities: rawActivities is List
           ? rawActivities.map((item) => item.toString()).toList()

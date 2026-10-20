@@ -204,6 +204,7 @@ class BackendRepository {
       'imagem_url': await uploadImage(trail.imageUrl),
       'preco': trail.price,
       'ativo': TrailStatus.isActive(trail.status),
+      'arquivado': trail.archived,
       'acessivel': trail.accessible,
       'itens_recomendados': trail.recommendedItems,
       'trajeto': trail.route.map((point) => point.toJson()).toList(),

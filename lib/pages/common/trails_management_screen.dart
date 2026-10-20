@@ -9,10 +9,67 @@ import '../../widgets/network_image_box.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
 
-class TrailsManagementScreen extends StatelessWidget {
+class TrailsManagementScreen extends StatefulWidget {
   const TrailsManagementScreen({super.key, required this.isAgency});
 
   final bool isAgency;
+
+  @override
+  State<TrailsManagementScreen> createState() =>
+      _TrailsManagementScreenState();
+}
+
+class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
+  String _filter = 'Não arquivados';
+  DateTimeRange? _period;
+
+  List<Trail> _filteredTrails(List<Trail> trails) {
+    final statusFiltered = switch (_filter) {
+      'Ativos' => trails
+          .where((trail) => TrailStatus.isActive(trail.status) && !trail.archived)
+          .toList(),
+      'Desativados' => trails
+          .where((trail) => TrailStatus.isInactive(trail.status) && !trail.archived)
+          .toList(),
+      'Arquivados' => trails.where((trail) => trail.archived).toList(),
+      'Todos' => trails,
+      _ => trails.where((trail) => !trail.archived).toList(),
+    };
+    final period = _period;
+    if (period == null) return statusFiltered;
+    final periodEnd = DateTime(
+      period.end.year,
+      period.end.month,
+      period.end.day,
+      23,
+      59,
+      59,
+    );
+    return statusFiltered.where((trail) {
+      final start = trail.startsAt;
+      if (start == null) return false;
+      final end = trail.endsAt ?? start;
+      return !end.isBefore(period.start) && !start.isAfter(periodEnd);
+    }).toList();
+  }
+
+  Future<void> _selectPeriod(BuildContext context) async {
+    final now = DateTime.now();
+    final selected = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 5, 12, 31),
+      initialDateRange: _period,
+      helpText: 'Período dos roteiros',
+      cancelText: 'Cancelar',
+      confirmText: 'Aplicar',
+      saveText: 'Aplicar',
+    );
+    if (selected != null && mounted) setState(() => _period = selected);
+  }
+
+  String _dateLabel(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +79,8 @@ class TrailsManagementScreen extends StatelessWidget {
       child: AnimatedBuilder(
         animation: store,
         builder: (context, child) {
+          final managedTrails = store.managedTrails;
+          final visibleTrails = _filteredTrails(managedTrails);
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -56,6 +115,59 @@ class TrailsManagementScreen extends StatelessWidget {
                           icon: const Icon(Icons.add),
                           label: const Text('Novo roteiro'),
                         ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          initialValue: _filter,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Exibir roteiros',
+                            prefixIcon: Icon(Icons.filter_list_rounded),
+                          ),
+                          items: const [
+                            'Não arquivados',
+                            'Ativos',
+                            'Desativados',
+                            'Arquivados',
+                            'Todos',
+                          ]
+                              .map(
+                                (value) => DropdownMenuItem(
+                                  value: value,
+                                  child: Text(value),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value != null) setState(() => _filter = value);
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _selectPeriod(context),
+                                icon: const Icon(Icons.date_range_outlined),
+                                label: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    _period == null
+                                        ? 'Filtrar por período'
+                                        : '${_dateLabel(_period!.start)} a ${_dateLabel(_period!.end)}',
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (_period != null) ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                tooltip: 'Limpar período',
+                                onPressed: () => setState(() => _period = null),
+                                icon: const Icon(Icons.close),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -76,7 +188,7 @@ class TrailsManagementScreen extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              '${store.managedTrails.length} roteiro(s) cadastrado(s)',
+                              '${visibleTrails.length} de ${managedTrails.length} roteiro(s)',
                               style: const TextStyle(
                                 color: AppColors.green900,
                                 fontWeight: FontWeight.w600,
@@ -89,7 +201,7 @@ class TrailsManagementScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Expanded(
-                    child: store.managedTrails.isEmpty
+                    child: visibleTrails.isEmpty
                         ? _EmptyTrails(
                             onAdd: () {
                               _openForm(context);
@@ -98,12 +210,12 @@ class TrailsManagementScreen extends StatelessWidget {
                         : ListView.separated(
                             primary: false,
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-                            itemCount: store.managedTrails.length,
+                            itemCount: visibleTrails.length,
                             separatorBuilder: (context, index) {
                               return const SizedBox(height: 10);
                             },
                             itemBuilder: (context, index) {
-                              final trail = store.managedTrails[index];
+                              final trail = visibleTrails[index];
 
                               return _TrailRow(
                                 trail: trail,
@@ -115,6 +227,7 @@ class TrailsManagementScreen extends StatelessWidget {
                                       ? _activate(context, trail)
                                       : _delete(context, trail);
                                 },
+                                onArchive: () => _archive(context, trail),
                               );
                             },
                           ),
@@ -132,7 +245,7 @@ class TrailsManagementScreen extends StatelessWidget {
     AppRoutes.push(
       context,
       existing == null ? AppRoutes.newTrail : AppRoutes.editTrail(existing.id),
-      (_) => TrailFormScreen(isAgency: isAgency, existing: existing),
+      (_) => TrailFormScreen(isAgency: widget.isAgency, existing: existing),
     );
   }
 
@@ -204,6 +317,24 @@ class TrailsManagementScreen extends StatelessWidget {
       context,
     ).showSnackBar(SnackBar(content: Text('${trail.name} foi reativado.')));
   }
+
+  Future<void> _archive(BuildContext context, Trail trail) async {
+    final archive = !trail.archived;
+    final saved = await runAction(
+      context,
+      () => AppStore.instance.archiveTrail(trail, archived: archive),
+    );
+    if (!saved || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          archive
+              ? '${trail.name} foi arquivado.'
+              : '${trail.name} voltou para roteiros desativados.',
+        ),
+      ),
+    );
+  }
 }
 
 class _TrailRow extends StatelessWidget {
@@ -211,11 +342,13 @@ class _TrailRow extends StatelessWidget {
     required this.trail,
     required this.onEdit,
     required this.onDelete,
+    required this.onArchive,
   });
 
   final Trail trail;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onArchive;
 
   @override
   Widget build(BuildContext context) {
@@ -294,6 +427,7 @@ class _TrailRow extends StatelessWidget {
                     _MiniChip(text: trail.difficulty),
                     _MiniChip(text: trail.distanceLabel),
                     _MiniChip(text: trail.status),
+                    if (trail.archived) const _MiniChip(text: 'Arquivado'),
                   ],
                 ),
               ],
@@ -308,6 +442,10 @@ class _TrailRow extends StatelessWidget {
 
               if (value == 'status') {
                 onDelete();
+              }
+
+              if (value == 'archive') {
+                onArchive();
               }
             },
             itemBuilder: (context) {
@@ -343,6 +481,22 @@ class _TrailRow extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (AppStore.instance.useBackend &&
+                    (trail.archived || TrailStatus.isInactive(trail.status)))
+                  PopupMenuItem(
+                    value: 'archive',
+                    child: Row(
+                      children: [
+                        Icon(
+                          trail.archived
+                              ? Icons.unarchive_outlined
+                              : Icons.archive_outlined,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(trail.archived ? 'Desarquivar' : 'Arquivar'),
+                      ],
+                    ),
+                  ),
               ];
             },
           ),

@@ -589,6 +589,20 @@ class AppStore extends ChangeNotifier {
     await refreshBackend();
   }
 
+  Future<void> archiveTrail(Trail trail, {required bool archived}) async {
+    if (!useBackend) {
+      throw StateError('O arquivamento está disponível no modo conectado.');
+    }
+    if (archived && !TrailStatus.isInactive(trail.status)) {
+      throw StateError('Desative o roteiro antes de arquivá-lo.');
+    }
+    await ApiClient.instance.put(
+      '/api/trilhas/${Uri.encodeComponent(trail.id)}',
+      body: {'arquivado': archived},
+    );
+    await refreshBackend();
+  }
+
   Future<void> addBooking(LocalBooking booking) async {
     if (useBackend) {
       await ApiClient.instance.post(
