@@ -1,3 +1,4 @@
+import '../../utils/controller_dialog.dart';
 import '../../utils/date_time_format.dart';
 import 'dart:typed_data';
 
@@ -70,13 +71,15 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
     var note = '';
     if (status == 'rejeitado') {
       final controller = TextEditingController();
-      final result = await showDialog<String>(
+      final result = await showControllerDialog<String>(
+        controllers: [controller],
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Motivo da rejeição'),
           content: TextField(
             controller: controller,
             maxLines: 3,
+            maxLength: 500,
             decoration: const InputDecoration(
               hintText: 'Explique o que precisa ser corrigido.',
             ),
@@ -93,7 +96,6 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
           ],
         ),
       );
-      controller.dispose();
       if (result == null || result.isEmpty || !mounted) return;
       note = result;
     }

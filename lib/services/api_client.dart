@@ -214,6 +214,12 @@ class ApiClient {
 
     final hadAuthenticatedSession =
         SessionService.instance.token?.isNotEmpty ?? false;
+    if (response.statusCode == 403 &&
+        data is Map &&
+        data['codigo'] == 'CONTA_BLOQUEADA' &&
+        hadAuthenticatedSession) {
+      await SessionService.instance.clear(reason: SessionEndReason.blocked);
+    }
     if (response.statusCode == 401 && hadAuthenticatedSession) {
       await SessionService.instance.clear(reason: SessionEndReason.expired);
       message = 'Sua sessão expirou. Entre novamente.';

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/brazil_locations.dart';
+import '../theme/app_colors.dart';
 
 class BrazilLocationFields extends StatelessWidget {
   const BrazilLocationFields({
@@ -19,6 +21,9 @@ class BrazilLocationFields extends StatelessWidget {
   final TextStyle? labelStyle;
 
   Future<void> _choose(BuildContext context, bool choosingState) async {
+    final pickerTheme = Theme.of(
+      Navigator.of(context, rootNavigator: true).context,
+    );
     try {
       final states = await BrazilLocations.load();
       if (!context.mounted) return;
@@ -32,15 +37,22 @@ class BrazilLocationFields extends StatelessWidget {
       final values = choosingState
           ? states.map((s) => '${s.uf} — ${s.name}').toList()
           : selectedState!.cities;
+      FocusManager.instance.primaryFocus?.unfocus();
       final selected = await showModalBottomSheet<String>(
         context: context,
+        useRootNavigator: true,
         isScrollControlled: true,
         useSafeArea: true,
-        builder: (context) => _LocationPicker(
-          title: choosingState ? 'Selecionar estado' : 'Selecionar cidade',
-          values: values,
+        backgroundColor: AppColors.paper,
+        builder: (context) => Theme(
+          data: pickerTheme,
+          child: _LocationPicker(
+            title: choosingState ? 'Selecionar estado' : 'Selecionar cidade',
+            values: values,
+          ),
         ),
       );
+      if (context.mounted) FocusScope.of(context).unfocus();
       if (selected == null || !context.mounted) return;
       if (choosingState) {
         final uf = selected.split(' — ').first;
@@ -74,6 +86,8 @@ class BrazilLocationFields extends StatelessWidget {
         controller: controller,
         style: const TextStyle(color: Color(0xFF25332C), fontSize: 14),
         readOnly: true,
+        canRequestFocus: false,
+        showCursor: false,
         enabled: enabled,
         onTap: () => _choose(context, choosingState),
         decoration: InputDecoration(
@@ -134,6 +148,27 @@ class _LocationPicker extends StatefulWidget {
 
 class _LocationPickerState extends State<_LocationPicker> {
   String query = '';
+  final searchFocus = FocusNode();
+  bool closing = false;
+
+  @override
+  void dispose() {
+    searchFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _close([String? value]) async {
+    if (closing) return;
+    closing = true;
+    searchFocus.unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+    try {
+      await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    } finally {
+      if (mounted) Navigator.of(context).pop(value);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final values = widget.values
@@ -143,45 +178,65 @@ class _LocationPickerState extends State<_LocationPicker> {
           ).contains(BrazilLocations.normalize(query)),
         )
         .toList();
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * .7,
-        child: Column(
-          children: [
-            ListTile(
-              title: Text(widget.title),
-              trailing: IconButton(
-                tooltip: 'Fechar',
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Buscar',
-                  prefixIcon: Icon(Icons.search),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+        final availableHeight = (constraints.maxHeight - keyboardInset).clamp(
+          0.0,
+          constraints.maxHeight,
+        );
+        final height = (MediaQuery.sizeOf(context).height * .7).clamp(
+          0.0,
+          availableHeight,
+        );
+        return Padding(
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: SizedBox(
+            height: height,
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(widget.title),
+                  trailing: IconButton(
+                    tooltip: 'Fechar',
+                    icon: const Icon(Icons.close),
+                    onPressed: _close,
+                  ),
                 ),
-                onChanged: (value) => setState(() => query = value),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: values.isEmpty
-                  ? const Center(child: Text('Nenhum resultado encontrado.'))
-                  : ListView.builder(
-                      itemCount: values.length,
-                      itemBuilder: (context, index) => ListTile(
-                        title: Text(values[index]),
-                        onTap: () => Navigator.pop(context, values[index]),
-                      ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    focusNode: searchFocus,
+                    style: const TextStyle(color: AppColors.ink),
+                    cursorColor: AppColors.green700,
+                    decoration: const InputDecoration(
+                      labelText: 'Buscar',
+                      prefixIcon: Icon(Icons.search),
+                      filled: true,
+                      fillColor: AppColors.paper,
                     ),
+                    onChanged: (value) => setState(() => query = value),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: values.isEmpty
+                      ? const Center(
+                          child: Text('Nenhum resultado encontrado.'),
+                        )
+                      : ListView.builder(
+                          itemCount: values.length,
+                          itemBuilder: (context, index) => ListTile(
+                            title: Text(values[index]),
+                            onTap: () => _close(values[index]),
+                          ),
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

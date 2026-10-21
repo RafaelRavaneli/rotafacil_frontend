@@ -1,3 +1,6 @@
+import 'pages/admin/admin_verification_screen.dart';
+import 'pages/admin/review_moderation_screen.dart';
+import 'pages/common/professional_profile_screen.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -70,7 +73,8 @@ class _RotaFacilAppState extends State<RotaFacilApp>
   void _handleSessionEnd() {
     final reason = SessionService.instance.consumeEndReason();
     if (reason != SessionEndReason.expired &&
-        reason != SessionEndReason.externalLogout) {
+        reason != SessionEndReason.externalLogout &&
+        reason != SessionEndReason.blocked) {
       return;
     }
 
@@ -84,7 +88,9 @@ class _RotaFacilAppState extends State<RotaFacilApp>
       appScaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text(
-            reason == SessionEndReason.expired
+            reason == SessionEndReason.blocked
+                ? 'Sua conta foi bloqueada. Entre em contato com o atendimento.'
+                : reason == SessionEndReason.expired
                 ? 'Sua sessão expirou. Entre novamente.'
                 : 'A sessão foi encerrada em outra aba.',
           ),
@@ -227,6 +233,25 @@ class _SessionBootstrapState extends State<_SessionBootstrap> {
     }
     if (uri.path == AppRoutes.search) return const TrailSearchScreen();
 
+    if (uri.pathSegments.length == 2 &&
+        uri.pathSegments.first == 'profissional') {
+      return ProfessionalProfileScreen(id: uri.pathSegments[1]);
+    }
+    if (role == 'admin' && uri.path.startsWith('/admin/')) {
+      if (uri.path == '/admin/documentos') {
+        return const AdminVerificationScreen();
+      }
+      if (uri.path == '/admin/avaliacoes') {
+        return const ReviewModerationScreen();
+      }
+      if (uri.path == '/admin/roteiros') {
+        return const AdminShell(initialSection: 'roteiros');
+      }
+      if (uri.path == '/admin/historico') {
+        return const AdminShell(initialSection: 'historico');
+      }
+      return const AdminShell();
+    }
     final isAgency = role == 'agencia' || role == 'agência' || role == 'agency';
     if (uri.path == AppRoutes.newTrail && (isAgency || role == 'guia')) {
       return TrailFormScreen(isAgency: isAgency);

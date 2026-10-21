@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum SessionEndReason { logout, expired, externalLogout }
+enum SessionEndReason { logout, expired, externalLogout, blocked }
 
 class SessionService extends ChangeNotifier {
   SessionService._();

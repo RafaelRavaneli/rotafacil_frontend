@@ -1,3 +1,8 @@
+import '../common/professional_profile_screen.dart';
+import '../../widgets/reviews_panel.dart';
+import '../../widgets/organizer_emergency_card.dart';
+import '../../widgets/trail_accessibility_section.dart';
+import '../../widgets/packing_items_list.dart';
 import '../../navigation/app_routes.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +12,6 @@ import '../../data/demo_data.dart' show guideByName;
 
 import '../../models/local_booking.dart';
 import '../../models/trail.dart';
-import '../../models/trail_experience.dart';
 import '../../state/app_store.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/network_image_box.dart';
@@ -36,14 +40,11 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
   bool get readOnly =>
       widget.readOnly ||
       const ['guia', 'agencia', 'admin'].contains(SessionService.instance.role);
-  late Future<List<TrailReview>> reviewsFuture;
   DateTime? selectedWeatherDate;
 
   @override
   void initState() {
     super.initState();
-    final store = AppStore.instance;
-    reviewsFuture = store.reviewsFor(trail.id);
     final dates = trail.effectiveDepartures.toList()
       ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
     selectedWeatherDate =
@@ -370,47 +371,18 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(
-                            trail.accessible
-                                ? Icons.accessible_forward_rounded
-                                : Icons.info_outline_rounded,
-                            color: AppColors.green700,
-                          ),
-                          title: Text(
-                            trail.accessible
-                                ? 'Percurso informado como acessível'
-                                : 'Acessibilidade não informada',
+                        OrganizerEmergencyCard(trail: trail),
+                        const SizedBox(height: 18),
+                        TrailAccessibilitySection(value: trail.accessibility),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'O que levar',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (trail.recommendedItems.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Itens recomendados',
-                            style: TextStyle(
-                              color: AppColors.ink,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: trail.recommendedItems
-                                .map(
-                                  (item) => Chip(
-                                    avatar: const Icon(
-                                      Icons.check_rounded,
-                                      size: 16,
-                                    ),
-                                    label: Text(item),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ],
+                        PackingItemsList(trail: trail),
                         if (trail.route.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           Text(
@@ -528,67 +500,20 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                                 },
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Avaliações',
-                          style: TextStyle(
-                            color: AppColors.ink,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                        if (trail.createdBy.isNotEmpty)
+                          TextButton(
+                            onPressed: () => AppRoutes.push(
+                              context,
+                              '/profissional/${Uri.encodeComponent(trail.createdBy)}',
+                              (_) => ProfessionalProfileScreen(
+                                id: trail.createdBy,
+                              ),
+                            ),
+                            child: const Text(
+                              'Ver perfil e avaliações do organizador',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        FutureBuilder<List<TrailReview>>(
-                          future: reviewsFuture,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const LinearProgressIndicator();
-                            }
-                            if (snapshot.hasError) {
-                              return const Text(
-                                'Não foi possível carregar as avaliações.',
-                                style: TextStyle(color: AppColors.muted),
-                              );
-                            }
-                            final reviews = snapshot.data ?? const [];
-                            if (reviews.isEmpty) {
-                              return const Text(
-                                'Este roteiro ainda não possui avaliações.',
-                                style: TextStyle(color: AppColors.muted),
-                              );
-                            }
-                            return Column(
-                              children: reviews
-                                  .map(
-                                    (review) => Card(
-                                      child: ListTile(
-                                        leading: CircleAvatar(
-                                          backgroundColor: AppColors.green100,
-                                          child: Text(
-                                            review.rating.toString(),
-                                            style: const TextStyle(
-                                              color: AppColors.green800,
-                                              fontWeight: FontWeight.w900,
-                                            ),
-                                          ),
-                                        ),
-                                        title: Text(review.userName),
-                                        subtitle: Text(
-                                          review.comment.trim().isEmpty
-                                              ? 'Sem comentário.'
-                                              : review.comment,
-                                        ),
-                                        trailing: const Icon(
-                                          Icons.star_rounded,
-                                          color: AppColors.earth,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                            );
-                          },
-                        ),
+                        ReviewsPanel(id: trail.id),
                       ],
                     ),
                   ),

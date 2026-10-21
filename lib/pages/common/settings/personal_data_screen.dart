@@ -37,6 +37,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   late final TextEditingController cadasturValidity;
   late final TextEditingController emergencyName;
   late final TextEditingController emergencyPhone;
+  late final TextEditingController emergencyRelation;
+  bool emergencyConsent = false;
   late final TextEditingController professionalDescription;
   late final TextEditingController specialties;
 
@@ -84,6 +86,10 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
       text: formatBrazilianDate(user.cadasturValidUntil),
     );
     emergencyPhone = TextEditingController(text: user.emergencyContactPhone);
+    emergencyRelation = TextEditingController(
+      text: user.emergencyContactRelation,
+    );
+    emergencyConsent = user.emergencyContactConsent;
     professionalDescription = TextEditingController(
       text: user.professionalDescription,
     );
@@ -104,6 +110,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     'cadasturValidity': cadasturValidity.text,
     'emergencyName': emergencyName.text,
     'emergencyPhone': emergencyPhone.text,
+    'emergencyRelation': emergencyRelation.text,
+    'emergencyConsent': emergencyConsent.toString(),
     'professionalDescription': professionalDescription.text,
     'specialties': specialties.text,
   };
@@ -164,6 +172,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     cadasturValidity.dispose();
     emergencyName.dispose();
     emergencyPhone.dispose();
+    emergencyRelation.dispose();
     professionalDescription.dispose();
     specialties.dispose();
     super.dispose();
@@ -202,6 +211,26 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   }
 
   Future<void> _save() async {
+    final contactPhone = emergencyPhone.text.trim();
+    final digits = contactPhone.replaceAll(RegExp(r'\D'), '');
+    if (!needsDocument &&
+        ((contactPhone.isNotEmpty &&
+                (!RegExp(r'^[+()0-9 .-]+$').hasMatch(contactPhone) ||
+                    digits.length < 10 ||
+                    digits.length > 15)) ||
+            (emergencyConsent &&
+                (emergencyName.text.trim().isEmpty ||
+                    emergencyRelation.text.trim().isEmpty ||
+                    contactPhone.isEmpty)))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe nome, telefone válido e relação do contato antes de autorizar o uso.',
+          ),
+        ),
+      );
+      return;
+    }
     final newEmail = email.text.trim();
 
     if (name.text.trim().isEmpty || newEmail.isEmpty) {
@@ -259,8 +288,14 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             : null,
         profileImageDataUrl: previewDataUrl,
         updateProfileImage: true,
-        emergencyContactName: emergencyName.text.trim(),
-        emergencyContactPhone: emergencyPhone.text.trim(),
+        emergencyContactName: needsDocument ? null : emergencyName.text.trim(),
+        emergencyContactPhone: needsDocument
+            ? null
+            : emergencyPhone.text.trim(),
+        emergencyContactRelation: needsDocument
+            ? null
+            : emergencyRelation.text.trim(),
+        emergencyContactConsent: needsDocument ? null : emergencyConsent,
         professionalDescription: needsDocument
             ? professionalDescription.text.trim()
             : null,
@@ -440,37 +475,76 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                 ),
               ),
             ],
-            const SizedBox(height: 18),
-            const Text(
-              'Contato de emergência',
-              style: TextStyle(
-                color: AppColors.forest,
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
+            if (!needsDocument) ...[
+              const SizedBox(height: 18),
+              const Text(
+                'Contato de emergência',
+                style: TextStyle(
+                  color: AppColors.forest,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Disponível somente para responsáveis autorizados durante uma reserva ativa.',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emergencyName,
-              decoration: const InputDecoration(
-                labelText: 'Nome do contato',
-                prefixIcon: Icon(Icons.emergency_outlined),
+              const SizedBox(height: 6),
+              const Text(
+                'Compartilhado somente com o responsável operacional por reserva confirmada, de 24 horas antes do início até o término. Cancelamento, conclusão ou retirada do consentimento bloqueiam novas consultas.',
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emergencyPhone,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Telefone de emergência',
-                prefixIcon: Icon(Icons.phone_in_talk_outlined),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emergencyName,
+                maxLength: 120,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do contato',
+                  prefixIcon: Icon(Icons.emergency_outlined),
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emergencyPhone,
+                maxLength: 30,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Telefone de emergência',
+                  prefixIcon: Icon(Icons.phone_in_talk_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emergencyRelation,
+                maxLength: 80,
+                decoration: const InputDecoration(
+                  labelText: 'Relação com o contato',
+                  hintText: 'Ex.: mãe, irmão, amiga',
+                ),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: emergencyConsent,
+                onChanged: saving
+                    ? null
+                    : (value) =>
+                          setState(() => emergencyConsent = value ?? false),
+                title: const Text(
+                  'Autorizo o uso deste contato em emergência durante a atividade.',
+                ),
+                subtitle: const Text(
+                  'Confirme que a pessoa sabe que será seu contato. Você pode retirar a autorização a qualquer momento.',
+                ),
+              ),
+              TextButton.icon(
+                onPressed: saving
+                    ? null
+                    : () => setState(() {
+                        emergencyName.clear();
+                        emergencyPhone.clear();
+                        emergencyRelation.clear();
+                        emergencyConsent = false;
+                      }),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Remover contato ao salvar'),
+              ),
+            ],
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: saving ? null : _save,

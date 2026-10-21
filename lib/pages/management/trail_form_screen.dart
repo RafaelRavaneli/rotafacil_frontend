@@ -1,3 +1,5 @@
+import '../../models/trail_accessibility.dart';
+import '../../widgets/trail_accessibility_section.dart';
 import '../../navigation/app_routes.dart';
 import '../../widgets/app_back_button.dart';
 import '../../services/brazil_locations.dart';
@@ -38,6 +40,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   final distanceController = TextEditingController();
   final priceController = TextEditingController();
   final recommendedItemsController = TextEditingController();
+  final organizerEmergencyPhone = TextEditingController();
+  final emergencyInstructions = TextEditingController();
+  final requiredItemsController = TextEditingController();
   final capacityController = TextEditingController(text: '12');
   final meetingPointController = TextEditingController();
   final mapController = MapController();
@@ -57,6 +62,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   bool geocoding = false;
   bool saving = false;
   bool accessible = false;
+  TrailAccessibility accessibility = const TrailAccessibility();
 
   @override
   void initState() {
@@ -92,8 +98,12 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       longitude = trail.longitude;
       meetingPointController.text = trail.meetingPoint;
       departures.addAll(trail.effectiveDepartures);
+      organizerEmergencyPhone.text = trail.organizerEmergencyPhone;
+      emergencyInstructions.text = trail.emergencyInstructions;
       accessible = trail.accessible;
+      accessibility = trail.accessibility;
       recommendedItemsController.text = trail.recommendedItems.join(', ');
+      requiredItemsController.text = trail.requiredItems.join(', ');
       capacityController.text = trail.capacity.toString();
     }
   }
@@ -161,6 +171,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     distanceController.dispose();
     priceController.dispose();
     recommendedItemsController.dispose();
+    requiredItemsController.dispose();
+    organizerEmergencyPhone.dispose();
+    emergencyInstructions.dispose();
     capacityController.dispose();
     meetingPointController.dispose();
     mapController.dispose();
@@ -373,6 +386,53 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
   }
 
   Future<void> _save() async {
+    final emergencyPhone = organizerEmergencyPhone.text.trim();
+    final phoneDigits = emergencyPhone.replaceAll(RegExp(r'\D'), '');
+    if (emergencyPhone.isNotEmpty &&
+        (!RegExp(r'^[+()0-9 .-]+$').hasMatch(emergencyPhone) ||
+            phoneDigits.length < 10 ||
+            phoneDigits.length > 15)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe um telefone de emergência válido para o organizador.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final minimumAge = accessibility.values['idade_minima'];
+    if (minimumAge != null &&
+        (minimumAge is! int || minimumAge < 0 || minimumAge > 120)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Informe uma idade mínima entre 0 e 120.'),
+        ),
+      );
+      return;
+    }
+
+    for (final controller in [
+      requiredItemsController,
+      recommendedItemsController,
+    ]) {
+      final items = controller.text
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+      if (items.length > 50 || items.any((item) => item.length > 120)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cada lista aceita até 50 itens, com até 120 caracteres por item.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
     if (nameController.text.trim().isEmpty ||
         descriptionController.text.trim().isEmpty ||
         cityController.text.trim().isEmpty) {
@@ -475,8 +535,16 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       latitude: latitude,
       longitude: longitude,
       meetingPoint: meetingPointController.text.trim(),
-      accessible: accessible,
+      accessible: accessibility.answer('mobilidade_reduzida') ?? accessible,
+      accessibility: accessibility,
+      organizerEmergencyPhone: organizerEmergencyPhone.text.trim(),
+      emergencyInstructions: emergencyInstructions.text.trim(),
       recommendedItems: recommendedItemsController.text
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList(),
+      requiredItems: requiredItemsController.text
           .split(',')
           .map((item) => item.trim())
           .where((item) => item.isNotEmpty)
@@ -770,14 +838,42 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Roteiro acessível'),
-                subtitle: const Text(
-                  'Informe se o percurso possui condições de acessibilidade.',
+              TextField(
+                controller: organizerEmergencyPhone,
+                maxLength: 30,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Telefone de emergência do organizador',
+                  helperText:
+                      'Contato da agência em roteiros de agência. Será exibido ao turista.',
                 ),
-                value: accessible,
-                onChanged: (value) => setState(() => accessible = value),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emergencyInstructions,
+                maxLength: 1500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Instruções de acionamento em emergência',
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TrailAccessibilityEditor(
+                initial: accessibility,
+                onChanged: (value) => accessibility = value,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: requiredItemsController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Itens obrigatórios',
+                  hintText: 'Calçado fechado, lanterna, documento',
+                  helperText:
+                      'Separe por vírgulas. Até 50 itens, com até 120 caracteres cada.',
+                  alignLabelWithHint: true,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -786,7 +882,8 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Itens recomendados',
                   hintText: 'Água, protetor solar, calçado adequado',
-                  helperText: 'Separe os itens por vírgulas.',
+                  helperText:
+                      'Separe por vírgulas. Até 50 itens, com até 120 caracteres cada.',
                   alignLabelWithHint: true,
                 ),
               ),

@@ -1,3 +1,4 @@
+import '../../widgets/reviews_panel.dart';
 import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
 
@@ -111,6 +112,8 @@ class GuideProfileScreen extends StatelessWidget {
                           .toList(),
                     ),
                   ],
+                  const SizedBox(height: 20),
+                  ReviewsPanel(id: guide.id, professional: true, role: 'guia'),
                   const SizedBox(height: 28),
                   Text(
                     'Roteiros deste guia',

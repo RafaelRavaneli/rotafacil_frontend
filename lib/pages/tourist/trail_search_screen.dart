@@ -1,3 +1,6 @@
+import '../../services/location_service.dart';
+import '../../services/trail_search_service.dart';
+import '../../models/trail_accessibility.dart';
 import '../../widgets/app_back_button.dart';
 import '../../widgets/brazil_location_fields.dart';
 import 'dart:async';
@@ -14,14 +17,16 @@ import '../../navigation/app_routes.dart';
 import 'trail_details_screen.dart';
 
 class TrailSearchScreen extends StatefulWidget {
-  const TrailSearchScreen({super.key, this.tileProvider});
+  const TrailSearchScreen({super.key, this.tileProvider, this.searchService});
   final TileProvider? tileProvider;
+  final TrailSearchService? searchService;
 
   @override
   State<TrailSearchScreen> createState() => _TrailSearchScreenState();
 }
 
-class _TrailSearchScreenState extends State<TrailSearchScreen> {
+class _TrailSearchScreenState extends State<TrailSearchScreen>
+    with WidgetsBindingObserver {
   final city = TextEditingController();
   final state = TextEditingController();
 
@@ -30,15 +35,114 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
   DateTime? startDate;
   DateTime? endDate;
   bool nearMe = false;
-  bool accessibleOnly = false;
+  final Set<String> accessibilityResources = {};
   double radiusKm = 20;
-  Position? position;
+  UserCoordinates? position;
   bool locating = false;
   bool showMap = true;
   String? selectedTrailId;
+  late final _search = widget.searchService ?? TrailSearchService();
+  Timer? _debounce;
+  String? _queryKey;
+  int _generation = 0;
+  bool _loading = false;
+  String? _searchError;
+  TrailSearchPage? _page;
+  final List<_TrailResult> _remote = [];
+
+  Map<String, String> get _filters => {
+    if (city.text.trim().isNotEmpty) 'cidade': city.text.trim(),
+    if (state.text.trim().isNotEmpty) 'estado': state.text.trim(),
+    if (difficulty != 'Todas') 'dificuldade': difficulty,
+    if (modality != 'Todas') 'modalidade': modality,
+    if (startDate != null)
+      'data_inicio': startDate!.toIso8601String().split('T').first,
+    if (endDate != null)
+      'data_fim': endDate!.toIso8601String().split('T').first,
+    if (accessibilityResources.isNotEmpty)
+      'recursos_acessibilidade': (accessibilityResources.toList()..sort()).join(
+        ',',
+      ),
+    if (nearMe && position != null) ...{
+      'latitude': '${position!.latitude}',
+      'longitude': '${position!.longitude}',
+      'raio_km': '$radiusKm',
+    },
+  };
+
+  void _syncSearch() {
+    if (!AppStore.instance.useBackend) return;
+    final filters = _filters;
+    final key = filters.toString();
+    if (key == _queryKey) return;
+    _queryKey = key;
+    final generation = ++_generation;
+    _debounce?.cancel();
+    _remote.clear();
+    _page = null;
+    _loading = true;
+    _searchError = null;
+    _debounce = Timer(
+      const Duration(milliseconds: 250),
+      () => _loadRemote(filters, generation),
+    );
+  }
+
+  Future<void> _loadRemote(
+    Map<String, String> filters,
+    int generation, {
+    int page = 1,
+  }) async {
+    try {
+      final result = await _search.search(filters, page: page);
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _searchError = null;
+        _page = result;
+        final ids = _remote.map((r) => r.trail.id).toSet();
+        _remote.addAll(
+          result.items
+              .where((r) => ids.add(r.trail.id))
+              .map(
+                (r) =>
+                    _TrailResult(trail: r.trail, userDistanceKm: r.distanceKm),
+              ),
+        );
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _loading = false;
+        _searchError = 'Não foi possível atualizar a busca. Tente novamente.';
+      });
+    }
+  }
+
+  void _retrySearch() {
+    setState(() {
+      ++_generation;
+      _queryKey = null;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    AppStore.instance.addListener(_retrySearch);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState value) {
+    if (value == AppLifecycleState.resumed) _retrySearch();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AppStore.instance.removeListener(_retrySearch);
+    _debounce?.cancel();
     city.dispose();
     state.dispose();
     super.dispose();
@@ -56,28 +160,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
     setState(() => locating = true);
 
     try {
-      final enabled = await Geolocator.isLocationServiceEnabled();
-
-      if (!enabled) {
-        throw StateError('Ative a localização do dispositivo.');
-      }
-
-      var permission = await Geolocator.checkPermission();
-
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        throw StateError(
-          'Permita o acesso à localização nas configurações do navegador ou dispositivo e tente novamente. Você também pode buscar por cidade e UF.',
-        );
-      }
-
-      final current = await Geolocator.getCurrentPosition().timeout(
-        const Duration(seconds: 15),
-      );
+      final current = await LocationService.instance.capture();
 
       if (!mounted) return;
 
@@ -173,7 +256,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       final distance = _distanceFromUser(trail);
 
       final nearMatch = !nearMe || (distance != null && distance <= radiusKm);
-      final accessibilityMatch = !accessibleOnly || trail.accessible;
+      final accessibilityMatch = trail.accessibility.matches(
+        accessibilityResources,
+      );
 
       if (cityMatch &&
           stateMatch &&
@@ -260,7 +345,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       startDate = null;
       endDate = null;
       nearMe = false;
-      accessibleOnly = false;
+      accessibilityResources.clear();
       position = null;
       radiusKm = 20;
       selectedTrailId = null;
@@ -313,7 +398,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
       body: AnimatedBuilder(
         animation: AppStore.instance,
         builder: (context, _) {
-          final results = filtered;
+          _syncSearch();
+          final remote = AppStore.instance.useBackend;
+          final results = remote ? _remote : filtered;
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -399,17 +486,37 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                       : 'Usa o GPS do dispositivo.',
                 ),
               ),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                value: accessibleOnly,
-                onChanged: (value) => setState(() => accessibleOnly = value),
-                title: const Text(
-                  'Somente roteiros acessíveis',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('Recursos de acessibilidade'),
+                subtitle: Text(
+                  accessibilityResources.isEmpty
+                      ? 'Nenhum recurso selecionado'
+                      : '${accessibilityResources.length} recurso(s) selecionado(s)',
                 ),
-                subtitle: const Text(
-                  'Mostra percursos informados como acessíveis pelo responsável.',
-                ),
+                children: [
+                  const Text(
+                    'Exibe somente roteiros com todos os recursos selecionados confirmados pelo responsável.',
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final key in TrailAccessibility.filterKeys)
+                        FilterChip(
+                          label: Text(TrailAccessibility.labels[key]!),
+                          selected: accessibilityResources.contains(key),
+                          onSelected: (selected) => setState(() {
+                            if (selected) {
+                              accessibilityResources.add(key);
+                            } else {
+                              accessibilityResources.remove(key);
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
               ),
               if (nearMe) ...[
                 Row(
@@ -441,7 +548,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
               ],
               const SizedBox(height: 12),
               Text(
-                '${results.length} resultado(s)',
+                '${remote ? (_page?.total ?? 0) : results.length} resultado(s)',
                 style: const TextStyle(
                   color: AppColors.ink,
                   fontSize: 18,
@@ -479,7 +586,31 @@ class _TrailSearchScreenState extends State<TrailSearchScreen> {
                   const SizedBox(height: 20),
                 ],
               ],
-              if (results.isEmpty)
+              if (remote && _loading) const LinearProgressIndicator(),
+              if (remote && _searchError != null) ...[
+                Text(_searchError!),
+                TextButton(
+                  onPressed: _retrySearch,
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
+              if (remote && _page?.nextPage != null)
+                TextButton(
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          setState(() => _loading = true);
+                          unawaited(
+                            _loadRemote(
+                              _filters,
+                              _generation,
+                              page: _page!.nextPage!,
+                            ),
+                          );
+                        },
+                  child: const Text('Carregar mais roteiros'),
+                ),
+              if (results.isEmpty && !_loading && _searchError == null)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
                   child: Center(
@@ -574,7 +705,7 @@ class _ResultCard extends StatelessWidget {
                     if (result.userDistanceKm != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '${result.userDistanceKm!.toStringAsFixed(1)} km de você',
+                        '${result.userDistanceKm!.toStringAsFixed(1).replaceAll('.', ',')} km de você',
                         style: const TextStyle(
                           color: AppColors.green900,
                           fontSize: 11,

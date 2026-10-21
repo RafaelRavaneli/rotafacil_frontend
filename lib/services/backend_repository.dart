@@ -8,6 +8,7 @@ import '../models/trail_experience.dart';
 import '../models/professional_document.dart';
 import '../models/app_notification.dart';
 import '../models/guide.dart';
+import '../models/packing_checklist.dart';
 import '../utils/role_utils.dart';
 import 'api_client.dart';
 import 'session_service.dart';
@@ -67,6 +68,30 @@ class OperatorDashboardSummary {
 class BackendRepository {
   BackendRepository({ApiClient? api}) : api = api ?? ApiClient.instance;
   final ApiClient api;
+
+  Future<PackingChecklist> packingChecklist(String bookingId) async =>
+      PackingChecklist.fromJson(
+        Map<String, dynamic>.from(
+          await api.get(
+                '/api/agendamentos/${Uri.encodeComponent(bookingId)}/checklist',
+              )
+              as Map,
+        ),
+      );
+
+  Future<PackingChecklist> updatePackingItem(
+    String bookingId,
+    String itemId,
+    bool checked,
+  ) async => PackingChecklist.fromJson(
+    Map<String, dynamic>.from(
+      await api.patch(
+            '/api/agendamentos/${Uri.encodeComponent(bookingId)}/checklist',
+            body: {'id_item': itemId, 'marcado': checked},
+          )
+          as Map,
+    ),
+  );
 
   static List<Map<String, dynamic>> records(dynamic data) {
     if (data is! List) throw const FormatException('Resposta inválida da API.');
@@ -224,7 +249,11 @@ class BackendRepository {
       'ativo': TrailStatus.isActive(trail.status),
       'arquivado': trail.archived,
       'acessivel': trail.accessible,
+      'emergencia_organizador_telefone': trail.organizerEmergencyPhone,
+      'emergencia_instrucoes': trail.emergencyInstructions,
+      'acessibilidade': trail.accessibility.toJson(),
       'itens_recomendados': trail.recommendedItems,
+      'itens_obrigatorios': trail.requiredItems,
       'trajeto': trail.route.map((point) => point.toJson()).toList(),
       if (trail.meetingPoint.trim().isNotEmpty)
         'ponto_encontro': trail.meetingPoint.trim(),
@@ -247,12 +276,75 @@ class BackendRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> adminRows(
+    String section,
+    Map<String, String> filters,
+  ) async =>
+      records(await api.get('/api/admin/$section', queryParameters: filters));
+  Future<void> adminAction(
+    String section,
+    String id,
+    String action,
+    String reason,
+  ) async {
+    await api.post(
+      '/api/admin/$section/${Uri.encodeComponent(id)}/acao',
+      body: {'acao': action, 'motivo': reason},
+    );
+  }
+
   Future<List<TrailReview>> reviews(String trailId) async {
     final response = await api.get(
       '/api/avaliacoes/trilha/${Uri.encodeComponent(trailId)}',
     );
     return records(response).map(TrailReview.fromJson).toList();
   }
+
+  Future<List<TrailReview>> professionalReviews(String id) async => records(
+    await api.get('/api/avaliacoes/profissional/${Uri.encodeComponent(id)}'),
+  ).map(TrailReview.fromJson).toList();
+  Future<TrailReview> ownReview(String bookingId) async => TrailReview.fromJson(
+    Map<String, dynamic>.from(
+      await api.get('/api/avaliacoes/reserva/${Uri.encodeComponent(bookingId)}')
+          as Map,
+    ),
+  );
+  Future<void> editReview(String id, Map<String, dynamic> body) async {
+    await api.patch('/api/avaliacoes/${Uri.encodeComponent(id)}', body: body);
+  }
+
+  Future<void> reportReview(
+    String id,
+    String reason,
+    String description,
+  ) async {
+    await api.post(
+      '/api/avaliacoes/${Uri.encodeComponent(id)}/denunciar',
+      body: {'motivo': reason, 'descricao': description},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> moderationReviews(String status) async =>
+      records(
+        await api.get(
+          '/api/avaliacoes/moderacao',
+          queryParameters: {'status': status},
+        ),
+      );
+  Future<void> moderateReview(String id, String action, String reason) async {
+    await api.post(
+      '/api/avaliacoes/${Uri.encodeComponent(id)}/moderar',
+      body: {'acao': action, 'motivo': reason},
+    );
+  }
+
+  Future<Map<String, dynamic>> professionalProfile(String id) async =>
+      Map<String, dynamic>.from(
+        await api.get(
+              '/api/avaliacoes/profissional/${Uri.encodeComponent(id)}/perfil',
+            )
+            as Map,
+      );
 
   Future<GuideProfile> publicGuide(String guideId) async {
     final result = await api.get('/api/guias/${Uri.encodeComponent(guideId)}');
@@ -326,9 +418,13 @@ class BackendRepository {
     return TrailWeather.fromJson(Map<String, dynamic>.from(current));
   }
 
-  Future<EmergencyContact> emergencyContact(String userId) async {
+  Future<EmergencyContact> emergencyContact(
+    String userId, {
+    required String bookingId,
+  }) async {
     final response = await api.get(
       '/api/usuarios/${Uri.encodeComponent(userId)}/contato-emergencia',
+      queryParameters: {'id_agendamento': bookingId},
     );
     return EmergencyContact.fromJson(
       Map<String, dynamic>.from(response as Map),

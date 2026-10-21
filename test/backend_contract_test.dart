@@ -281,6 +281,7 @@ void main() {
       );
       final result = await gateway.register(
         role: UserRole.guide,
+        acceptedLegal: true,
         name: 'Guia',
         email: 'guia@example.test',
         password: 'senha123',
@@ -330,6 +331,10 @@ void main() {
           expect(body['data_atividade'], '2026-09-25');
           expect(body['preco'], 35);
           expect(body['acessivel'], true);
+          expect(body['acessibilidade'], {
+            'apoio_visual': true,
+            'idade_minima': 12,
+          });
           expect(body['itens_recomendados'], ['Água', 'Boné']);
           expect(body['trajeto'], [
             {'latitude': -23.4, 'longitude': -51.9},
@@ -349,6 +354,7 @@ void main() {
           'preco': 35,
           'date': '25/09/2026',
           'acessivel': true,
+          'acessibilidade': {'apoio_visual': true, 'idade_minima': 12},
           'itens_recomendados': ['Água', 'Boné'],
           'trajeto': [
             {'latitude': -23.4, 'longitude': -51.9},

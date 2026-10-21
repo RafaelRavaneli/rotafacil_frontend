@@ -17,6 +17,8 @@ class AppUser {
     this.profileImageDataUrl,
     this.emergencyContactName = '',
     this.emergencyContactPhone = '',
+    this.emergencyContactRelation = '',
+    this.emergencyContactConsent = false,
     this.professionalDescription = '',
     this.specialties = const [],
   }) : role = normalizeAppUserRole(role);
@@ -34,6 +36,8 @@ class AppUser {
   String? profileImageDataUrl;
   String emergencyContactName;
   String emergencyContactPhone;
+  String emergencyContactRelation;
+  bool emergencyContactConsent;
   String professionalDescription;
   List<String> specialties;
 
@@ -51,6 +55,8 @@ class AppUser {
     'profileImageDataUrl': profileImageDataUrl,
     'emergencyContactName': emergencyContactName,
     'emergencyContactPhone': emergencyContactPhone,
+    'emergencyContactRelation': emergencyContactRelation,
+    'emergencyContactConsent': emergencyContactConsent,
     'professionalDescription': professionalDescription,
     'specialties': specialties,
   };
@@ -82,6 +88,14 @@ class AppUser {
           (json['emergencyContactPhone'] ?? json['contato_emergencia_telefone'])
               ?.toString() ??
           '',
+      emergencyContactRelation:
+          (json['emergencyContactRelation'] ??
+                  json['contato_emergencia_relacao'])
+              ?.toString() ??
+          '',
+      emergencyContactConsent:
+          json['emergencyContactConsent'] == true ||
+          json['contato_emergencia_consentimento'] == true,
       professionalDescription:
           (json['professionalDescription'] ?? json['descricao_profissional'])
               ?.toString() ??

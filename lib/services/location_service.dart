@@ -70,7 +70,7 @@ class LocationService {
     }
     if (permission == LocationPermission.denied) {
       throw StateError(
-        'Permissão de localização negada. Autorize o acesso e tente novamente.',
+        'Permita o acesso à localização nas configurações do navegador ou dispositivo. Você também pode buscar por cidade e UF.',
       );
     }
 

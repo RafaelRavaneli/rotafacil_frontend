@@ -1,3 +1,5 @@
+import 'trail_accessibility.dart';
+
 class TrailStatus {
   const TrailStatus._();
 
@@ -191,8 +193,12 @@ class Trail {
     this.latitude,
     this.longitude,
     this.meetingPoint = '',
+    this.organizerEmergencyPhone = '',
+    this.emergencyInstructions = '',
     this.accessible = false,
+    this.accessibility = const TrailAccessibility(),
     this.recommendedItems = const [],
+    this.requiredItems = const [],
     this.route = const [],
     this.capacity = 12,
     this.startTime = '',
@@ -234,8 +240,12 @@ class Trail {
   final double? latitude;
   final double? longitude;
   final String meetingPoint;
+  final String organizerEmergencyPhone;
+  final String emergencyInstructions;
   final bool accessible;
+  final TrailAccessibility accessibility;
   final List<String> recommendedItems;
+  final List<String> requiredItems;
   final List<TrailPoint> route;
   final int capacity;
   final String startTime;
@@ -314,8 +324,12 @@ class Trail {
     'latitude': latitude,
     'longitude': longitude,
     'meetingPoint': meetingPoint,
+    'emergencia_organizador_telefone': organizerEmergencyPhone,
+    'emergencia_instrucoes': emergencyInstructions,
     'accessible': accessible,
+    'acessibilidade': accessibility.toJson(),
     'recommendedItems': recommendedItems,
+    'requiredItems': requiredItems,
     'route': route.map((point) => point.toJson()).toList(),
     'capacity': capacity,
     'startTime': startTime,
@@ -338,6 +352,8 @@ class Trail {
     final rawReviews = json['reviews'] ?? json['total_avaliacoes'];
 
     final rawItems = json['recommendedItems'] ?? json['itens_recomendados'];
+    final rawRequiredItems =
+        json['requiredItems'] ?? json['itens_obrigatorios'];
     final rawRoute = json['route'] ?? json['trajeto'];
     final rawActivities = json['activities'] ?? json['atividades'];
     final rawDepartures = json['departures'] ?? json['datas'];
@@ -394,9 +410,16 @@ class Trail {
       longitude: double.tryParse(json['longitude']?.toString() ?? ''),
       meetingPoint:
           (json['meetingPoint'] ?? json['ponto_encontro'])?.toString() ?? '',
+      organizerEmergencyPhone:
+          json['emergencia_organizador_telefone']?.toString() ?? '',
+      emergencyInstructions: json['emergencia_instrucoes']?.toString() ?? '',
       accessible: json['accessible'] == true || json['acessivel'] == true,
+      accessibility: TrailAccessibility.fromJson(json['acessibilidade']),
       recommendedItems: rawItems is List
           ? rawItems.map((item) => item.toString()).toList()
+          : const [],
+      requiredItems: rawRequiredItems is List
+          ? rawRequiredItems.whereType<String>().toList()
           : const [],
       route: rawRoute is List
           ? rawRoute

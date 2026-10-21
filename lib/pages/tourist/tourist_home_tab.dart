@@ -1,3 +1,4 @@
+import '../../services/trail_search_service.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -15,28 +16,101 @@ import 'trail_details_screen.dart';
 import 'trail_search_screen.dart';
 
 class TouristHomeTab extends StatefulWidget {
-  const TouristHomeTab({super.key, this.exploreMode = false});
+  const TouristHomeTab({
+    super.key,
+    this.exploreMode = false,
+    this.searchService,
+    this.locate,
+  });
   final bool exploreMode;
+  final TrailSearchService? searchService;
+  final Future<UserCoordinates> Function()? locate;
 
   @override
   State<TouristHomeTab> createState() => _TouristHomeTabState();
 }
 
-class _TouristHomeTabState extends State<TouristHomeTab> {
+class _TouristHomeTabState extends State<TouristHomeTab>
+    with WidgetsBindingObserver {
   UserCoordinates? position;
   bool locationLoaded = true;
   String? locationError;
+  late final _search = widget.searchService ?? TrailSearchService();
+  final List<TrailSearchResult> _nearby = [];
+  int? _nextPage;
+  int _locationGeneration = 0;
+
+  Future<void> _loadNearby({int page = 1}) async {
+    final current = position;
+    if (current == null || !AppStore.instance.useBackend) return;
+    final generation = ++_locationGeneration;
+    setState(() {
+      locationLoaded = false;
+      locationError = null;
+    });
+    try {
+      final result = await _search.search({
+        'latitude': '${current.latitude}',
+        'longitude': '${current.longitude}',
+        'raio_km': '100',
+      }, page: page);
+      if (!mounted || generation != _locationGeneration) return;
+      setState(() {
+        if (page == 1) _nearby.clear();
+        final ids = _nearby.map((r) => r.trail.id).toSet();
+        _nearby.addAll(result.items.where((r) => ids.add(r.trail.id)));
+        _nextPage = result.nextPage;
+        locationLoaded = true;
+      });
+    } catch (_) {
+      if (!mounted || generation != _locationGeneration) return;
+      setState(() {
+        locationLoaded = true;
+        locationError =
+            'Não foi possível carregar atividades próximas. Tente novamente.';
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    AppStore.instance.addListener(_refreshNearby);
     unawaited(_loadPosition());
+  }
+
+  Timer? _refreshTimer;
+
+  void _refreshNearby() {
+    if (!AppStore.instance.useBackend || position == null) return;
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer(
+      const Duration(milliseconds: 350),
+      () => _loadNearby(),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState value) {
+    if (value == AppLifecycleState.resumed) unawaited(_loadPosition());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    AppStore.instance.removeListener(_refreshNearby);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   void _finishLocationWithError(String message) {
     if (!mounted) return;
     setState(() {
+      ++_locationGeneration;
       position = null;
+      _nearby.clear();
+      _nextPage = null;
       locationLoaded = true;
       locationError = message;
     });
@@ -47,17 +121,23 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
 
   Future<void> _loadPosition() async {
     setState(() {
+      ++_locationGeneration;
+      position = null;
+      _nearby.clear();
+      _nextPage = null;
       locationLoaded = false;
       locationError = null;
     });
     try {
-      final current = await LocationService.instance.capture();
+      final current =
+          await (widget.locate?.call() ?? LocationService.instance.capture());
       if (mounted) {
         setState(() {
           position = current;
           locationLoaded = true;
           locationError = null;
         });
+        await _loadNearby();
       }
     } catch (error) {
       _finishLocationWithError(
@@ -69,6 +149,12 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
   }
 
   double? _distanceTo(Trail trail) {
+    if (AppStore.instance.useBackend) {
+      for (final item in _nearby) {
+        if (item.trail.id == trail.id) return item.distanceKm;
+      }
+      return null;
+    }
     final current = position;
     if (current == null || trail.latitude == null || trail.longitude == null) {
       return null;
@@ -100,14 +186,17 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
               .where((t) => TrailStatus.isActive(t.status))
               .toList();
           final nearby =
-              trails.where((trail) {
-                final distance = _distanceTo(trail);
-                return distance != null && distance <= 100;
-              }).toList()..sort(
-                (a, b) => (_distanceTo(a) ?? double.infinity).compareTo(
-                  _distanceTo(b) ?? double.infinity,
-                ),
-              );
+              AppStore.instance.useBackend
+                    ? _nearby.map((r) => r.trail).toList()
+                    : trails.where((trail) {
+                        final distance = _distanceTo(trail);
+                        return distance != null && distance <= 100;
+                      }).toList()
+                ..sort(
+                  (a, b) => (_distanceTo(a) ?? double.infinity).compareTo(
+                    _distanceTo(b) ?? double.infinity,
+                  ),
+                );
           final bestRated = trails.where((trail) => trail.reviews > 0).toList()
             ..sort((a, b) {
               final rating = b.rating.compareTo(a.rating);
@@ -180,16 +269,46 @@ class _TouristHomeTabState extends State<TouristHomeTab> {
                         subtitle: 'Até 100 km da sua localização',
                         trails: nearby,
                         loading: !locationLoaded,
-                        emptyText: position == null
+                        emptyText: locationError != null
+                            ? locationError!
+                            : position == null
                             ? (locationError ??
                                   'Permita a localização para ver atividades próximas.')
                             : 'Nenhuma atividade encontrada em até 100 km.',
-                        emptyAction: position == null
+                        emptyAction: position == null || locationError != null
                             ? () => unawaited(_loadPosition())
                             : null,
-                        emptyActionLabel: 'Usar minha localização',
-                        itemBuilder: (trail) => _card(context, trail, store),
+                        emptyActionLabel: 'Tentar novamente',
+                        itemBuilder: (trail) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _card(context, trail, store),
+                            if (_distanceTo(trail) != null)
+                              Text(
+                                '${_distanceTo(trail)!.toStringAsFixed(1).replaceAll('.', ',')} km de você',
+                              ),
+                          ],
+                        ),
                       ),
+                      if (locationError != null && _nearby.isNotEmpty)
+                        Column(
+                          children: [
+                            Text(locationError!),
+                            TextButton(
+                              onPressed: () => unawaited(_loadNearby()),
+                              child: const Text('Tentar novamente'),
+                            ),
+                          ],
+                        ),
+                      if (_nextPage != null && locationError == null)
+                        TextButton(
+                          onPressed: !locationLoaded
+                              ? null
+                              : () => unawaited(_loadNearby(page: _nextPage!)),
+                          child: const Text(
+                            'Carregar mais atividades próximas',
+                          ),
+                        ),
                       _TrailCarouselSection(
                         title: 'Melhores avaliados',
                         subtitle: 'Experiências preferidas pelos usuários',
@@ -330,7 +449,7 @@ class _TrailCarouselSection extends StatelessWidget {
             )
           else
             SizedBox(
-              height: 345,
+              height: 375,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 scrollDirection: Axis.horizontal,

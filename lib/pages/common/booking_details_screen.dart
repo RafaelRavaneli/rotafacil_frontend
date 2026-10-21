@@ -1,3 +1,6 @@
+import '../../utils/controller_dialog.dart';
+import 'professional_profile_screen.dart';
+import '../../widgets/organizer_emergency_card.dart';
 import '../../navigation/app_routes.dart';
 import '../../widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +15,8 @@ import '../../utils/date_time_format.dart';
 import '../../utils/run_action.dart';
 import '../../widgets/network_image_box.dart';
 import '../../widgets/trail_weather_card.dart';
+import '../../widgets/personal_checklist_card.dart';
+import '../../widgets/packing_items_list.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   const BookingDetailsScreen({super.key, required this.bookingId});
@@ -119,12 +124,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
-  Future<void> _review(LocalBooking booking) async {
-    var trailRating = 0;
-    var guideRating = 0;
-    var agencyRating = 0;
-    final comment = TextEditingController();
-    final data = await showDialog<(int, int, int?, String)?>(
+  Future<void> _review(LocalBooking booking, {bool editing = false}) async {
+    TrailReview? existing;
+    if (editing) {
+      existing = await runValueAction<TrailReview>(
+        context,
+        () => AppStore.instance.ownReview(booking.id),
+      );
+      if (existing == null || !mounted) return;
+      if (!existing.editable) {
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Sua avaliação'),
+            content: SingleChildScrollView(
+              child: Text(
+                '${existing!.comment}\n\n${existing.moderationStatus == 'oculta' ? 'Avaliação ocultada pela moderação.' : 'Prazo de edição encerrado.'}',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Fechar'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+    var trailRating = existing?.rating ?? 0;
+    var guideRating = existing?.guideRating ?? 0;
+    var agencyRating = existing?.agencyRating ?? 0;
+    final comment = TextEditingController(text: existing?.comment);
+    final data = await showControllerDialog<(int, int, int?, String)?>(
+      controllers: [comment],
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -134,6 +168,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'Edição disponível por 7 dias após o primeiro envio. Notas de 0 a 5. Avaliações ocultadas não podem ser editadas.',
+                ),
                 _RatingSelector(
                   label: 'Roteiro',
                   value: trailRating,
@@ -180,24 +217,30 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 booking.agencyId.isEmpty ? null : agencyRating,
                 comment.text.trim(),
               )),
-              child: const Text('Publicar avaliação'),
+              child: Text(editing ? 'Salvar avaliação' : 'Publicar avaliação'),
             ),
           ],
         ),
       ),
     );
-    comment.dispose();
     if (data == null || !mounted) return;
     final saved = await runAction(
       context,
-      () => AppStore.instance.reviewTrail(
-        bookingId: booking.id,
-        trailId: booking.trailId,
-        trailRating: data.$1,
-        guideRating: data.$2,
-        agencyRating: data.$3,
-        comment: data.$4,
-      ),
+      () => editing
+          ? AppStore.instance.editReview(existing!.id, {
+              'nota': data.$1,
+              'nota_guia': data.$2,
+              if (data.$3 != null) 'nota_agencia': data.$3,
+              'comentario': data.$4,
+            })
+          : AppStore.instance.reviewTrail(
+              bookingId: booking.id,
+              trailId: booking.trailId,
+              trailRating: data.$1,
+              guideRating: data.$2,
+              agencyRating: data.$3,
+              comment: data.$4,
+            ),
     );
     if (saved && mounted) {
       ScaffoldMessenger.of(
@@ -232,7 +275,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Future<void> _showEmergency(LocalBooking booking) async {
     final EmergencyContact? contact = await runValueAction<EmergencyContact>(
       context,
-      () => AppStore.instance.emergencyContactFor(booking.personId),
+      () => AppStore.instance.emergencyContactFor(
+        booking.personId,
+        bookingId: booking.id,
+      ),
     );
     if (contact == null || !mounted) return;
     await showDialog<void>(
@@ -249,6 +295,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               value: contact.participantPhone,
             ),
             _Information(label: 'Contato', value: contact.contactName),
+            _Information(label: 'Relação', value: contact.relation),
             _Information(
               label: 'Telefone de emergência',
               value: contact.contactPhone,
@@ -397,6 +444,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     value: formatBrazilianDateTime(end),
                   ),
                   if (trail != null) ...[
+                    OrganizerEmergencyCard(trail: trail),
+                    const SizedBox(height: 12),
                     _Information(
                       label: 'Ponto de encontro',
                       value: trail.meetingPoint,
@@ -409,20 +458,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (trail.recommendedItems.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'Lista ainda não informada pelo responsável.',
-                        ),
-                      )
+                    if (isOperator || role == 'admin')
+                      PackingItemsList(trail: trail)
                     else
-                      ...trail.recommendedItems.map(
-                        (item) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.check_circle_outline),
-                          title: Text(item),
-                        ),
+                      PersonalChecklistCard(
+                        key: ValueKey('packing-${booking.id}'),
+                        booking: booking,
+                        trail: trail,
                       ),
                     if (trail.latitude != null && trail.longitude != null)
                       OutlinedButton.icon(
@@ -492,7 +534,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     ),
                   ],
                   if (!isOperator &&
-                      BookingStatus.isActive(booking.status)) ...[
+                      (BookingStatus.isConfirmed(booking.status) ||
+                          normalizedStatus == 'Em andamento') &&
+                      start != null &&
+                      end != null &&
+                      !DateTime.now().isBefore(
+                        start.subtract(const Duration(hours: 24)),
+                      ) &&
+                      !DateTime.now().isAfter(end)) ...[
                     const SizedBox(height: 12),
                     const ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -503,6 +552,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       ),
                     ),
                   ],
+                  if (booking.agencyId.isNotEmpty)
+                    TextButton(
+                      onPressed: () => AppRoutes.push(
+                        context,
+                        '/profissional/${Uri.encodeComponent(booking.agencyId)}',
+                        (_) => ProfessionalProfileScreen(id: booking.agencyId),
+                      ),
+                      child: const Text('Ver perfil e avaliações da agência'),
+                    ),
                   if (normalizedStatus == 'Concluído' &&
                       !isOperator &&
                       !booking.evaluated) ...[
@@ -522,10 +580,21 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       leading: Icon(Icons.check_circle_outline),
                       title: Text('Avaliação enviada'),
                     ),
+                    OutlinedButton(
+                      onPressed: () => _review(booking, editing: true),
+                      child: const Text('Ver ou editar avaliação'),
+                    ),
                   ],
                   if (isOperator &&
                       booking.personId.isNotEmpty &&
-                      BookingStatus.isActive(booking.status)) ...[
+                      (BookingStatus.isConfirmed(booking.status) ||
+                          normalizedStatus == 'Em andamento') &&
+                      start != null &&
+                      end != null &&
+                      !DateTime.now().isBefore(
+                        start.subtract(const Duration(hours: 24)),
+                      ) &&
+                      !DateTime.now().isAfter(end)) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => _showEmergency(booking),

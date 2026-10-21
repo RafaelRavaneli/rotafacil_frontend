@@ -17,6 +17,7 @@ import '../models/trail.dart';
 import '../models/trail_experience.dart';
 import '../models/professional_document.dart';
 import '../models/guide.dart';
+import '../models/packing_checklist.dart';
 import '../utils/role_utils.dart';
 
 class AppStore extends ChangeNotifier {
@@ -411,6 +412,8 @@ class AppStore extends ChangeNotifier {
     bool updateProfileImage = false,
     String? emergencyContactName,
     String? emergencyContactPhone,
+    String? emergencyContactRelation,
+    bool? emergencyContactConsent,
     String? professionalDescription,
     List<String>? specialties,
   }) async {
@@ -431,6 +434,8 @@ class AppStore extends ChangeNotifier {
               : await _backend.uploadImage(profileImageDataUrl),
         'contato_emergencia_nome': ?emergencyContactName,
         'contato_emergencia_telefone': ?emergencyContactPhone,
+        'contato_emergencia_relacao': ?emergencyContactRelation,
+        'contato_emergencia_consentimento': ?emergencyContactConsent,
         'descricao_profissional': ?professionalDescription,
         'especialidades': ?specialties,
       };
@@ -472,6 +477,12 @@ class AppStore extends ChangeNotifier {
     }
     if (emergencyContactPhone != null) {
       user.emergencyContactPhone = emergencyContactPhone;
+    }
+    if (emergencyContactRelation != null) {
+      user.emergencyContactRelation = emergencyContactRelation;
+    }
+    if (emergencyContactConsent != null) {
+      user.emergencyContactConsent = emergencyContactConsent;
     }
     if (professionalDescription != null) {
       user.professionalDescription = professionalDescription;
@@ -737,10 +748,45 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Map<String, dynamic>>> adminRows(
+    String section,
+    Map<String, String> filters,
+  ) => _backend.adminRows(section, filters);
+  Future<void> adminAction(
+    String section,
+    String id,
+    String action,
+    String reason,
+  ) async {
+    await _backend.adminAction(section, id, action, reason);
+    await refreshBackend();
+  }
+
   Future<List<TrailReview>> reviewsFor(String trailId) async {
     if (!useBackend) return const [];
     return _backend.reviews(trailId);
   }
+
+  Future<List<TrailReview>> professionalReviews(String id) async =>
+      useBackend ? _backend.professionalReviews(id) : const [];
+  Future<TrailReview> ownReview(String bookingId) =>
+      _backend.ownReview(bookingId);
+  Future<void> editReview(String id, Map<String, dynamic> body) async {
+    await _backend.editReview(id, body);
+    await refreshBackend();
+  }
+
+  Future<void> reportReview(String id, String reason, String description) =>
+      _backend.reportReview(id, reason, description);
+  Future<List<Map<String, dynamic>>> moderationReviews(String status) =>
+      _backend.moderationReviews(status);
+  Future<void> moderateReview(String id, String action, String reason) async {
+    await _backend.moderateReview(id, action, reason);
+    await refreshBackend();
+  }
+
+  Future<Map<String, dynamic>> professionalProfile(String id) =>
+      _backend.professionalProfile(id);
 
   Future<GuideProfile> publicGuide(String guideId) {
     if (!useBackend) {
@@ -810,11 +856,64 @@ class AppStore extends ChangeNotifier {
     return _backend.weather(trailId, date: date);
   }
 
-  Future<EmergencyContact> emergencyContactFor(String userId) {
+  String get _packingPrefix =>
+      'packing_checklist_${Uri.encodeComponent(SessionService.instance.userId ?? SessionService.instance.email ?? tourist.email)}_';
+
+  Future<PackingChecklist> packingChecklistFor(
+    LocalBooking booking,
+    Trail trail,
+  ) async {
+    if (useBackend) return _backend.packingChecklist(booking.id);
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('$_packingPrefix${booking.id}');
+    final checked = raw == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    return PackingChecklist.fromTrail(
+      trail,
+      checked: checked,
+      editable: BookingStatus.isActive(booking.status),
+    );
+  }
+
+  Future<PackingChecklist> updatePackingItem(
+    LocalBooking booking,
+    Trail trail,
+    String itemId,
+    bool checked,
+  ) async {
+    if (useBackend) {
+      return _backend.updatePackingItem(booking.id, itemId, checked);
+    }
+    if (!BookingStatus.isActive(booking.status) ||
+        !PackingChecklist.fromTrail(
+          trail,
+        ).items.any((item) => item.id == itemId)) {
+      throw StateError('Este item não pode ser alterado nesta reserva.');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final key = '$_packingPrefix${booking.id}';
+    final raw = prefs.getString(key);
+    final marks = raw == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    marks[itemId] = checked;
+    if (!await prefs.setString(key, jsonEncode(marks))) {
+      throw StateError(
+        'Não foi possível salvar seu checklist. Tente novamente.',
+      );
+    }
+    return PackingChecklist.fromTrail(trail, checked: marks, editable: true);
+  }
+
+  Future<EmergencyContact> emergencyContactFor(
+    String userId, {
+    required String bookingId,
+  }) {
     if (!useBackend) {
       throw StateError('Contato de emergência exige conexão com o servidor.');
     }
-    return _backend.emergencyContact(userId);
+    return _backend.emergencyContact(userId, bookingId: bookingId);
   }
 
   Future<void> deleteCurrentAccount(String role) async {
@@ -826,6 +925,12 @@ class AppStore extends ChangeNotifier {
       await _backend.deleteAccount(userId);
     } else {
       final roleKey = normalizeRole(role);
+      final packingPrefs = await SharedPreferences.getInstance();
+      for (final key in packingPrefs.getKeys().where(
+        (key) => key.startsWith(_packingPrefix),
+      )) {
+        await packingPrefs.remove(key);
+      }
       await LocalAuthService.instance.deleteAccount(role: roleKey);
       await _prefs.remove('user_$roleKey');
       final empty = AppUser(

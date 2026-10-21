@@ -219,11 +219,16 @@ void main() {
     );
     expect(find.text('Água'), findsOneWidget);
     await tester.scrollUntilVisible(
+      find.text('Abrir rota no Google Maps'),
+      150,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Abrir rota no Google Maps'), findsOneWidget);
+    await tester.scrollUntilVisible(
       find.byType(TrailWeatherCard),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.text('Abrir rota no Google Maps'), findsOneWidget);
     expect(
       tester.widget<TrailWeatherCard>(find.byType(TrailWeatherCard)).date,
       DateTime(2099, 11, 10, 6, 30),
@@ -304,6 +309,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(store.bookings.single.status, 'Cancelado');
     expect(find.text('Cancelar reserva'), findsNothing);
+    await tester.scrollUntilVisible(
+      find.text('Cancelado'),
+      -250,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Cancelado'), findsOneWidget);
   }, skip: AppConfig.useBackend);
 

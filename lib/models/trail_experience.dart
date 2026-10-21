@@ -1,15 +1,33 @@
 class TrailReview {
   const TrailReview({
+    this.id = '',
+    this.createdAt = '',
+    this.guideRating,
+    this.agencyRating,
+    this.editable = false,
+    this.moderationStatus = 'publicada',
     required this.userName,
     required this.rating,
     required this.comment,
   });
 
+  final String id;
+  final String createdAt;
+  final int? guideRating;
+  final int? agencyRating;
+  final bool editable;
+  final String moderationStatus;
   final String userName;
   final int rating;
   final String comment;
 
   factory TrailReview.fromJson(Map<String, dynamic> json) => TrailReview(
+    id: json['id']?.toString() ?? '',
+    createdAt: json['createdAt']?.toString() ?? '',
+    guideRating: int.tryParse('${json['nota_guia'] ?? ''}'),
+    agencyRating: int.tryParse('${json['nota_agencia'] ?? ''}'),
+    editable: json['editavel'] == true,
+    moderationStatus: json['status_moderacao']?.toString() ?? 'publicada',
     userName: json['nome_usuario']?.toString() ?? 'Participante',
     rating:
         int.tryParse(
@@ -56,12 +74,14 @@ class EmergencyContact {
     required this.participantPhone,
     required this.contactName,
     required this.contactPhone,
+    this.relation = '',
   });
 
   final String participantName;
   final String participantPhone;
   final String contactName;
   final String contactPhone;
+  final String relation;
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) =>
       EmergencyContact(
@@ -69,5 +89,6 @@ class EmergencyContact {
         participantPhone: json['telefone_participante']?.toString() ?? '',
         contactName: json['contato_emergencia_nome']?.toString() ?? '',
         contactPhone: json['contato_emergencia_telefone']?.toString() ?? '',
+        relation: json['contato_emergencia_relacao']?.toString() ?? '',
       );
 }

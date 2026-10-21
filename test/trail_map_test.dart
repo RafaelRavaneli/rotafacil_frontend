@@ -166,6 +166,7 @@ void main() {
           'nome': 'Percurso acessível',
           'ativo': true,
           'acessivel': true,
+          'acessibilidade': {'mobilidade_reduzida': true},
         }),
         Trail.fromJson({
           'id': 'comum',
@@ -181,8 +182,15 @@ void main() {
 
     await tester.pumpWidget(const MaterialApp(home: TrailSearchScreen()));
     expect(find.text('2 resultado(s)'), findsOneWidget);
-    await tester.tap(find.text('Somente roteiros acessíveis'));
+    await tester.ensureVisible(find.text('Recursos de acessibilidade'));
+    await tester.tap(find.text('Recursos de acessibilidade'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Acesso para mobilidade reduzida'));
+    await tester.tap(find.text('Acesso para mobilidade reduzida'));
     await tester.pump();
+    await tester.ensureVisible(find.text('Recursos de acessibilidade'));
+    await tester.tap(find.text('Recursos de acessibilidade'));
+    await tester.pumpAndSettle();
     expect(find.text('1 resultado(s)'), findsOneWidget);
   });
 
