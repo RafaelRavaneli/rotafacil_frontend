@@ -29,6 +29,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
     with WidgetsBindingObserver {
   final city = TextEditingController();
   final state = TextEditingController();
+  final _scrollController = ScrollController();
+  bool? _mobileFiltersExpanded;
 
   String difficulty = 'Todas';
   String modality = 'Todas';
@@ -109,6 +111,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
               ),
         );
         _loading = false;
+        _mobileFiltersExpanded ??= false;
       });
     } catch (_) {
       if (!mounted || generation != _generation) return;
@@ -145,6 +148,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
     _debounce?.cancel();
     city.dispose();
     state.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -335,6 +339,46 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
+  bool get _filtersExpanded =>
+      _mobileFiltersExpanded ??
+      (AppStore.instance.useBackend ? _page == null : filtered.isEmpty);
+
+  String get _filterSummary {
+    final parts = <String>[
+      if (city.text.trim().isNotEmpty)
+        city.text.trim()
+      else if (state.text.trim().isNotEmpty)
+        state.text.trim(),
+      if (modality != 'Todas') modality,
+      if (difficulty != 'Todas') difficulty,
+      if (startDate != null || endDate != null)
+        '${_dateLabel(startDate)} a ${_dateLabel(endDate)}',
+      if (nearMe) 'Até ${radiusKm.round()} km de você',
+      if (accessibilityResources.isNotEmpty)
+        '${accessibilityResources.length} recurso(s) de acessibilidade',
+    ];
+    return parts.isEmpty
+        ? 'Destino, atividade, datas e mais opções'
+        : parts.join(' · ');
+  }
+
+  void _setFiltersExpanded(bool expanded) {
+    if (!expanded) FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _mobileFiltersExpanded = expanded);
+    if (!expanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        unawaited(
+          _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+      });
+    }
+  }
+
   void _clear() {
     city.clear();
     state.clear();
@@ -349,51 +393,295 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       position = null;
       radiusKm = 20;
       selectedTrailId = null;
+      _mobileFiltersExpanded = true;
     });
   }
 
+  List<Widget> _filterFields({required bool collapsible}) => [
+    BrazilLocationFields(
+      city: city,
+      state: state,
+      onChanged: () => setState(() {}),
+    ),
+    const SizedBox(height: 12),
+    DropdownButtonFormField<String>(
+      key: ValueKey('modalidade-$modality'),
+      initialValue: modality,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Atividade do roteiro',
+        prefixIcon: Icon(Icons.hiking_rounded),
+      ),
+      items: [
+        const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+        ...RouteActivity.values.map(
+          (activity) =>
+              DropdownMenuItem(value: activity, child: Text(activity)),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) setState(() => modality = value);
+      },
+    ),
+    const SizedBox(height: 12),
+    DropdownButtonFormField<String>(
+      key: ValueKey(difficulty),
+      initialValue: difficulty,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'Dificuldade'),
+      items: [
+        const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+        ...TrailDifficulty.values.map(
+          (value) => DropdownMenuItem(value: value, child: Text(value)),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => difficulty = value);
+        }
+      },
+    ),
+    const SizedBox(height: 12),
+    Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _pickStart,
+            icon: const Icon(Icons.calendar_today_outlined),
+            label: Text('De: ${_dateLabel(startDate)}'),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _pickEnd,
+            icon: const Icon(Icons.event_available_outlined),
+            label: Text('Até: ${_dateLabel(endDate)}'),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 8),
+    SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      value: nearMe,
+      onChanged: locating ? null : _toggleNearMe,
+      title: const Text(
+        'Buscar perto de mim',
+        style: TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Text(
+        locating
+            ? 'Obtendo GPS...'
+            : nearMe
+            ? 'Localização capturada.'
+            : 'Usa o GPS do dispositivo.',
+      ),
+    ),
+    ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: const Text('Recursos de acessibilidade'),
+      subtitle: Text(
+        accessibilityResources.isEmpty
+            ? 'Nenhum recurso selecionado'
+            : '${accessibilityResources.length} recurso(s) selecionado(s)',
+      ),
+      children: [
+        const Text(
+          'Exibe somente roteiros com todos os recursos selecionados confirmados pelo responsável.',
+        ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final key in TrailAccessibility.filterKeys)
+              FilterChip(
+                label: Text(TrailAccessibility.labels[key]!),
+                selected: accessibilityResources.contains(key),
+                onSelected: (selected) => setState(() {
+                  if (selected) {
+                    accessibilityResources.add(key);
+                  } else {
+                    accessibilityResources.remove(key);
+                  }
+                }),
+              ),
+          ],
+        ),
+      ],
+    ),
+    if (nearMe) ...[
+      Row(
+        children: [
+          const Text('Raio', style: TextStyle(fontWeight: FontWeight.w800)),
+          const Spacer(),
+          Text(
+            '${radiusKm.round()} km',
+            style: const TextStyle(
+              color: AppColors.green700,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+      Slider(
+        min: 5,
+        max: 100,
+        divisions: 19,
+        value: radiusKm,
+        activeColor: AppColors.green700,
+        onChanged: (value) {
+          setState(() => radiusKm = value);
+        },
+      ),
+    ],
+    const SizedBox(height: 12),
+    if (collapsible) ...[
+      Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          TextButton(onPressed: _clear, child: const Text('Limpar filtros')),
+          FilledButton.icon(
+            key: const ValueKey('search-show-results'),
+            onPressed: () => _setFiltersExpanded(false),
+            icon: const Icon(Icons.search_rounded),
+            label: const Text('Ver resultados'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+    ],
+  ];
+
+  Widget _filterHeader(bool expanded) => Material(
+    color: AppColors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: const BorderSide(color: AppColors.border),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+      key: const ValueKey('search-filters-toggle'),
+      leading: const Icon(Icons.tune_rounded),
+      title: const Text(
+        'Filtros de busca',
+        style: TextStyle(fontWeight: FontWeight.w800),
+      ),
+      subtitle: Text(
+        _filterSummary,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+      onTap: () => _setFiltersExpanded(!expanded),
+    ),
+  );
+
+  Widget _resultsMap(List<_TrailResult> results, {double height = 340}) {
+    if (results.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text('Nenhum roteiro para exibir no mapa.'),
+        ),
+      );
+    }
+    return TrailResultsMap(
+      key: const ValueKey('search-results-map'),
+      trails: results.map((result) => result.trail).toList(),
+      selectedId: selectedTrailId,
+      tileProvider: widget.tileProvider,
+      height: height,
+      onSelected: (trail) {
+        setState(() => selectedTrailId = trail.id);
+        AppRoutes.push(
+          context,
+          AppRoutes.trail(trail.id),
+          (_) => TrailDetailsScreen(trail: trail),
+        );
+      },
+    );
+  }
+
+  List<Widget> _resultsHeader(List<_TrailResult> results, bool remote) => [
+    Text(
+      '${remote ? (_page?.total ?? 0) : results.length} resultado(s)',
+      style: const TextStyle(
+        color: AppColors.ink,
+        fontSize: 18,
+        fontWeight: FontWeight.w900,
+      ),
+    ),
+    const SizedBox(height: 10),
+    if (results.isNotEmpty) ...[
+      OutlinedButton.icon(
+        onPressed: () => setState(() => showMap = !showMap),
+        icon: Icon(showMap ? Icons.list : Icons.map_outlined),
+        label: Text(showMap ? 'Ocultar mapa' : 'Mostrar mapa'),
+      ),
+      const SizedBox(height: 12),
+    ],
+  ];
+
+  List<Widget> _resultCards(List<_TrailResult> results, bool remote) => [
+    if (remote && _loading) const LinearProgressIndicator(),
+    if (remote && _searchError != null) ...[
+      Text(_searchError!),
+      TextButton(
+        onPressed: _retrySearch,
+        child: const Text('Tentar novamente'),
+      ),
+    ],
+    if (results.isEmpty && !_loading && _searchError == null)
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Text('Nenhum roteiro encontrado com esses filtros.'),
+        ),
+      )
+    else
+      ...results.map(
+        (result) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _ResultCard(result: result),
+        ),
+      ),
+    if (remote && _page?.nextPage != null)
+      TextButton(
+        onPressed: _loading
+            ? null
+            : () {
+                setState(() => _loading = true);
+                unawaited(
+                  _loadRemote(_filters, _generation, page: _page!.nextPage!),
+                );
+              },
+        child: const Text('Carregar mais roteiros'),
+      ),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final collapsible = width < 600 || width >= 1000;
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         leading: const AppBackButton(),
         backgroundColor: AppColors.paper,
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: const [
-              BoxShadow(color: AppColors.shadow, blurRadius: 12),
-            ],
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.search_rounded, size: 20),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Buscar roteiros',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    Text(
-                      'Destino · data · dificuldade',
-                      style: TextStyle(fontSize: 10, color: AppColors.muted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [TextButton(onPressed: _clear, child: const Text('Limpar'))],
+        title: const Text('Buscar roteiros'),
+        actions: [
+          if (collapsible)
+            IconButton(
+              tooltip: _filtersExpanded ? 'Recolher filtros' : 'Editar filtros',
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () => _setFiltersExpanded(!_filtersExpanded),
+            )
+          else
+            TextButton(onPressed: _clear, child: const Text('Limpar')),
+        ],
       ),
       body: AnimatedBuilder(
         animation: AppStore.instance,
@@ -401,229 +689,91 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
           _syncSearch();
           final remote = AppStore.instance.useBackend;
           final results = remote ? _remote : filtered;
+          final expanded = !collapsible || _filtersExpanded;
+          final panel = AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _filterFields(collapsible: true),
+                  )
+                : const SizedBox(width: double.infinity),
+          );
+
+          if (width >= 1000) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: LayoutBuilder(
+                builder: (context, constraints) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _filterHeader(expanded),
+                    const SizedBox(height: 12),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: constraints.maxHeight * .45,
+                      ),
+                      child: SingleChildScrollView(child: panel),
+                    ),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              key: const ValueKey('search-results-pane'),
+                              controller: _scrollController,
+                              padding: EdgeInsets.zero,
+                              children: [
+                                ..._resultsHeader(results, remote),
+                                ..._resultCards(results, remote),
+                              ],
+                            ),
+                          ),
+                          if (showMap) ...[
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, mapConstraints) =>
+                                    SingleChildScrollView(
+                                      key: const ValueKey('search-map-pane'),
+                                      child: _resultsMap(
+                                        results,
+                                        height: (mapConstraints.maxHeight - 100)
+                                            .clamp(160, 1000)
+                                            .toDouble(),
+                                      ),
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
           return ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             children: [
-              BrazilLocationFields(
-                city: city,
-                state: state,
-                onChanged: () => setState(() {}),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: ValueKey('modalidade-$modality'),
-                initialValue: modality,
-                decoration: const InputDecoration(
-                  labelText: 'Atividade do roteiro',
-                  prefixIcon: Icon(Icons.hiking_rounded),
-                ),
-                items: [
-                  const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
-                  ...RouteActivity.values.map(
-                    (activity) => DropdownMenuItem(
-                      value: activity,
-                      child: Text(activity),
-                    ),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => modality = value);
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: ValueKey(difficulty),
-                initialValue: difficulty,
-                decoration: const InputDecoration(labelText: 'Dificuldade'),
-                items: [
-                  const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
-                  ...TrailDifficulty.values.map(
-                    (value) =>
-                        DropdownMenuItem(value: value, child: Text(value)),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => difficulty = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickStart,
-                      icon: const Icon(Icons.calendar_today_outlined),
-                      label: Text('De: ${_dateLabel(startDate)}'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickEnd,
-                      icon: const Icon(Icons.event_available_outlined),
-                      label: Text('Até: ${_dateLabel(endDate)}'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                value: nearMe,
-                onChanged: locating ? null : _toggleNearMe,
-                title: const Text(
-                  'Buscar perto de mim',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                subtitle: Text(
-                  locating
-                      ? 'Obtendo GPS...'
-                      : nearMe
-                      ? 'Localização capturada.'
-                      : 'Usa o GPS do dispositivo.',
-                ),
-              ),
-              ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                title: const Text('Recursos de acessibilidade'),
-                subtitle: Text(
-                  accessibilityResources.isEmpty
-                      ? 'Nenhum recurso selecionado'
-                      : '${accessibilityResources.length} recurso(s) selecionado(s)',
-                ),
-                children: [
-                  const Text(
-                    'Exibe somente roteiros com todos os recursos selecionados confirmados pelo responsável.',
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final key in TrailAccessibility.filterKeys)
-                        FilterChip(
-                          label: Text(TrailAccessibility.labels[key]!),
-                          selected: accessibilityResources.contains(key),
-                          onSelected: (selected) => setState(() {
-                            if (selected) {
-                              accessibilityResources.add(key);
-                            } else {
-                              accessibilityResources.remove(key);
-                            }
-                          }),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              if (nearMe) ...[
-                Row(
-                  children: [
-                    const Text(
-                      'Raio',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${radiusKm.round()} km',
-                      style: const TextStyle(
-                        color: AppColors.green700,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-                Slider(
-                  min: 5,
-                  max: 100,
-                  divisions: 19,
-                  value: radiusKm,
-                  activeColor: AppColors.green700,
-                  onChanged: (value) {
-                    setState(() => radiusKm = value);
-                  },
-                ),
-              ],
-              const SizedBox(height: 12),
-              Text(
-                '${remote ? (_page?.total ?? 0) : results.length} resultado(s)',
-                style: const TextStyle(
-                  color: AppColors.ink,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (results.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => setState(() => showMap = !showMap),
-                        icon: Icon(showMap ? Icons.list : Icons.map_outlined),
-                        label: Text(showMap ? 'Ocultar mapa' : 'Mostrar mapa'),
-                      ),
-                    ),
-                  ],
-                ),
+              if (collapsible) ...[
+                _filterHeader(expanded),
                 const SizedBox(height: 12),
-                if (showMap) ...[
-                  TrailResultsMap(
-                    trails: results.map((r) => r.trail).toList(),
-                    selectedId: selectedTrailId,
-                    tileProvider: widget.tileProvider,
-                    onSelected: (trail) {
-                      setState(() => selectedTrailId = trail.id);
-                      AppRoutes.push(
-                        context,
-                        AppRoutes.trail(trail.id),
-                        (_) => TrailDetailsScreen(trail: trail),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                panel,
+              ] else
+                ..._filterFields(collapsible: false),
+              ..._resultsHeader(results, remote),
+              if (showMap && results.isNotEmpty) ...[
+                _resultsMap(results),
+                const SizedBox(height: 20),
               ],
-              if (remote && _loading) const LinearProgressIndicator(),
-              if (remote && _searchError != null) ...[
-                Text(_searchError!),
-                TextButton(
-                  onPressed: _retrySearch,
-                  child: const Text('Tentar novamente'),
-                ),
-              ],
-              if (remote && _page?.nextPage != null)
-                TextButton(
-                  onPressed: _loading
-                      ? null
-                      : () {
-                          setState(() => _loading = true);
-                          unawaited(
-                            _loadRemote(
-                              _filters,
-                              _generation,
-                              page: _page!.nextPage!,
-                            ),
-                          );
-                        },
-                  child: const Text('Carregar mais roteiros'),
-                ),
-              if (results.isEmpty && !_loading && _searchError == null)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: Center(
-                    child: Text('Nenhum roteiro encontrado com esses filtros.'),
-                  ),
-                )
-              else
-                ...results.map(
-                  (result) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _ResultCard(result: result),
-                  ),
-                ),
+              ..._resultCards(results, remote),
             ],
           );
         },

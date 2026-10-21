@@ -72,12 +72,14 @@ class TrailResultsMap extends StatefulWidget {
     required this.onSelected,
     this.selectedId,
     this.tileProvider,
+    this.height = 340,
   });
 
   final List<Trail> trails;
   final ValueChanged<Trail> onSelected;
   final String? selectedId;
   final TileProvider? tileProvider;
+  final double height;
 
   @override
   State<TrailResultsMap> createState() => _TrailResultsMapState();
@@ -158,7 +160,7 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
         ClipRRect(
           borderRadius: BorderRadius.circular(22),
           child: SizedBox(
-            height: 340,
+            height: widget.height,
             child: FlutterMap(
               key: ValueKey(signature),
               options: MapOptions(

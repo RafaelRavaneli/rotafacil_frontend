@@ -187,8 +187,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Acesso para mobilidade reduzida'));
     await tester.tap(find.text('Acesso para mobilidade reduzida'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Recursos de acessibilidade'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Recursos de acessibilidade'));
     await tester.pumpAndSettle();
     expect(find.text('1 resultado(s)'), findsOneWidget);
