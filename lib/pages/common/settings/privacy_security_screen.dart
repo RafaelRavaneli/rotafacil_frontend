@@ -30,7 +30,7 @@ class PrivacySecurityScreen extends StatelessWidget {
         leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Privacidade e segurança',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: AnimatedBuilder(

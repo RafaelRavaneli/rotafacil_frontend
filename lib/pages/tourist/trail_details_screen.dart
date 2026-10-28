@@ -136,7 +136,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'R\$ ${trail.price.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -210,7 +210,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
         trail.responsibleRole == 'guia';
 
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: AppColors.cream,
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
@@ -222,7 +222,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                 expandedHeight: 300,
                 pinned: true,
                 stretch: true,
-                backgroundColor: AppColors.paper,
+                backgroundColor: AppColors.cream,
                 foregroundColor: AppColors.ink,
                 leading: Padding(
                   padding: const EdgeInsets.all(8),
@@ -268,7 +268,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(22, 22, 22, 120),
                     decoration: const BoxDecoration(
-                      color: AppColors.paper,
+                      color: AppColors.cream,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -301,7 +301,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                             color: AppColors.green900,
                             fontSize: 30,
                             height: 1.05,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -.8,
                           ),
                         ),
@@ -358,7 +358,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           style: TextStyle(
                             color: AppColors.ink,
                             fontSize: 17,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -427,7 +427,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           style: TextStyle(
                             color: AppColors.ink,
                             fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -458,7 +458,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                                 child: Text(
                                   trail.responsibleName,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -541,7 +541,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                         style: const TextStyle(
                           color: AppColors.ink,
                           fontSize: 13,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),

@@ -6,7 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../state/app_store.dart';
 import '../../models/trail.dart';
-import '../../theme/app_colors.dart';
+import '../../theme/legacy_colors.dart';
 import '../../widgets/market_search.dart';
 import '../../widgets/trail_card.dart';
 import '../../utils/run_action.dart';
@@ -238,7 +238,7 @@ class _TouristHomeTabState extends State<TouristHomeTab>
                           Text(
                             name.isEmpty ? 'Explore atividades' : 'Olá, $name',
                             style: const TextStyle(
-                              color: AppColors.ink,
+                              color: LegacyColors.ink,
                               fontSize: 30,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -1,
@@ -247,7 +247,7 @@ class _TouristHomeTabState extends State<TouristHomeTab>
                           const SizedBox(height: 6),
                           const Text(
                             'Encontre sua próxima experiência ao ar livre.',
-                            style: TextStyle(color: AppColors.muted),
+                            style: TextStyle(color: LegacyColors.muted),
                           ),
                           const SizedBox(height: 22),
                           MarketSearch(
@@ -398,7 +398,7 @@ class _TrailCarouselSection extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: AppColors.ink,
+                    color: LegacyColors.ink,
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
                   ),
@@ -406,7 +406,7 @@ class _TrailCarouselSection extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                  style: const TextStyle(color: LegacyColors.muted, fontSize: 13),
                 ),
               ],
             ),
@@ -424,16 +424,16 @@ class _TrailCarouselSection extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: LegacyColors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: LegacyColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       emptyText,
-                      style: const TextStyle(color: AppColors.muted),
+                      style: const TextStyle(color: LegacyColors.muted),
                     ),
                     if (emptyAction != null) ...[
                       const SizedBox(height: 14),

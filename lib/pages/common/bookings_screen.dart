@@ -166,7 +166,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       style: const TextStyle(
                         color: AppColors.ink,
                         fontSize: 32,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: -1,
                       ),
                     ),
@@ -231,7 +231,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         style: const TextStyle(
                           color: AppColors.ink,
                           fontSize: 20,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -274,7 +274,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         style: TextStyle(
                           color: AppColors.ink,
                           fontSize: 18,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -301,7 +301,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         style: TextStyle(
                           color: AppColors.ink,
                           fontSize: 18,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -399,7 +399,7 @@ class _AgendaCalendar extends StatelessWidget {
                     '${months[month.month - 1]} ${month.year}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       fontSize: 17,
                     ),
                   ),
@@ -467,7 +467,7 @@ class _AgendaCalendar extends StatelessWidget {
                                 ? AppColors.ink
                                 : AppColors.muted.withValues(alpha: 0.45),
                             fontWeight: marked || isToday
-                                ? FontWeight.w900
+                                ? FontWeight.w700
                                 : FontWeight.w500,
                           ),
                         ),

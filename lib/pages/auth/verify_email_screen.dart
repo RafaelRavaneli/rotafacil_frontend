@@ -71,6 +71,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) => AuthScaffold(
     title: 'Confirmar e-mail',
+    largeLogo: true,
     body: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,14 +93,20 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        FilledButton(
-          onPressed: loading ? null : _send,
-          child: Text(
-            loading
-                ? 'Aguarde...'
-                : sent
-                ? 'Reenviar link'
-                : 'Enviar link',
+        Center(
+          child: FilledButton(
+            onPressed: loading ? null : _send,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(160, 52),
+              shape: const StadiumBorder(),
+            ),
+            child: Text(
+              loading
+                  ? 'Aguarde...'
+                  : sent
+                  ? 'Reenviar link'
+                  : 'Enviar link',
+            ),
           ),
         ),
       ],

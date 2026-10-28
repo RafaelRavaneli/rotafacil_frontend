@@ -45,22 +45,18 @@ void main() {
     });
   }
 
-  testWidgets('Mobile mostra resultados e reabre filtros preservando seleção', (
+  testWidgets('Mobile começa nos filtros, mostra resultados e reabre filtros', (
     tester,
   ) async {
     await configure(tester, const Size(390, 844));
     await tester.pumpWidget(const MaterialApp(home: TrailSearchScreen()));
     await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsNothing);
-    expect(find.text('2 resultado(s)'), findsOneWidget);
+    expect(find.byType(TextField), findsWidgets);
+    expect(find.text('2 resultado(s)'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('search-filters-toggle')));
-    await tester.pumpAndSettle();
-    final difficulty = find.byKey(const ValueKey('Todas'));
-    await tester.ensureVisible(difficulty);
-    await tester.tap(difficulty);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Avançado').last);
+    final advanced = find.byKey(const ValueKey('dificuldade-Avançado'));
+    await tester.ensureVisible(advanced);
+    await tester.tap(advanced);
     await tester.pumpAndSettle();
 
     final results = find.byKey(const ValueKey('search-show-results'));
@@ -70,17 +66,12 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     expect(find.text('1 resultado(s)'), findsOneWidget);
     expect(find.text('Cachoeira tranquila'), findsNothing);
-    expect(find.text('Avançado'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Editar filtros'));
+    await tester.tap(find.byKey(const ValueKey('search-filters-toggle')));
     await tester.pumpAndSettle();
     expect(
-      tester
-          .widget<DropdownButtonFormField<String>>(
-            find.byKey(const ValueKey('Avançado')),
-          )
-          .initialValue,
-      'Avançado',
+      tester.widget<ChoiceChip>(advanced).selected,
+      isTrue,
     );
     final clear = find.text('Limpar filtros');
     await tester.ensureVisible(clear);
@@ -164,16 +155,11 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsNothing);
-      expect(find.text('1 resultado(s)'), findsOneWidget);
+      expect(find.byType(TextField), findsWidgets);
 
-      await tester.tap(find.byKey(const ValueKey('search-filters-toggle')));
-      await tester.pumpAndSettle();
-      final difficulty = find.byKey(const ValueKey('Todas'));
-      await tester.ensureVisible(difficulty);
-      await tester.tap(difficulty);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Avançado').last);
+      final advanced = find.byKey(const ValueKey('dificuldade-Avançado'));
+      await tester.ensureVisible(advanced);
+      await tester.tap(advanced);
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(queries.last['dificuldade'], 'Avançado');

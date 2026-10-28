@@ -31,6 +31,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
   final state = TextEditingController();
   final _scrollController = ScrollController();
   bool? _mobileFiltersExpanded;
+  // Celular: false = tela de filtros; true = mapa com a lista que sobe.
+  bool _mobileResults = false;
+  bool _sheetOpen = false;
+  final _sheetController = DraggableScrollableController();
 
   String difficulty = 'Todas';
   String modality = 'Todas';
@@ -149,6 +153,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
     city.dispose();
     state.dispose();
     _scrollController.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -579,7 +584,11 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
     ),
   );
 
-  Widget _resultsMap(List<_TrailResult> results, {double height = 340}) {
+  Widget _resultsMap(
+    List<_TrailResult> results, {
+    double height = 340,
+    bool fill = false,
+  }) {
     if (results.isEmpty) {
       return const Card(
         child: Padding(
@@ -594,6 +603,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       selectedId: selectedTrailId,
       tileProvider: widget.tileProvider,
       height: height,
+      borderRadius: fill ? 0 : 22,
+      showDetails: !fill,
       onSelected: (trail) {
         setState(() => selectedTrailId = trail.id);
         AppRoutes.push(
@@ -611,7 +622,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       style: const TextStyle(
         color: AppColors.ink,
         fontSize: 18,
-        fontWeight: FontWeight.w900,
+        fontWeight: FontWeight.w700,
       ),
     ),
     const SizedBox(height: 10),
@@ -662,18 +673,587 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       ),
   ];
 
+
+  // ------------------------------------------------------------------
+  // Celular: filtros -> mapa com os pontos -> lista que sobe (Figma).
+  // O conteúdo é o mesmo da busca original.
+  // ------------------------------------------------------------------
+
+  void _setMobileResults(bool value) {
+    if (value) FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _mobileResults = value;
+      _sheetOpen = false;
+    });
+  }
+
+  Widget _sectionCard({String? title, required Widget child}) => Container(
+    margin: const EdgeInsets.only(bottom: 14),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.paper,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: AppColors.border),
+      boxShadow: const [
+        BoxShadow(color: AppColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title != null) ...[
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.ink,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        child,
+      ],
+    ),
+  );
+
+  Widget _difficultyChips() => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      for (final value in ['Todas', ...TrailDifficulty.values])
+        ChoiceChip(
+          key: ValueKey('dificuldade-$value'),
+          label: Text(value),
+          selected: difficulty == value,
+          showCheckmark: false,
+          backgroundColor: AppColors.paper,
+          selectedColor: AppColors.leaf,
+          side: const BorderSide(color: AppColors.border),
+          shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          labelStyle: TextStyle(
+            color: difficulty == value ? AppColors.white : AppColors.ink,
+            fontWeight: FontWeight.w600,
+          ),
+          onSelected: (_) => setState(() => difficulty = value),
+        ),
+    ],
+  );
+
+  Widget _dateField(
+    String label,
+    IconData icon,
+    DateTime? value,
+    VoidCallback onTap,
+  ) => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.ink,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColors.paper,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: AppColors.leaf),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _dateLabel(value),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.ink),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _mobileFilters() => Column(
+    children: [
+      Expanded(
+        child: ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          children: [
+            _sectionCard(
+              title: 'Local',
+              child: BrazilLocationFields(
+                city: city,
+                state: state,
+                onChanged: () => setState(() {}),
+              ),
+            ),
+            _sectionCard(
+              child: DropdownButtonFormField<String>(
+                key: ValueKey('modalidade-$modality'),
+                initialValue: modality,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Atividade do roteiro',
+                  prefixIcon: Icon(Icons.hiking_rounded),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
+                  ...RouteActivity.values.map(
+                    (activity) =>
+                        DropdownMenuItem(value: activity, child: Text(activity)),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => modality = value);
+                },
+              ),
+            ),
+            _sectionCard(title: 'Dificuldade', child: _difficultyChips()),
+            _sectionCard(
+              title: 'Período',
+              child: Row(
+                children: [
+                  _dateField(
+                    'De',
+                    Icons.calendar_today_outlined,
+                    startDate,
+                    _pickStart,
+                  ),
+                  const SizedBox(width: 12),
+                  _dateField(
+                    'Até',
+                    Icons.event_available_outlined,
+                    endDate,
+                    _pickEnd,
+                  ),
+                ],
+              ),
+            ),
+            _sectionCard(
+              title: 'Distância',
+              child: Column(
+                children: [
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: nearMe,
+                    onChanged: locating ? null : _toggleNearMe,
+                    title: const Text(
+                      'Buscar perto de mim',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: Text(
+                      locating
+                          ? 'Obtendo GPS...'
+                          : nearMe
+                          ? 'Localização capturada.'
+                          : 'Usa o GPS do dispositivo.',
+                    ),
+                  ),
+                  if (nearMe) ...[
+                    Row(
+                      children: [
+                        const Text(
+                          'Raio',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${radiusKm.round()} km',
+                          style: const TextStyle(
+                            color: AppColors.green700,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      min: 5,
+                      max: 100,
+                      divisions: 19,
+                      value: radiusKm,
+                      activeColor: AppColors.green700,
+                      onChanged: (value) => setState(() => radiusKm = value),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            _sectionCard(
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: const Text('Recursos de acessibilidade'),
+                subtitle: Text(
+                  accessibilityResources.isEmpty
+                      ? 'Nenhum recurso selecionado'
+                      : '${accessibilityResources.length} recurso(s) selecionado(s)',
+                ),
+                children: [
+                  const Text(
+                    'Exibe somente roteiros com todos os recursos selecionados confirmados pelo responsável.',
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final key in TrailAccessibility.filterKeys)
+                        FilterChip(
+                          label: Text(TrailAccessibility.labels[key]!),
+                          selected: accessibilityResources.contains(key),
+                          onSelected: (selected) => setState(() {
+                            if (selected) {
+                              accessibilityResources.add(key);
+                            } else {
+                              accessibilityResources.remove(key);
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: const BoxDecoration(
+          color: AppColors.paper,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              OutlinedButton(
+                onPressed: _clear,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 52),
+                  shape: const StadiumBorder(),
+                ),
+                child: const Text('Limpar filtros'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  key: const ValueKey('search-show-results'),
+                  onPressed: () => _setMobileResults(true),
+                  style: FilledButton.styleFrom(shape: const StadiumBorder()),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Ver resultados'),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _mobileResultChips(List<_TrailResult> results) {
+    if (results.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: Text('Nenhum roteiro encontrado com esses filtros.'),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 58,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: results.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final trail = results[index].trail;
+          return InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => AppRoutes.push(
+              context,
+              AppRoutes.trail(trail.id),
+              (_) => TrailDetailsScreen(trail: trail),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.sage,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 150),
+                    child: Text(
+                      trail.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    trail.distanceLabel,
+                    style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _backToMap() {
+    unawaited(
+      _sheetController.animateTo(
+        .26,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+
+  Widget _mobileFilterCard() => Material(
+    color: AppColors.paper,
+    elevation: 2,
+    shadowColor: AppColors.shadow,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: const BorderSide(color: AppColors.border),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.tune_rounded, color: AppColors.leaf, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Filtros de busca',
+                style: TextStyle(
+                  color: AppColors.ink,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _filterSummary,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            key: const ValueKey('search-filters-toggle'),
+            onPressed: () => _setMobileResults(false),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(44),
+              shape: const StadiumBorder(),
+              side: const BorderSide(color: AppColors.leaf),
+            ),
+            child: const Text('Editar filtros'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _mobileResultsView(List<_TrailResult> results, bool remote) {
+    final count = remote ? (_page?.total ?? 0) : results.length;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: showMap && results.isNotEmpty
+              ? LayoutBuilder(
+                  builder: (context, constraints) => _resultsMap(
+                    results,
+                    height: constraints.maxHeight,
+                    fill: true,
+                  ),
+                )
+              : ColoredBox(
+                  color: AppColors.sage,
+                  child: Center(
+                    child: results.isEmpty
+                        ? const Text('Nenhum roteiro para exibir no mapa.')
+                        : null,
+                  ),
+                ),
+        ),
+        // Com a lista aberta (tela inteira) o cartão de filtros passa a fazer
+        // parte dela, junto com a opção de voltar ao mapa.
+        Positioned(
+          top: 12,
+          left: 16,
+          right: 16,
+          child: _sheetOpen ? const SizedBox.shrink() : _mobileFilterCard(),
+        ),
+        Positioned.fill(
+          key: const ValueKey('search-sheet'),
+          child: NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              final open = notification.extent > .5;
+              if (open != _sheetOpen) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted && open != _sheetOpen) {
+                    setState(() => _sheetOpen = open);
+                  }
+                });
+              }
+              return false;
+            },
+            child: DraggableScrollableSheet(
+              controller: _sheetController,
+              initialChildSize: .26,
+              minChildSize: .26,
+              maxChildSize: 1,
+              snap: true,
+              snapSizes: const [.26, 1],
+              builder: (context, controller) => Container(
+                decoration: BoxDecoration(
+                  color: _sheetOpen ? AppColors.cream : AppColors.paper,
+                  borderRadius: _sheetOpen
+                      ? BorderRadius.zero
+                      : const BorderRadius.vertical(top: Radius.circular(24)),
+                  border: _sheetOpen ? null : Border.all(color: AppColors.border),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 16,
+                      offset: Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: ListView(
+                  controller: controller,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.leaf,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_sheetOpen) ...[
+                      _mobileFilterCard(),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        key: const ValueKey('search-back-to-map'),
+                        onPressed: _backToMap,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          shape: const StadiumBorder(),
+                        ),
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Voltar ao mapa'),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+                    Row(
+                      children: [
+                        Text(
+                          '$count resultado(s)',
+                          style: const TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          _sheetOpen ? 'Puxe para fechar' : 'Puxe para ver',
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (!_sheetOpen)
+                      _mobileResultChips(results)
+                    else ...[
+                      if (results.isNotEmpty) ...[
+                        OutlinedButton.icon(
+                          onPressed: () => setState(() => showMap = !showMap),
+                          icon: Icon(showMap ? Icons.list : Icons.map_outlined),
+                          label: Text(showMap ? 'Ocultar mapa' : 'Mostrar mapa'),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      ..._resultCards(results, remote),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final collapsible = width < 600 || width >= 1000;
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: AppColors.cream,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppColors.paper,
+        backgroundColor: AppColors.cream,
         title: const Text('Buscar roteiros'),
         actions: [
-          if (collapsible)
+          if (width < 600)
+            IconButton(
+              tooltip: _mobileResults ? 'Editar filtros' : 'Recolher filtros',
+              icon: const Icon(Icons.tune_rounded),
+              onPressed: () => _setMobileResults(!_mobileResults),
+            )
+          else if (collapsible)
             IconButton(
               tooltip: _filtersExpanded ? 'Recolher filtros' : 'Editar filtros',
               icon: const Icon(Icons.tune_rounded),
@@ -689,6 +1269,11 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
           _syncSearch();
           final remote = AppStore.instance.useBackend;
           final results = remote ? _remote : filtered;
+          if (width < 600) {
+            return _mobileResults
+                ? _mobileResultsView(results, remote)
+                : _mobileFilters();
+          }
           final expanded = !collapsible || _filtersExpanded;
           final panel = AnimatedSize(
             duration: const Duration(milliseconds: 200),
@@ -799,10 +1384,11 @@ class _ResultCard extends StatelessWidget {
     final trail = result.trail;
 
     return Material(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 1,
-      shadowColor: AppColors.shadow,
+      color: AppColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: AppColors.border),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
@@ -832,7 +1418,7 @@ class _ResultCard extends StatelessWidget {
                       style: const TextStyle(
                         color: AppColors.ink,
                         fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),

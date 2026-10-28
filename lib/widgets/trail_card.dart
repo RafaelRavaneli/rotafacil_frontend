@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/trail.dart';
-import '../theme/app_colors.dart';
+import '../theme/legacy_colors.dart';
 import '../utils/date_time_format.dart';
 import 'network_image_box.dart';
 
@@ -44,13 +44,13 @@ class TrailCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.paper.withValues(alpha: .94),
+                        color: LegacyColors.paper.withValues(alpha: .94),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         trail.difficulty,
                         style: const TextStyle(
-                          color: AppColors.forest,
+                          color: LegacyColors.forest,
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                         ),
@@ -61,7 +61,7 @@ class TrailCard extends StatelessWidget {
                     right: 10,
                     top: 10,
                     child: Material(
-                      color: AppColors.paper.withValues(alpha: .94),
+                      color: LegacyColors.paper.withValues(alpha: .94),
                       shape: const CircleBorder(),
                       child: IconButton(
                         tooltip: favorite
@@ -70,7 +70,7 @@ class TrailCard extends StatelessWidget {
                         onPressed: onFavorite,
                         icon: Icon(
                           favorite ? Icons.favorite : Icons.favorite_border,
-                          color: AppColors.forest,
+                          color: LegacyColors.forest,
                         ),
                       ),
                     ),
@@ -88,7 +88,7 @@ class TrailCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppColors.ink,
+                      color: LegacyColors.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
@@ -99,13 +99,13 @@ class TrailCard extends StatelessWidget {
                   const Icon(
                     Icons.star_rounded,
                     size: 16,
-                    color: AppColors.earth,
+                    color: LegacyColors.earth,
                   ),
                   const SizedBox(width: 3),
                   Text(
                     trail.rating.toStringAsFixed(1).replaceAll('.', ','),
                     style: const TextStyle(
-                      color: AppColors.ink,
+                      color: LegacyColors.ink,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
@@ -118,7 +118,7 @@ class TrailCard extends StatelessWidget {
               trail.location,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+              style: const TextStyle(color: LegacyColors.muted, fontSize: 13),
             ),
             const SizedBox(height: 4),
             Text(
@@ -128,7 +128,7 @@ class TrailCard extends StatelessWidget {
               ].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              style: const TextStyle(color: LegacyColors.muted, fontSize: 12),
             ),
             const SizedBox(height: 7),
             Text.rich(
@@ -142,7 +142,7 @@ class TrailCard extends StatelessWidget {
                   const TextSpan(text: ' por pessoa'),
                 ],
               ),
-              style: const TextStyle(color: AppColors.ink, fontSize: 13),
+              style: const TextStyle(color: LegacyColors.ink, fontSize: 13),
             ),
             const SizedBox(height: 8),
           ],

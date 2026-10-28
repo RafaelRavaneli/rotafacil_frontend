@@ -117,7 +117,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
       appBar: AppBar(
         title: const Text(
           'Verificação profissional',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -195,7 +195,7 @@ class _AdminVerificationScreenState extends State<AdminVerificationScreen> {
                                           : document.userName,
                                       style: const TextStyle(
                                         color: AppColors.green900,
-                                        fontWeight: FontWeight.w900,
+                                        fontWeight: FontWeight.w700,
                                       ),
                                     ),
                                   ),

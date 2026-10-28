@@ -47,6 +47,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   bool removeCurrentImage = false;
   bool saving = false;
   bool allowPop = false;
+  bool _showSaveBar = false;
   late final Map<String, String> initialValues;
 
   bool get needsDocument {
@@ -97,6 +98,32 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     currentImageDataUrl = user.profileImageDataUrl;
     initialValues = _currentValues();
+    for (final controller in _textControllers) {
+      controller.addListener(_onFieldChanged);
+    }
+  }
+
+  List<TextEditingController> get _textControllers => [
+    name,
+    email,
+    phone,
+    city,
+    state,
+    document,
+    cadastur,
+    cadasturValidity,
+    emergencyName,
+    emergencyPhone,
+    emergencyRelation,
+    professionalDescription,
+    specialties,
+  ];
+
+  // Mostra ou esconde o aviso de "salvar" só quando o estado realmente muda.
+  void _onFieldChanged() {
+    if (!mounted) return;
+    final dirty = hasUnsavedChanges;
+    if (dirty != _showSaveBar) setState(() => _showSaveBar = dirty);
   }
 
   Map<String, String> _currentValues() => {
@@ -346,12 +373,15 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         appBar: AppBar(
           leading: AppBackButton(onPressed: _handleBack),
           title: const Text(
-            'Editar perfil',
-            style: TextStyle(fontWeight: FontWeight.w900),
+            'Dados pessoais',
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
+        body: Stack(
+          children: [
+            ListView(
+          // Espaço extra para o aviso de salvar não cobrir o fim da página.
+          padding: EdgeInsets.fromLTRB(20, 20, 20, hasUnsavedChanges ? 110 : 20),
           children: [
             Center(
               child: Stack(
@@ -558,6 +588,54 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 11),
             ),
+          ],
+            ),
+            if (hasUnsavedChanges)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 12,
+                child: SafeArea(
+                  top: false,
+                  child: Material(
+                    key: const ValueKey('save-changes-bar'),
+                    color: AppColors.forest,
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Salve as alterações para não perdê-las.',
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FilledButton(
+                            onPressed: saving ? null : _save,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.paper,
+                              foregroundColor: AppColors.forest,
+                              minimumSize: const Size(0, 40),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(saving ? 'Salvando...' : 'Salvar'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

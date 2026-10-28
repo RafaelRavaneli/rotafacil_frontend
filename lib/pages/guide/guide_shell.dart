@@ -51,7 +51,7 @@ class _GuideShellState extends State<GuideShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: AppColors.cream,
 
       // Importante:
       // Não usamos mais IndexedStack.

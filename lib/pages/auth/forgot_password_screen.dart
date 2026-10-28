@@ -112,6 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return AuthScaffold(
       title: 'Recuperar senha',
+      largeLogo: true,
       body: ListView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -153,14 +154,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ),
           const SizedBox(height: 20),
-          FilledButton(
-            onPressed: loading ? null : _reset,
-            child: Text(
-              loading
-                  ? 'Aguarde...'
-                  : AppConfig.useBackend
-                  ? (requested ? 'Reenviar link' : 'Enviar link')
-                  : 'Redefinir senha',
+          Center(
+            child: FilledButton(
+              onPressed: loading ? null : _reset,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(160, 52),
+                shape: const StadiumBorder(),
+              ),
+              child: Text(
+                loading
+                    ? 'Aguarde...'
+                    : AppConfig.useBackend
+                    ? (requested ? 'Reenviar link' : 'Enviar link')
+                    : 'Redefinir senha',
+              ),
             ),
           ),
         ],

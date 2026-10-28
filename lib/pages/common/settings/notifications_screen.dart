@@ -55,7 +55,7 @@ class NotificationsScreen extends StatelessWidget {
         leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Notificações',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: AnimatedBuilder(

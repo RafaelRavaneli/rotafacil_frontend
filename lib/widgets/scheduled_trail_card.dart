@@ -49,7 +49,7 @@ class ScheduledTrailCard extends StatelessWidget {
                     style: const TextStyle(
                       color: AppColors.ink,
                       fontSize: 17,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 5),

@@ -322,7 +322,7 @@ class _RemoteGuidesState extends State<RemoteGuidesScreen> {
                           style: const TextStyle(
                             color: AppColors.ink,
                             fontSize: 32,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -1,
                           ),
                         ),

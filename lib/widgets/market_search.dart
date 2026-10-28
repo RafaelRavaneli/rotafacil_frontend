@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/legacy_colors.dart';
 
 class MarketSearch extends StatelessWidget {
   const MarketSearch({
@@ -15,9 +15,9 @@ class MarketSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.forest,
+      color: LegacyColors.forest,
       elevation: 8,
-      shadowColor: AppColors.forest.withValues(alpha: 0.3),
+      shadowColor: LegacyColors.forest.withValues(alpha: 0.3),
       borderRadius: BorderRadius.circular(28),
       child: InkWell(
         onTap: onTap,
@@ -30,7 +30,7 @@ class MarketSearch extends StatelessWidget {
               const Text(
                 'Encontre seu próximo roteiro',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: LegacyColors.white,
                   fontSize: 19,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.3,
@@ -39,21 +39,21 @@ class MarketSearch extends StatelessWidget {
               const SizedBox(height: 4),
               const Text(
                 'Busque por destino, atividade, data ou dificuldade.',
-                style: TextStyle(color: AppColors.sage, fontSize: 12),
+                style: TextStyle(color: LegacyColors.sage, fontSize: 12),
               ),
               const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 13, 10, 13),
                 decoration: BoxDecoration(
-                  color: AppColors.paper,
+                  color: LegacyColors.paper,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.white, width: 2),
+                  border: Border.all(color: LegacyColors.white, width: 2),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.search_rounded,
-                      color: AppColors.forest,
+                      color: LegacyColors.forest,
                       size: 27,
                     ),
                     const SizedBox(width: 12),
@@ -64,7 +64,7 @@ class MarketSearch extends StatelessWidget {
                           const Text(
                             'Buscar roteiros',
                             style: TextStyle(
-                              color: AppColors.ink,
+                              color: LegacyColors.ink,
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                             ),
@@ -75,7 +75,7 @@ class MarketSearch extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: AppColors.muted,
+                              color: LegacyColors.muted,
                               fontSize: 11,
                             ),
                           ),
@@ -86,12 +86,12 @@ class MarketSearch extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: const BoxDecoration(
-                        color: AppColors.green100,
+                        color: LegacyColors.green100,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.tune_rounded,
-                        color: AppColors.forest,
+                        color: LegacyColors.forest,
                         size: 21,
                       ),
                     ),

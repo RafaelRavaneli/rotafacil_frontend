@@ -8,57 +8,59 @@ import '../../theme/app_colors.dart';
 import '../../widgets/role_card.dart';
 import 'register_screen.dart';
 
-class ProfileChoiceScreen extends StatelessWidget {
+class ProfileChoiceScreen extends StatefulWidget {
   const ProfileChoiceScreen({super.key});
 
-  void _choose(BuildContext context, UserRole role) {
+  @override
+  State<ProfileChoiceScreen> createState() => _ProfileChoiceScreenState();
+}
+
+class _ProfileChoiceScreenState extends State<ProfileChoiceScreen> {
+  UserRole? _selected;
+
+  Future<void> _choose(UserRole role) async {
     if (!AppRoutes.canPush(context)) return;
-    Navigator.push(
+    // Marca o perfil escolhido (estado do Figma) e abre o cadastro direto.
+    setState(() => _selected = role);
+    await Navigator.push(
       context,
       AuthPageRoute(builder: (_) => RegisterScreen(role: role)),
     );
+    // Ao voltar, a escolha começa limpa de novo.
+    if (mounted) setState(() => _selected = null);
   }
 
   @override
   Widget build(BuildContext context) {
     return AuthScaffold(
       title: 'Criar conta',
-      body: SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          children: [
-            const SizedBox(height: 18),
-            const SizedBox(height: 8),
-            const Text(
-              'Escolha um perfil para criar sua conta.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.paper, fontSize: 13),
-            ),
-            const SizedBox(height: 28),
+      largeLogo: true,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Escolha um perfil para criar sua conta.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.paper, fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          for (final role in UserRole.values) ...[
             RoleCard(
-              role: UserRole.tourist,
-              onTap: () => _choose(context, UserRole.tourist),
+              role: role,
+              selected: _selected == role,
+              dimmed: _selected != null && _selected != role,
+              onTap: () => _choose(role),
             ),
             const SizedBox(height: 12),
-            RoleCard(
-              role: UserRole.guide,
-              onTap: () => _choose(context, UserRole.guide),
-            ),
-            const SizedBox(height: 12),
-            RoleCard(
-              role: UserRole.agency,
-              onTap: () => _choose(context, UserRole.agency),
-            ),
-            const SizedBox(height: 38),
-            const Text(
-              'Guia: CPF obrigatório. Agência: CNPJ obrigatório.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.paper, fontSize: 11.5),
-            ),
           ],
-        ),
+          const SizedBox(height: 4),
+          const Text(
+            'Guia: CPF obrigatório. Agência: CNPJ obrigatório.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.paper, fontSize: 11.5),
+          ),
+        ],
       ),
     );
   }
