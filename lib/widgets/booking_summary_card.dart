@@ -1,3 +1,4 @@
+import '../utils/input_masks.dart';
 import 'package:flutter/material.dart';
 import '../models/local_booking.dart';
 import '../theme/app_colors.dart';
@@ -100,7 +101,7 @@ class BookingSummaryCard extends StatelessWidget {
               ],
               const SizedBox(height: 10),
               Text(
-                'Valor declarado: R\$ ${booking.valuePaid.toStringAsFixed(2).replaceAll('.', ',')}',
+                'Valor declarado: ${Brl.format(booking.valuePaid)}',
                 style: const TextStyle(color: AppColors.muted, fontSize: 12),
               ),
               const SizedBox(height: 8),

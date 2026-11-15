@@ -131,10 +131,8 @@ void main() {
         tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
         false,
       );
-      await tester.ensureVisible(
-        find.widgetWithText(FilledButton, 'Salvar alterações'),
-      );
-      await tester.tap(find.widgetWithText(FilledButton, 'Salvar alterações'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
       await tester.pumpAndSettle();
       expect(user.emergencyContactConsent, false);
       expect(user.emergencyContactPhone, '');

@@ -1,3 +1,4 @@
+import '../../utils/input_masks.dart';
 import '../../models/local_booking.dart';
 import '../../widgets/backend_refresh.dart';
 import 'package:flutter/material.dart';
@@ -235,7 +236,14 @@ class OperatorDashboard extends StatelessWidget {
                               width: width,
                               label: 'Valor declarado',
                               value:
-                                  'R\$ ${(summary?.declaredValue ?? activeBookings.fold<double>(0, (total, item) => total + item.valuePaid)).toStringAsFixed(2).replaceAll('.', ',')}',
+                                  Brl.format(
+                                    summary?.declaredValue ??
+                                        activeBookings.fold<double>(
+                                          0,
+                                          (total, item) =>
+                                              total + item.valuePaid,
+                                        ),
+                                  ),
                               icon: Icons.receipt_long_outlined,
                             ),
                           ],

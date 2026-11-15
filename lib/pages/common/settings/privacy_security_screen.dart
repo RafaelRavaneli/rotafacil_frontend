@@ -1,3 +1,4 @@
+import '../../../utils/input_masks.dart';
 import '../../auth/verify_email_screen.dart';
 import '../legal_document_screen.dart';
 import '../../../config/app_config.dart';
@@ -317,6 +318,7 @@ class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
                 controller: document,
                 enabled: !loading,
                 keyboardType: TextInputType.number,
+                inputFormatters: [InputMasks.documentForRole(selected.title)],
                 decoration: InputDecoration(
                   labelText: DocumentValidator.labelForRole(selected.title),
                 ),

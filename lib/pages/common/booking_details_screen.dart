@@ -1,3 +1,4 @@
+import '../../utils/input_masks.dart';
 import '../../utils/controller_dialog.dart';
 import 'professional_profile_screen.dart';
 import '../../widgets/organizer_emergency_card.dart';
@@ -37,16 +38,27 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
+          icon: const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.red,
+            size: 34,
+          ),
           title: const Text('Cancelar reserva?'),
           content: Text(
-            'Confirme o cancelamento da reserva para ${booking.trailName}.',
+            'Confirme o cancelamento da reserva para ${booking.trailName}.\n\n'
+            'Esta ação não pode ser desfeita.',
           ),
+          actionsOverflowButtonSpacing: 8,
           actions: [
-            TextButton(
+            OutlinedButton(
               onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Manter reserva'),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.red,
+                foregroundColor: AppColors.white,
+              ),
               onPressed: () => Navigator.pop(dialogContext, true),
               child: const Text('Confirmar cancelamento'),
             ),
@@ -428,7 +440,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           _Information(
                             label: 'Valor declarado',
                             value:
-                                'R\$ ${booking.valuePaid.toStringAsFixed(2).replaceAll('.', ',')}',
+                                Brl.format(booking.valuePaid),
                           ),
                         ],
                       ),
@@ -606,7 +618,30 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     const SizedBox(height: 24),
                     OutlinedButton.icon(
                       onPressed: cancelling ? null : () => _cancel(booking),
-                      icon: const Icon(Icons.cancel_outlined),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.red,
+                        disabledForegroundColor: AppColors.red.withValues(
+                          alpha: .5,
+                        ),
+                        backgroundColor: AppColors.paper,
+                        minimumSize: const Size.fromHeight(52),
+                        side: BorderSide(
+                          color: AppColors.red.withValues(alpha: .6),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: cancelling
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.red,
+                              ),
+                            )
+                          : const Icon(Icons.event_busy_outlined),
                       label: Text(
                         cancelling ? 'Cancelando...' : 'Cancelar reserva',
                       ),

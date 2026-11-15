@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import '../utils/app_pickers.dart';
 import 'package:flutter/material.dart';
 
@@ -32,6 +33,7 @@ class CadasturFields extends StatelessWidget {
         controller: number,
         enabled: enabled,
         keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9./ -]'))],
         maxLength: 40,
         style: const TextStyle(color: AppColors.ink),
         decoration: InputDecoration(

@@ -1,3 +1,4 @@
+import '../../utils/input_masks.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/run_action.dart';
@@ -464,7 +465,7 @@ class _TrailRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 7),
                 Text(
-                  'R\$ ${trail.price.toStringAsFixed(2).replaceAll('.', ',')} por pessoa',
+                  '${Brl.format(trail.price)} por pessoa',
                   style: const TextStyle(
                     color: AppColors.forest,
                     fontWeight: FontWeight.w600,
