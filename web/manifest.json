@@ -1,11 +1,12 @@
 {
-    "name": "rotafacil",
-    "short_name": "rotafacil",
+    "name": "RotaFácil",
+    "short_name": "RotaFácil",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFEF9",
+    "theme_color": "#2F4A1E",
+    "description": "RotaFácil - Roteiros e aventuras para todos os caminhos.",
+    "lang": "pt-BR",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
