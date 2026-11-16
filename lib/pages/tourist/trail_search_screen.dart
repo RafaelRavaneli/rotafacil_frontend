@@ -137,7 +137,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppStore.instance.addListener(_retrySearch);
+    AppStore.instance.watch(StoreArea.trails).addListener(_retrySearch);
   }
 
   @override
@@ -148,7 +148,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    AppStore.instance.removeListener(_retrySearch);
+    AppStore.instance.watch(StoreArea.trails).removeListener(_retrySearch);
     _debounce?.cancel();
     city.dispose();
     state.dispose();
@@ -1280,7 +1280,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
         ],
       ),
       body: AnimatedBuilder(
-        animation: AppStore.instance,
+        // A busca só depende do catálogo de roteiros.
+        animation: AppStore.instance.watch(StoreArea.trails),
         builder: (context, _) {
           _syncSearch();
           final remote = AppStore.instance.useBackend;
