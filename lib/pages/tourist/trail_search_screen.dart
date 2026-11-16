@@ -673,7 +673,6 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       ),
   ];
 
-
   // ------------------------------------------------------------------
   // Celular: filtros -> mapa com os pontos -> lista que sobe (Figma).
   // O conteúdo é o mesmo da busca original.
@@ -695,7 +694,11 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: AppColors.border),
       boxShadow: const [
-        BoxShadow(color: AppColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
+        BoxShadow(
+          color: AppColors.shadow,
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
       ],
     ),
     child: Column(
@@ -712,7 +715,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
           ),
           const SizedBox(height: 12),
         ],
-        child,
+        // Material transparente: o ListTile/Switch interno pinta o ripple nele,
+        // e não sob o fundo do DecoratedBox do cartão (ink invisível).
+        Material(type: MaterialType.transparency, child: child),
       ],
     ),
   );
@@ -816,8 +821,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                 items: [
                   const DropdownMenuItem(value: 'Todas', child: Text('Todas')),
                   ...RouteActivity.values.map(
-                    (activity) =>
-                        DropdownMenuItem(value: activity, child: Text(activity)),
+                    (activity) => DropdownMenuItem(
+                      value: activity,
+                      child: Text(activity),
+                    ),
                   ),
                 ],
                 onChanged: (value) {
@@ -962,7 +969,13 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Ver resultados'),
+                      Flexible(
+                        child: Text(
+                          'Ver resultados',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       SizedBox(width: 8),
                       Icon(Icons.arrow_forward_rounded, size: 20),
                     ],
@@ -1025,7 +1038,10 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                   ),
                   Text(
                     trail.distanceLabel,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -1153,7 +1169,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                   borderRadius: _sheetOpen
                       ? BorderRadius.zero
                       : const BorderRadius.vertical(top: Radius.circular(24)),
-                  border: _sheetOpen ? null : Border.all(color: AppColors.border),
+                  border: _sheetOpen
+                      ? null
+                      : Border.all(color: AppColors.border),
                   boxShadow: const [
                     BoxShadow(
                       color: AppColors.shadow,
@@ -1194,20 +1212,27 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                     ],
                     Row(
                       children: [
-                        Text(
-                          '$count resultado(s)',
-                          style: const TextStyle(
-                            color: AppColors.ink,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          child: Text(
+                            '$count resultado(s)',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                        const Spacer(),
-                        Text(
-                          _sheetOpen ? 'Puxe para fechar' : 'Puxe para ver',
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 12,
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            _sheetOpen ? 'Puxe para fechar' : 'Puxe para ver',
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -1220,7 +1245,9 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                         OutlinedButton.icon(
                           onPressed: () => setState(() => showMap = !showMap),
                           icon: Icon(showMap ? Icons.list : Icons.map_outlined),
-                          label: Text(showMap ? 'Ocultar mapa' : 'Mostrar mapa'),
+                          label: Text(
+                            showMap ? 'Ocultar mapa' : 'Mostrar mapa',
+                          ),
                         ),
                         const SizedBox(height: 12),
                       ],

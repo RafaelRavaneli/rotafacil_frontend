@@ -51,89 +51,94 @@ class WelcomeScreen extends StatelessWidget {
           ),
           SafeArea(
             child: LayoutBuilder(
+              // O ConstrainedBox(maxWidth) fica FORA do IntrinsicHeight para que
+              // a altura seja medida na largura real (até 420). Antes ficava
+              // dentro: em telas largas e baixas a altura era medida com a
+              // largura da tela e o conteúdo estourava embaixo.
               builder: (context, constraints) => SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(28, 16, 28, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // O PNG da marca tem margem interna; o corte de
-                              // altura aproxima a logo do texto, como no Figma.
-                              const Align(
-                                heightFactor: .74,
-                                child: AppLogo(large: true),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                      maxWidth: 420,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 16, 28, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // O PNG da marca tem margem interna; o corte de
+                            // altura aproxima a logo do texto, como no Figma.
+                            const Align(
+                              heightFactor: .74,
+                              child: AppLogo(large: true),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Roteiros e aventuras\npara todos os caminhos.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: _ink,
+                                fontSize: 18,
+                                height: 1.4,
+                                fontWeight: FontWeight.w700,
                               ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'Roteiros e aventuras\npara todos os caminhos.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: _ink,
-                                  fontSize: 18,
-                                  height: 1.4,
+                            ),
+                            const Spacer(),
+                            const SizedBox(height: 24),
+                            const _Benefit(
+                              icon: Icons.hiking_rounded,
+                              text: 'Explore roteiros incríveis',
+                            ),
+                            const SizedBox(height: 18),
+                            const _Benefit(
+                              icon: Icons.group_outlined,
+                              text:
+                                  'Encontre atividades com guias responsáveis',
+                            ),
+                            const SizedBox(height: 18),
+                            const _Benefit(
+                              icon: Icons.favorite_border_rounded,
+                              text: 'Viva experiências memoráveis',
+                            ),
+                            const SizedBox(height: 28),
+                            FilledButton(
+                              onPressed: () => _open(
+                                context,
+                                (_) => const ProfileChoiceScreen(),
+                              ),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AuthScaffold.olive,
+                                foregroundColor: AppColors.paper,
+                                minimumSize: const Size.fromHeight(52),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const Spacer(),
-                              const SizedBox(height: 24),
-                              const _Benefit(
-                                icon: Icons.hiking_rounded,
-                                text: 'Explore roteiros incríveis',
-                              ),
-                              const SizedBox(height: 18),
-                              const _Benefit(
-                                icon: Icons.group_outlined,
-                                text:
-                                    'Encontre atividades com guias responsáveis',
-                              ),
-                              const SizedBox(height: 18),
-                              const _Benefit(
-                                icon: Icons.favorite_border_rounded,
-                                text: 'Viva experiências memoráveis',
-                              ),
-                              const SizedBox(height: 28),
-                              FilledButton(
-                                onPressed: () => _open(
-                                  context,
-                                  (_) => const ProfileChoiceScreen(),
-                                ),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AuthScaffold.olive,
-                                  foregroundColor: AppColors.paper,
-                                  minimumSize: const Size.fromHeight(52),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                child: const Text('Criar conta'),
-                              ),
-                              const SizedBox(height: 8),
-                              TextButton(
-                                onPressed: () =>
-                                    _open(context, (_) => const LoginScreen()),
-                                style: TextButton.styleFrom(
-                                  textStyle: const TextStyle(
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Fazer login',
-                                  style: TextStyle(color: AppColors.paper),
+                              child: const Text('Criar conta'),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: () =>
+                                  _open(context, (_) => const LoginScreen()),
+                              style: TextButton.styleFrom(
+                                textStyle: const TextStyle(
+                                  decoration: TextDecoration.underline,
                                 ),
                               ),
-                              const LegalLinks(light: true),
-                            ],
-                          ),
+                              child: const Text(
+                                'Fazer login',
+                                style: TextStyle(color: AppColors.paper),
+                              ),
+                            ),
+                            const LegalLinks(light: true, stacked: true),
+                          ],
                         ),
                       ),
                     ),

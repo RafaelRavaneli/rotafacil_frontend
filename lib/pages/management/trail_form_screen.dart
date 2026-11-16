@@ -8,7 +8,6 @@ import '../../services/brazil_locations.dart';
 import '../../widgets/brazil_location_fields.dart';
 import '../../utils/auth_error_message.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';

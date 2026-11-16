@@ -33,7 +33,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   Future<void> _cancel(LocalBooking booking) async {
     if (cancelling) return;
-    setState(() => cancelling = true);
     try {
       final confirm = await showDialog<bool>(
         context: context,
@@ -66,6 +65,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ),
       );
       if (confirm != true || !mounted) return;
+      // O indicador "Cancelando..." só aparece depois da confirmação; antes, o
+      // botão ficava girando atrás do diálogo enquanto a pessoa decidia.
+      setState(() => cancelling = true);
       final saved = await runAction(
         context,
         () => AppStore.instance.cancelBooking(booking),
@@ -439,8 +441,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           ),
                           _Information(
                             label: 'Valor declarado',
-                            value:
-                                Brl.format(booking.valuePaid),
+                            value: Brl.format(booking.valuePaid),
                           ),
                         ],
                       ),
