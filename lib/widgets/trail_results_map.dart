@@ -163,97 +163,96 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
         .map((t) => '${t.id}:${t.latitude}:${t.longitude}')
         .join('|');
     final mapView = ClipRRect(
-          borderRadius: BorderRadius.circular(widget.borderRadius),
-          child: SizedBox(
-            height: widget.height,
-            child: FlutterMap(
-              key: ValueKey(signature),
-              options: MapOptions(
-                initialCenter: points.first,
-                initialZoom: 12,
-                initialCameraFit: uniquePoints.length > 1
-                    ? CameraFit.bounds(
-                        bounds: LatLngBounds.fromPoints(points),
-                        padding: const EdgeInsets.all(48),
-                        maxZoom: 14,
-                      )
-                    : null,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                ),
-              ),
-              children: [
-                TileLayer(
-                  tileProvider: widget.tileProvider,
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.rotafacil.app',
-                  errorTileCallback: (_, _, _) {
-                    if (!tileError && mounted) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) setState(() => tileError = true);
-                      });
-                    }
-                  },
-                ),
-                Builder(
-                  builder: (context) {
-                    final groups = groupTrailMarkers(
-                      mapped,
-                      MapCamera.of(context).zoom,
-                    );
-                    return MarkerLayer(
-                      markers: groups
-                          .map(
-                            (group) => Marker(
-                              point: group.position,
-                              width: 52,
-                              height: 52,
-                              child: Tooltip(
-                                message: group.trails.length == 1
-                                    ? 'Abrir roteiro: ${group.trails.single.name}'
-                                    : '${group.trails.length} roteiros nesta região',
-                                child: IconButton(
-                                  onPressed: () => _openGroup(group),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor:
-                                        group.trails.any(
-                                          (trail) =>
-                                              widget.selectedId == trail.id,
-                                        )
-                                        ? AppColors.earth
-                                        : AppColors.forest,
-                                    foregroundColor: AppColors.white,
-                                  ),
-                                  icon: group.trails.length == 1
-                                      ? const Icon(Icons.terrain)
-                                      : Text(
-                                          '${group.trails.length}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                ),
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      child: SizedBox(
+        height: widget.height,
+        child: FlutterMap(
+          key: ValueKey(signature),
+          options: MapOptions(
+            initialCenter: points.first,
+            initialZoom: 12,
+            initialCameraFit: uniquePoints.length > 1
+                ? CameraFit.bounds(
+                    bounds: LatLngBounds.fromPoints(points),
+                    padding: const EdgeInsets.all(48),
+                    maxZoom: 14,
+                  )
+                : null,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+            ),
+          ),
+          children: [
+            TileLayer(
+              tileProvider: widget.tileProvider,
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.rotafacil.app',
+              errorTileCallback: (_, _, _) {
+                if (!tileError && mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) setState(() => tileError = true);
+                  });
+                }
+              },
+            ),
+            Builder(
+              builder: (context) {
+                final groups = groupTrailMarkers(
+                  mapped,
+                  MapCamera.of(context).zoom,
+                );
+                return MarkerLayer(
+                  markers: groups
+                      .map(
+                        (group) => Marker(
+                          point: group.position,
+                          width: 52,
+                          height: 52,
+                          child: Tooltip(
+                            message: group.trails.length == 1
+                                ? 'Abrir roteiro: ${group.trails.single.name}'
+                                : '${group.trails.length} roteiros nesta região',
+                            child: IconButton(
+                              onPressed: () => _openGroup(group),
+                              style: IconButton.styleFrom(
+                                backgroundColor:
+                                    group.trails.any(
+                                      (trail) => widget.selectedId == trail.id,
+                                    )
+                                    ? AppColors.earth
+                                    : AppColors.forest,
+                                foregroundColor: AppColors.white,
                               ),
+                              icon: group.trails.length == 1
+                                  ? const Icon(Icons.terrain)
+                                  : Text(
+                                      '${group.trails.length}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
-                          )
-                          .toList(),
-                    );
-                  },
-                ),
-                RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution(
-                      'OpenStreetMap contributors',
-                      onTap: () => launchUrl(
-                        Uri.parse('https://www.openstreetmap.org/copyright'),
-                      ),
-                    ),
-                  ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+            RichAttributionWidget(
+              attributions: [
+                TextSourceAttribution(
+                  'OpenStreetMap contributors',
+                  onTap: () => launchUrl(
+                    Uri.parse('https://www.openstreetmap.org/copyright'),
+                  ),
                 ),
               ],
             ),
-          ),
-        );
+          ],
+        ),
+      ),
+    );
     if (!widget.showDetails) return mapView;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

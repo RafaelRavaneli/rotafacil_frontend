@@ -51,9 +51,9 @@ class RoleCard extends StatelessWidget {
             duration: const Duration(milliseconds: 160),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF3A3A38).withValues(
-                alpha: selected ? .72 : (dimmed ? .35 : .5),
-              ),
+              color: const Color(
+                0xFF3A3A38,
+              ).withValues(alpha: selected ? .72 : (dimmed ? .35 : .5)),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
                 color: selected ? AuthScaffold.accent : Colors.transparent,
@@ -92,7 +92,9 @@ class RoleCard extends StatelessWidget {
                       Text(
                         data.$2,
                         style: TextStyle(
-                          color: AppColors.paper.withValues(alpha: dimmed ? .5 : .82),
+                          color: AppColors.paper.withValues(
+                            alpha: dimmed ? .5 : .82,
+                          ),
                           fontSize: 12.5,
                           height: 1.35,
                         ),

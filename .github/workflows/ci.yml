@@ -33,6 +33,11 @@ jobs:
       - name: Dependências
         run: flutter pub get
 
+      # Código fora do padrão do dart format reprova o PR. Para corrigir:
+      # dart format lib test
+      - name: Formatação
+        run: dart format --output=none --set-exit-if-changed lib test
+
       - name: Análise estática
         run: flutter analyze
 

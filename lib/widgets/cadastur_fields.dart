@@ -33,7 +33,9 @@ class CadasturFields extends StatelessWidget {
         controller: number,
         enabled: enabled,
         keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9./ -]'))],
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9./ -]')),
+        ],
         maxLength: 40,
         style: const TextStyle(color: AppColors.ink),
         decoration: InputDecoration(
