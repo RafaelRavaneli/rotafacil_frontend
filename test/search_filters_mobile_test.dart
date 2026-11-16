@@ -67,12 +67,11 @@ void main() {
     expect(find.text('1 resultado(s)'), findsOneWidget);
     expect(find.text('Cachoeira tranquila'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('search-filters-toggle')));
+    // O mapa não tem mais cartão de filtros; o caminho é o ícone da barra.
+    expect(find.text('Filtros de busca'), findsNothing);
+    await tester.tap(find.byTooltip('Editar filtros'));
     await tester.pumpAndSettle();
-    expect(
-      tester.widget<ChoiceChip>(advanced).selected,
-      isTrue,
-    );
+    expect(tester.widget<ChoiceChip>(advanced).selected, isTrue);
     final clear = find.text('Limpar filtros');
     await tester.ensureVisible(clear);
     await tester.tap(clear);

@@ -1134,14 +1134,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                   ),
                 ),
         ),
-        // Com a lista aberta (tela inteira) o cartão de filtros passa a fazer
-        // parte dela, junto com a opção de voltar ao mapa.
-        Positioned(
-          top: 12,
-          left: 16,
-          right: 16,
-          child: _sheetOpen ? const SizedBox.shrink() : _mobileFilterCard(),
-        ),
+        // Sem cartão de filtros sobre o mapa: a edição dos filtros fica no ícone
+        // da barra superior e no cartão que aparece dentro da lista aberta.
         Positioned.fill(
           key: const ValueKey('search-sheet'),
           child: NotificationListener<DraggableScrollableNotification>(
