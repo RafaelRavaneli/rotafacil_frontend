@@ -1,0 +1,45 @@
+name: CI
+
+# Roda análise estática e testes em todo pull request e a cada push nas
+# branches principais. O build de produção continua sendo feito pelo Vercel.
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+# Um push novo na mesma branch cancela a execução anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    name: Análise e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mesma versão usada no desenvolvimento local, para o resultado ser igual.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Análise estática
+        run: flutter analyze
+
+      - name: Testes (modo local)
+        run: flutter test
+
+      # O app publicado roda com USE_BACKEND=true; este passo executa os
+      # testes que só existem nesse modo.
+      - name: Testes (modo backend)
+        run: flutter test --dart-define=USE_BACKEND=true
