@@ -336,6 +336,20 @@ class AppStore extends ChangeNotifier {
 
   final _backend = BackendRepository();
   Future<void>? _refreshBackendInFlight;
+  DateTime? _lastBackendRefresh;
+
+  /// Para navegação (troca de aba, volta ao app): só baixa tudo de novo se os
+  /// dados estiverem velhos. Depois de uma ação que muda dados, use
+  /// [refreshBackend], que sempre atualiza.
+  Future<void> refreshBackendIfStale({
+    Duration maxAge = const Duration(seconds: 30),
+  }) {
+    final last = _lastBackendRefresh;
+    if (last != null && DateTime.now().difference(last) < maxAge) {
+      return Future.value();
+    }
+    return refreshBackend();
+  }
 
   Future<void> refreshBackend() async {
     if (!useBackend) return;
@@ -346,6 +360,7 @@ class AppStore extends ChangeNotifier {
     _refreshBackendInFlight = refresh;
     try {
       await refresh;
+      _lastBackendRefresh = DateTime.now();
     } finally {
       if (identical(_refreshBackendInFlight, refresh)) {
         _refreshBackendInFlight = null;

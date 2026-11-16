@@ -45,7 +45,7 @@ class _GuideShellState extends State<GuideShell> {
     unawaited(
       AppRoutes.replaceBrowserLocation(AppRoutes.tabsForRole('guia')[value]),
     );
-    unawaited(AppStore.instance.refreshBackend());
+    unawaited(AppStore.instance.refreshBackendIfStale());
   }
 
   @override

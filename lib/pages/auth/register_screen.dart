@@ -212,6 +212,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     bool secret = false,
     int? maxLength,
     List<TextInputFormatter>? formatters,
+    TextInputAction action = TextInputAction.next,
+    Iterable<String>? autofill,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -227,6 +229,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: controller,
             enabled: !loading,
             keyboardType: keyboard,
+            textInputAction: action,
+            autofillHints: autofill,
             maxLength: maxLength,
             inputFormatters: formatters,
             textCapitalization: maxLength == 2
@@ -300,7 +304,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildStep() => Column(
+  Widget _buildStep() => AutofillGroup(
+    key: ValueKey<bool>(credentialsStep),
+    child: _buildStepColumn(),
+  );
+
+  Widget _buildStepColumn() => Column(
     key: ValueKey<bool>(credentialsStep),
     crossAxisAlignment: CrossAxisAlignment.stretch,
     mainAxisSize: MainAxisSize.min,
@@ -309,6 +318,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _field(
           widget.role == UserRole.agency ? 'Razão Social' : 'Nome completo',
           nameController,
+          autofill: [
+            widget.role == UserRole.agency
+                ? AutofillHints.organizationName
+                : AutofillHints.name,
+          ],
         ),
         _field(
           'Telefone',
@@ -316,6 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hint: '(00) 00000-0000',
           keyboard: TextInputType.phone,
           formatters: [InputMasks.phone],
+          autofill: const [AutofillHints.telephoneNumber],
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: 18),
@@ -375,12 +390,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ] else ...[
-        _field('E-mail', emailController, keyboard: TextInputType.emailAddress),
+        _field(
+          'E-mail',
+          emailController,
+          keyboard: TextInputType.emailAddress,
+          autofill: const [AutofillHints.email],
+        ),
         _field(
           'Senha',
           passwordController,
           hint: 'Mínimo de 6 caracteres',
           secret: true,
+          action: TextInputAction.done,
+          autofill: const [AutofillHints.newPassword],
         ),
         const LegalLinks(light: true),
         CheckboxListTile(

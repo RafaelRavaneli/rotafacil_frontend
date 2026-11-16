@@ -73,7 +73,11 @@ class _RotaFacilAppState extends State<RotaFacilApp>
     }
     if (state != AppLifecycleState.resumed || !AppConfig.useBackend) return;
     if (SessionService.instance.userId?.isNotEmpty != true) return;
-    unawaited(AppStore.instance.refreshBackend());
+    unawaited(
+      AppStore.instance.refreshBackendIfStale(
+        maxAge: const Duration(minutes: 1),
+      ),
+    );
   }
 
   void _handleSessionEnd() {

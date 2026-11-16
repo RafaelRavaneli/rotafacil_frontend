@@ -33,6 +33,20 @@ class LocationService {
     return prefs.getString(_permissionKey);
   }
 
+  /// Diz se já dá para obter a posição SEM abrir o alerta de permissão.
+  /// Serve para decidir se a home carrega as atividades próximas sozinha ou
+  /// mostra um convite para a pessoa tocar em "Usar minha localização".
+  Future<bool> canCaptureSilently() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) return false;
+      final permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<UserCoordinates> capture({bool requestPermission = true}) async {
     final active = _captureInFlight;
     if (active != null) return active;
