@@ -24,7 +24,7 @@ class GuideProfileScreen extends StatelessWidget {
         title: const Text('Perfil do guia'),
       ),
       body: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.trails, StoreArea.favorites),
         builder: (context, _) {
           final trails = store.trails
               .where(

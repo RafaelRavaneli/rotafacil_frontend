@@ -28,7 +28,12 @@ class ProfileTab extends StatelessWidget {
 
     return SafeArea(
       child: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(
+          StoreArea.profile,
+          StoreArea.trails,
+          StoreArea.bookings,
+          StoreArea.notifications,
+        ),
         builder: (context, _) {
           final user = store.userForRole(role);
           final showDocument = user.document.isNotEmpty;

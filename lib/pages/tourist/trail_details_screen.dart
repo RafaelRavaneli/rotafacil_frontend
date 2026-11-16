@@ -218,7 +218,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.profile, StoreArea.favorites),
         builder: (context, _) {
           final favorite = store.isFavorite(trail.id);
 

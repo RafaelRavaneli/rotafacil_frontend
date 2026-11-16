@@ -35,7 +35,7 @@ class PrivacySecurityScreen extends StatelessWidget {
         ),
       ),
       body: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.profile, StoreArea.settings),
         builder: (context, _) {
           return ListView(
             padding: const EdgeInsets.all(20),

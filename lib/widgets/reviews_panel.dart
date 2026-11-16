@@ -28,7 +28,9 @@ class _ReviewsPanelState extends State<ReviewsPanel>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppStore.instance.addListener(reload);
+    AppStore.instance
+        .watch(StoreArea.bookings, StoreArea.trails)
+        .addListener(reload);
     future = fetch();
   }
 
@@ -60,7 +62,9 @@ class _ReviewsPanelState extends State<ReviewsPanel>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    AppStore.instance.removeListener(reload);
+    AppStore.instance
+        .watch(StoreArea.bookings, StoreArea.trails)
+        .removeListener(reload);
     super.dispose();
   }
 

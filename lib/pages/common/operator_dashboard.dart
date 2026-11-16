@@ -91,7 +91,12 @@ class OperatorDashboard extends StatelessWidget {
     return BackendRefresh(
       child: SafeArea(
         child: AnimatedBuilder(
-          animation: store,
+          animation: store.watch(
+            StoreArea.profile,
+            StoreArea.trails,
+            StoreArea.bookings,
+            StoreArea.notifications,
+          ),
           builder: (context, _) {
             final user = isAgency ? store.agency : store.guide;
             final trails = store.managedTrails;
@@ -235,15 +240,13 @@ class OperatorDashboard extends StatelessWidget {
                             _Metric(
                               width: width,
                               label: 'Valor declarado',
-                              value:
-                                  Brl.format(
-                                    summary?.declaredValue ??
-                                        activeBookings.fold<double>(
-                                          0,
-                                          (total, item) =>
-                                              total + item.valuePaid,
-                                        ),
-                                  ),
+                              value: Brl.format(
+                                summary?.declaredValue ??
+                                    activeBookings.fold<double>(
+                                      0,
+                                      (total, item) => total + item.valuePaid,
+                                    ),
+                              ),
                               icon: Icons.receipt_long_outlined,
                             ),
                           ],

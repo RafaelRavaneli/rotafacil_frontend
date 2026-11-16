@@ -59,7 +59,10 @@ class NotificationsScreen extends StatelessWidget {
         ),
       ),
       body: AnimatedBuilder(
-        animation: Listenable.merge([store, notifications]),
+        animation: Listenable.merge([
+          store.watch(StoreArea.settings),
+          notifications,
+        ]),
         builder: (context, _) {
           return ListView(
             padding: const EdgeInsets.all(20),

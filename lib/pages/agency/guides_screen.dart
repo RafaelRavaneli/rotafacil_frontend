@@ -26,7 +26,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
       backgroundColor: AppColors.paper,
       body: SafeArea(
         child: AnimatedBuilder(
-          animation: store,
+          animation: store.watch(StoreArea.guides),
           builder: (context, _) => Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
