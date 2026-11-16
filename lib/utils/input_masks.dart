@@ -126,7 +126,9 @@ abstract class _DigitsFormatter extends TextInputFormatter {
 
   String mask(String digits);
 
-  String normalize(String digits) => digits;
+  /// [pasted]: o texto foi colado (várias teclas de uma vez ou com `+`), e não
+  /// digitado tecla a tecla.
+  String normalize(String digits, {bool pasted = false}) => digits;
 
   @override
   TextEditingValue formatEditUpdate(
@@ -144,12 +146,16 @@ abstract class _DigitsFormatter extends TextInputFormatter {
         digits == _onlyDigits(oldValue.text) &&
         cursorDigits > 0) {
       digits =
-          digits.substring(0, cursorDigits - 1) + digits.substring(cursorDigits);
+          digits.substring(0, cursorDigits - 1) +
+          digits.substring(cursorDigits);
       cursorDigits -= 1;
     }
 
+    final pasted =
+        newValue.text.contains('+') ||
+        newValue.text.length - oldValue.text.length > 1;
     final before = digits.length;
-    digits = normalize(digits);
+    digits = normalize(digits, pasted: pasted);
     cursorDigits = math.max(0, cursorDigits - (before - digits.length));
     if (digits.length > maxDigits) digits = digits.substring(0, maxDigits);
     cursorDigits = math.min(cursorDigits, digits.length);
@@ -227,9 +233,11 @@ class _PhoneFormatter extends _DigitsFormatter {
   @override
   int get maxDigits => 11;
 
-  // Colar "+55 31 91234-5678" mantém só DDD e número.
+  // Colar "+55 31 91234-5678" mantém só DDD e número. Só vale para texto colado:
+  // digitar o 12º número de um telefone com DDD 55 (RS) não pode apagar o DDD.
   @override
-  String normalize(String digits) => _normalize(digits);
+  String normalize(String digits, {bool pasted = false}) =>
+      pasted ? _normalize(digits) : digits;
 
   static String _normalize(String digits) =>
       digits.length > 11 && digits.startsWith('55')
@@ -292,7 +300,10 @@ class CurrencyInputFormatter extends TextInputFormatter {
 /// Número decimal com vírgula (ex.: km). Aceita `.` ou `,` e converte para
 /// vírgula; limita as casas inteiras e decimais.
 class DecimalInputFormatter extends TextInputFormatter {
-  const DecimalInputFormatter({this.maxIntegerDigits = 4, this.maxDecimals = 2});
+  const DecimalInputFormatter({
+    this.maxIntegerDigits = 4,
+    this.maxDecimals = 2,
+  });
 
   final int maxIntegerDigits;
   final int maxDecimals;

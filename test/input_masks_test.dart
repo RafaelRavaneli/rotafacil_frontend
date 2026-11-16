@@ -35,10 +35,14 @@ void main() {
     });
 
     test('máscara do documento segue o perfil', () {
-      expect(typed(InputMasks.documentForRole('Guia'), '12345678909'),
-          '123.456.789-09');
-      expect(typed(InputMasks.documentForRole('Agência'), '12345678000190'),
-          '12.345.678/0001-90');
+      expect(
+        typed(InputMasks.documentForRole('Guia'), '12345678909'),
+        '123.456.789-09',
+      );
+      expect(
+        typed(InputMasks.documentForRole('Agência'), '12345678000190'),
+        '12.345.678/0001-90',
+      );
     });
 
     test('apagar um separador apaga o número anterior', () {
@@ -72,6 +76,33 @@ void main() {
 
     test('colar com +55 mantém só DDD e número', () {
       expect(typed(InputMasks.phone, '+55 31 91234-5678'), '(31) 91234-5678');
+    });
+
+    test(
+      'colar com 55 sem + e fixo com +55 também removem o código do país',
+      () {
+        expect(typed(InputMasks.phone, '5531912345678'), '(31) 91234-5678');
+        expect(typed(InputMasks.phone, '+55 31 3123-4567'), '(31) 3123-4567');
+      },
+    );
+
+    test('DDD 55: digitar um 12º número não apaga o DDD', () {
+      final full = InputMasks.phone.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(
+          text: '55999991234',
+          selection: TextSelection.collapsed(offset: 11),
+        ),
+      );
+      expect(full.text, '(55) 99999-1234');
+      final next = InputMasks.phone.formatEditUpdate(
+        full,
+        TextEditingValue(
+          text: '${full.text}5',
+          selection: TextSelection.collapsed(offset: full.text.length + 1),
+        ),
+      );
+      expect(next.text, '(55) 99999-1234');
     });
 
     test('formata valores já salvos', () {
