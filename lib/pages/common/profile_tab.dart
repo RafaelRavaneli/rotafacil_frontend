@@ -38,9 +38,10 @@ class ProfileTab extends StatelessWidget {
                     .where((item) => item.roleView == 'turista')
                     .length
               : store.managedTrails.length;
-          final activityLabel = normalizedRole == 'turista'
-              ? 'reservas'
-              : 'roteiros';
+          final isTourist = normalizedRole == 'turista';
+          final activityLabel = isTourist
+              ? (activityCount == 1 ? 'reserva' : 'reservas')
+              : (activityCount == 1 ? 'roteiro' : 'roteiros');
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(22, 28, 22, 34),

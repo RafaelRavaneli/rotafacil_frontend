@@ -466,6 +466,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             ),
             const SizedBox(height: 18),
             TextField(
+              textInputAction: TextInputAction.next,
               controller: name,
               decoration: const InputDecoration(
                 labelText: 'Nome',
@@ -474,6 +475,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
+              textInputAction: TextInputAction.next,
               controller: email,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
@@ -484,6 +486,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             if (needsDocument) ...[
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: document,
                 keyboardType: TextInputType.number,
                 inputFormatters: [InputMasks.documentForRole(widget.role)],
@@ -502,6 +505,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             ],
             const SizedBox(height: 12),
             TextField(
+              textInputAction: TextInputAction.next,
               controller: phone,
               keyboardType: TextInputType.phone,
               inputFormatters: [InputMasks.phone],
@@ -540,6 +544,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: specialties,
                 decoration: const InputDecoration(
                   labelText: 'Especialidades',
@@ -565,6 +570,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: emergencyName,
                 maxLength: 120,
                 decoration: const InputDecoration(
@@ -574,6 +580,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: emergencyPhone,
                 maxLength: 15,
                 keyboardType: TextInputType.phone,
@@ -586,6 +593,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.done,
                 controller: emergencyRelation,
                 maxLength: 80,
                 decoration: const InputDecoration(

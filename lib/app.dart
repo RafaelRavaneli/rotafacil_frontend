@@ -49,8 +49,11 @@ class _RotaFacilAppState extends State<RotaFacilApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     SessionService.instance.addListener(_handleSessionEnd);
+    // Detecta logout feito em outra aba. Ao voltar para esta aba o
+    // didChangeAppLifecycleState já confere na hora; o timer é só uma rede de
+    // segurança e por isso roda raramente (antes: a cada 2 s).
     _sessionTimer = Timer.periodic(
-      const Duration(seconds: 2),
+      const Duration(seconds: 30),
       (_) => unawaited(SessionService.instance.synchronizeFromStorage()),
     );
   }
@@ -65,9 +68,16 @@ class _RotaFacilAppState extends State<RotaFacilApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(SessionService.instance.synchronizeFromStorage());
+    }
     if (state != AppLifecycleState.resumed || !AppConfig.useBackend) return;
     if (SessionService.instance.userId?.isNotEmpty != true) return;
-    unawaited(AppStore.instance.refreshBackend());
+    unawaited(
+      AppStore.instance.refreshBackendIfStale(
+        maxAge: const Duration(minutes: 1),
+      ),
+    );
   }
 
   void _handleSessionEnd() {

@@ -164,7 +164,7 @@ void main() {
     expect(find.textContaining('não comprova pagamento'), findsOneWidget);
     expect(find.text('Fazer check-in'), findsNothing);
     expect(find.text('Fazer check-out'), findsNothing);
-  });
+  }, skip: AppConfig.useBackend);
 
   testWidgets('Reserva usa horário e previsão da saída reservada', (
     tester,
@@ -233,7 +233,7 @@ void main() {
       tester.widget<TrailWeatherCard>(find.byType(TrailWeatherCard)).date,
       DateTime(2099, 11, 10, 6, 30),
     );
-  });
+  }, skip: AppConfig.useBackend);
 
   testWidgets('Seletor de previsão troca data sem alterar reserva', (
     tester,

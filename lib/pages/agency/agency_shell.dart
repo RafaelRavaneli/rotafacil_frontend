@@ -48,7 +48,7 @@ class _AgencyShellState extends State<AgencyShell> {
     unawaited(
       AppRoutes.replaceBrowserLocation(AppRoutes.tabsForRole('agencia')[value]),
     );
-    unawaited(AppStore.instance.refreshBackend());
+    unawaited(AppStore.instance.refreshBackendIfStale());
   }
 
   @override

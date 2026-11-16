@@ -65,34 +65,48 @@ class _NetworkImageBoxState extends State<NetworkImageBox> {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
-      child: localBytes != null
-          ? Image.memory(
-              localBytes,
-              fit: widget.fit,
-              width: double.infinity,
-              height: double.infinity,
-              gaplessPlayback: true,
-              filterQuality: FilterQuality.medium,
-            )
-          : Image.network(
-              widget.url,
-              fit: widget.fit,
-              width: double.infinity,
-              height: double.infinity,
-              filterQuality: FilterQuality.medium,
-              webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: AppColors.green100,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.landscape_rounded,
-                    color: AppColors.green700,
-                    size: 42,
-                  ),
-                );
-              },
-            ),
+      child: ColoredBox(
+        color: AppColors.green100,
+        child: localBytes != null
+            ? Image.memory(
+                localBytes,
+                fit: widget.fit,
+                width: double.infinity,
+                height: double.infinity,
+                gaplessPlayback: true,
+                filterQuality: FilterQuality.medium,
+              )
+            : Image.network(
+                widget.url,
+                fit: widget.fit,
+                width: double.infinity,
+                height: double.infinity,
+                filterQuality: FilterQuality.medium,
+                webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+                // Aparece com um fade em vez de surgir de repente; o fundo
+                // (ColoredBox abaixo) funciona como placeholder enquanto carrega.
+                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                  if (wasSynchronouslyLoaded) return child;
+                  return AnimatedOpacity(
+                    opacity: frame == null ? 0 : 1,
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
+                    child: child,
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: AppColors.green100,
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.landscape_rounded,
+                      color: AppColors.green700,
+                      size: 42,
+                    ),
+                  );
+                },
+              ),
+      ),
     );
   }
 }

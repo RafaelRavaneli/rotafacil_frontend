@@ -67,7 +67,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         ],
       ),
       body: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.notifications),
         builder: (context, _) {
           if (store.notifications.isEmpty) {
             return RefreshIndicator(

@@ -26,7 +26,7 @@ class AuthScaffold extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'assets/images/auth_background.png',
+          'assets/images/auth_background.jpg',
           fit: BoxFit.cover,
           alignment: Alignment.center,
           excludeFromSemantics: true,

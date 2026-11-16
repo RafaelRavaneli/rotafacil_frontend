@@ -137,7 +137,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppStore.instance.addListener(_retrySearch);
+    AppStore.instance.watch(StoreArea.trails).addListener(_retrySearch);
   }
 
   @override
@@ -148,7 +148,7 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    AppStore.instance.removeListener(_retrySearch);
+    AppStore.instance.watch(StoreArea.trails).removeListener(_retrySearch);
     _debounce?.cancel();
     city.dispose();
     state.dispose();
@@ -950,39 +950,34 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
         ),
         child: SafeArea(
           top: false,
-          child: Row(
-            children: [
-              OutlinedButton(
-                onPressed: _clear,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 52),
-                  shape: const StadiumBorder(),
-                ),
-                child: const Text('Limpar filtros'),
+          child: _FooterButtons(
+            secondary: OutlinedButton(
+              onPressed: _clear,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 52),
+                shape: const StadiumBorder(),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  key: const ValueKey('search-show-results'),
-                  onPressed: () => _setMobileResults(true),
-                  style: FilledButton.styleFrom(shape: const StadiumBorder()),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'Ver resultados',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, size: 20),
-                    ],
+              child: const Text('Limpar filtros'),
+            ),
+            primary: FilledButton(
+              key: const ValueKey('search-show-results'),
+              onPressed: () => _setMobileResults(true),
+              style: FilledButton.styleFrom(shape: const StadiumBorder()),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Ver resultados',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_rounded, size: 20),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1134,14 +1129,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
                   ),
                 ),
         ),
-        // Com a lista aberta (tela inteira) o cartão de filtros passa a fazer
-        // parte dela, junto com a opção de voltar ao mapa.
-        Positioned(
-          top: 12,
-          left: 16,
-          right: 16,
-          child: _sheetOpen ? const SizedBox.shrink() : _mobileFilterCard(),
-        ),
+        // Sem cartão de filtros sobre o mapa: a edição dos filtros fica no ícone
+        // da barra superior e no cartão que aparece dentro da lista aberta.
         Positioned.fill(
           key: const ValueKey('search-sheet'),
           child: NotificationListener<DraggableScrollableNotification>(
@@ -1291,7 +1280,8 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
         ],
       ),
       body: AnimatedBuilder(
-        animation: AppStore.instance,
+        // A busca só depende do catálogo de roteiros.
+        animation: AppStore.instance.watch(StoreArea.trails),
         builder: (context, _) {
           _syncSearch();
           final remote = AppStore.instance.useBackend;
@@ -1484,6 +1474,34 @@ class _ResultCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Botões do rodapé dos filtros. Lado a lado em fonte normal; com fonte grande
+/// (acessibilidade) ficam um sobre o outro, para o texto não ser cortado.
+class _FooterButtons extends StatelessWidget {
+  const _FooterButtons({required this.secondary, required this.primary});
+
+  final Widget secondary;
+  final Widget primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final large = MediaQuery.textScalerOf(context).scale(16) > 22;
+    if (large) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [primary, const SizedBox(height: 8), secondary],
+      );
+    }
+    return Row(
+      children: [
+        secondary,
+        const SizedBox(width: 12),
+        Expanded(child: primary),
+      ],
     );
   }
 }

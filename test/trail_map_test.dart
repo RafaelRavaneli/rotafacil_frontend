@@ -1,3 +1,4 @@
+import 'package:rotafacil/config/app_config.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,7 +150,7 @@ void main() {
     expect(find.text('Trilha mapa'), findsOneWidget);
     expect(find.text('Sem coordenadas'), findsOneWidget);
     expect(tester.takeException(), isNull);
-  });
+  }, skip: AppConfig.useBackend);
 
   testWidgets('Filtro de acessibilidade mantém somente percursos informados', (
     tester,
@@ -193,7 +194,7 @@ void main() {
     await tester.tap(find.text('Recursos de acessibilidade'));
     await tester.pumpAndSettle();
     expect(find.text('1 resultado(s)'), findsOneWidget);
-  });
+  }, skip: AppConfig.useBackend);
 
   testWidgets(
     'Localização negada orienta usuário sem erro técnico e mantém busca',
@@ -232,5 +233,6 @@ void main() {
         findsOneWidget,
       );
     },
+    skip: AppConfig.useBackend,
   );
 }

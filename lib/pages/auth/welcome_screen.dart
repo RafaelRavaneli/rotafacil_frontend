@@ -29,7 +29,7 @@ class WelcomeScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/auth_background.png',
+            'assets/images/auth_background.jpg',
             fit: BoxFit.cover,
             alignment: Alignment.center,
             excludeFromSemantics: true,
@@ -124,18 +124,32 @@ class WelcomeScreen extends StatelessWidget {
                               child: const Text('Criar conta'),
                             ),
                             const SizedBox(height: 8),
-                            TextButton(
+                            // Botão de verdade (antes era só um link sublinhado):
+                            // quem já tem conta é a maioria dos acessos.
+                            OutlinedButton(
                               onPressed: () =>
                                   _open(context, (_) => const LoginScreen()),
-                              style: TextButton.styleFrom(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.paper,
+                                // O tema dá fundo claro aos botões com borda; aqui o
+                                // texto é claro, então o fundo é escuro e translúcido.
+                                backgroundColor: Colors.black.withValues(
+                                  alpha: .28,
+                                ),
+                                minimumSize: const Size.fromHeight(52),
+                                side: const BorderSide(
+                                  color: AppColors.paper,
+                                  width: 1.5,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                                 textStyle: const TextStyle(
-                                  decoration: TextDecoration.underline,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              child: const Text(
-                                'Fazer login',
-                                style: TextStyle(color: AppColors.paper),
-                              ),
+                              child: const Text('Fazer login'),
                             ),
                             const LegalLinks(light: true, stacked: true),
                           ],

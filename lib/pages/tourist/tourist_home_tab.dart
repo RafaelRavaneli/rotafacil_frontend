@@ -8,6 +8,7 @@ import '../../state/app_store.dart';
 import '../../models/trail.dart';
 import '../../theme/legacy_colors.dart';
 import '../../widgets/market_search.dart';
+import '../../widgets/skeleton.dart';
 import '../../widgets/trail_card.dart';
 import '../../utils/run_action.dart';
 import '../../navigation/app_routes.dart';
@@ -21,10 +22,15 @@ class TouristHomeTab extends StatefulWidget {
     this.exploreMode = false,
     this.searchService,
     this.locate,
+    this.hasLocationPermission,
   });
   final bool exploreMode;
   final TrailSearchService? searchService;
   final Future<UserCoordinates> Function()? locate;
+
+  /// Permite testar sem o plugin de localização: responde se a permissão já
+  /// está concedida (sem abrir alerta).
+  final Future<bool> Function()? hasLocationPermission;
 
   @override
   State<TouristHomeTab> createState() => _TouristHomeTabState();
@@ -39,6 +45,9 @@ class _TouristHomeTabState extends State<TouristHomeTab>
   final List<TrailSearchResult> _nearby = [];
   int? _nextPage;
   int _locationGeneration = 0;
+  bool needsLocationPrompt = false;
+  bool _nearbyLoaded = false;
+  DateTime? _positionAt;
 
   Future<void> _loadNearby({int page = 1}) async {
     final current = position;
@@ -60,6 +69,7 @@ class _TouristHomeTabState extends State<TouristHomeTab>
         final ids = _nearby.map((r) => r.trail.id).toSet();
         _nearby.addAll(result.items.where((r) => ids.add(r.trail.id)));
         _nextPage = result.nextPage;
+        _nearbyLoaded = true;
         locationLoaded = true;
       });
     } catch (_) {
@@ -76,14 +86,20 @@ class _TouristHomeTabState extends State<TouristHomeTab>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppStore.instance.addListener(_refreshNearby);
+    AppStore.instance.watch(StoreArea.trails).addListener(_refreshNearby);
     unawaited(_loadPosition());
   }
 
   Timer? _refreshTimer;
 
   void _refreshNearby() {
-    if (!AppStore.instance.useBackend || position == null) return;
+    if (!AppStore.instance.useBackend ||
+        position == null ||
+        _nearbyLoaded ||
+        !locationLoaded ||
+        locationError != null) {
+      return;
+    }
     _refreshTimer?.cancel();
     _refreshTimer = Timer(
       const Duration(milliseconds: 350),
@@ -93,13 +109,21 @@ class _TouristHomeTabState extends State<TouristHomeTab>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState value) {
-    if (value == AppLifecycleState.resumed) unawaited(_loadPosition());
+    if (value != AppLifecycleState.resumed) return;
+    // Posição recente: não pede o GPS de novo a cada volta ao app.
+    final at = _positionAt;
+    final fresh =
+        position != null &&
+        at != null &&
+        DateTime.now().difference(at) < const Duration(minutes: 5);
+    if (fresh) return;
+    unawaited(_loadPosition(refresh: position != null));
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    AppStore.instance.removeListener(_refreshNearby);
+    AppStore.instance.watch(StoreArea.trails).removeListener(_refreshNearby);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -114,32 +138,74 @@ class _TouristHomeTabState extends State<TouristHomeTab>
       locationLoaded = true;
       locationError = message;
     });
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _loadPosition() async {
+  /// [prompt]: a pessoa tocou para permitir a localização (aí o alerta pode
+  /// aparecer). Sem ele, só usamos a posição se a permissão já foi concedida.
+  /// [refresh]: atualização em segundo plano; mantém a lista na tela.
+  Future<void> _loadPosition({
+    bool prompt = false,
+    bool refresh = false,
+  }) async {
+    final injected = widget.locate;
+    if (!prompt) {
+      final granted =
+          await (widget.hasLocationPermission?.call() ??
+              (injected != null
+                  ? Future.value(true)
+                  : LocationService.instance.canCaptureSilently()));
+      if (!mounted) return;
+      if (!granted) {
+        setState(() {
+          ++_locationGeneration;
+          position = null;
+          _nearby.clear();
+          _nextPage = null;
+          _nearbyLoaded = false;
+          locationLoaded = true;
+          locationError = null;
+          needsLocationPrompt = true;
+        });
+        return;
+      }
+    }
+    final previous = position;
     setState(() {
       ++_locationGeneration;
-      position = null;
-      _nearby.clear();
-      _nextPage = null;
-      locationLoaded = false;
+      needsLocationPrompt = false;
+      if (!refresh) {
+        position = null;
+        _nearby.clear();
+        _nextPage = null;
+        _nearbyLoaded = false;
+        locationLoaded = false;
+      }
       locationError = null;
     });
     try {
       final current =
-          await (widget.locate?.call() ?? LocationService.instance.capture());
+          await (injected?.call() ??
+              LocationService.instance.capture(requestPermission: prompt));
       if (mounted) {
+        final moved =
+            previous == null ||
+            Geolocator.distanceBetween(
+                  previous.latitude,
+                  previous.longitude,
+                  current.latitude,
+                  current.longitude,
+                ) >
+                300;
         setState(() {
           position = current;
+          _positionAt = DateTime.now();
           locationLoaded = true;
           locationError = null;
         });
-        await _loadNearby();
+        if (!refresh || moved || !_nearbyLoaded) await _loadNearby();
       }
     } catch (error) {
+      if (refresh && position != null) return;
       _finishLocationWithError(
         error is StateError
             ? error.message.toString()
@@ -180,7 +246,12 @@ class _TouristHomeTabState extends State<TouristHomeTab>
     final store = AppStore.instance;
     return SafeArea(
       child: AnimatedBuilder(
-        animation: store,
+        // Só reconstrói quando mudam roteiros, favoritos ou o perfil.
+        animation: store.watch(
+          StoreArea.trails,
+          StoreArea.favorites,
+          StoreArea.profile,
+        ),
         builder: (context, _) {
           final trails = store.trails
               .where((t) => TrailStatus.isActive(t.status))
@@ -269,16 +340,24 @@ class _TouristHomeTabState extends State<TouristHomeTab>
                         subtitle: 'Até 100 km da sua localização',
                         trails: nearby,
                         loading: !locationLoaded,
-                        emptyText: locationError != null
+                        emptyText: needsLocationPrompt
+                            ? 'Veja as atividades mais perto de você. Usamos '
+                                  'sua localização só para calcular as distâncias.'
+                            : locationError != null
                             ? locationError!
                             : position == null
                             ? (locationError ??
                                   'Permita a localização para ver atividades próximas.')
                             : 'Nenhuma atividade encontrada em até 100 km.',
-                        emptyAction: position == null || locationError != null
-                            ? () => unawaited(_loadPosition())
+                        emptyAction:
+                            needsLocationPrompt ||
+                                position == null ||
+                                locationError != null
+                            ? () => unawaited(_loadPosition(prompt: true))
                             : null,
-                        emptyActionLabel: 'Tentar novamente',
+                        emptyActionLabel: needsLocationPrompt
+                            ? 'Usar minha localização'
+                            : 'Tentar novamente',
                         itemBuilder: (trail) => Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -406,16 +485,28 @@ class _TrailCarouselSection extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: LegacyColors.muted, fontSize: 13),
+                  style: const TextStyle(
+                    color: LegacyColors.muted,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
           if (loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 34),
-              child: Center(child: CircularProgressIndicator()),
+            // Esqueleto com a forma dos cartões em vez de um indicador girando.
+            SizedBox(
+              height: 375,
+              child: ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                scrollDirection: Axis.horizontal,
+                itemCount: 3,
+                separatorBuilder: (_, _) => const SizedBox(width: 16),
+                itemBuilder: (_, _) =>
+                    const SizedBox(width: 270, child: TrailCardSkeleton()),
+              ),
             )
           else if (trails.isEmpty)
             Padding(

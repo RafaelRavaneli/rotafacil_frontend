@@ -19,8 +19,11 @@ import '../models/professional_document.dart';
 import '../models/guide.dart';
 import '../models/packing_checklist.dart';
 import '../utils/role_utils.dart';
+import 'store_areas.dart';
 
-class AppStore extends ChangeNotifier {
+export 'store_areas.dart' show StoreArea;
+
+class AppStore extends ChangeNotifier with StoreAreas {
   AppStore._();
 
   static final AppStore instance = AppStore._();
@@ -331,11 +334,28 @@ class AppStore extends ChangeNotifier {
               ),
             ),
       );
-    notifyListeners();
+    notifyAreas(const {StoreArea.guides});
   }
 
   final _backend = BackendRepository();
   Future<void>? _refreshBackendInFlight;
+  DateTime? _lastBackendRefresh;
+
+  /// Para navegação (troca de aba, volta ao app): só baixa tudo de novo se os
+  /// dados estiverem velhos. Depois de uma ação que muda dados, use
+  /// [refreshBackend], que sempre atualiza.
+  Future<void> refreshBackendIfStale({
+    Duration maxAge = const Duration(seconds: 30),
+  }) {
+    final last = _lastBackendRefresh;
+    if (last != null && DateTime.now().difference(last) < maxAge) {
+      return Future.value();
+    }
+    // Atualização oportunista, em segundo plano: se falhar (sem rede, por
+    // exemplo), a tela continua com os dados que já tem. Sessão expirada é
+    // tratada pelo ApiClient antes de o erro chegar aqui.
+    return refreshBackend().catchError((Object _) {});
+  }
 
   Future<void> refreshBackend() async {
     if (!useBackend) return;
@@ -346,6 +366,7 @@ class AppStore extends ChangeNotifier {
     _refreshBackendInFlight = refresh;
     try {
       await refresh;
+      _lastBackendRefresh = DateTime.now();
     } finally {
       if (identical(_refreshBackendInFlight, refresh)) {
         _refreshBackendInFlight = null;
@@ -353,8 +374,46 @@ class AppStore extends ChangeNotifier {
     }
   }
 
+  /// Retrato do conteúdo de cada área. Comparar o antes e o depois de uma
+  /// carga do servidor diz quais áreas mudaram de verdade.
+  Map<StoreArea, String> _areaSignatures() {
+    final dashboard = operatorDashboardSummary;
+    return {
+      StoreArea.profile: jsonEncode([
+        tourist.toJson(),
+        guide.toJson(),
+        agency.toJson(),
+      ]),
+      StoreArea.trails: jsonEncode([for (final item in trails) item.toJson()]),
+      StoreArea.bookings: jsonEncode([
+        [for (final item in bookings) item.toJson()],
+        if (dashboard != null)
+          [dashboard.total, dashboard.byStatus, dashboard.declaredValue],
+      ]),
+      StoreArea.favorites: (favoriteTrailIds.toList()..sort()).join(','),
+      StoreArea.notifications: jsonEncode([
+        for (final item in notifications) item.toJson(),
+      ]),
+      StoreArea.settings:
+          '$pushNotifications|$bookingNotifications|$marketingNotifications|'
+          '$biometricLock|$profileVisible',
+      StoreArea.guides: jsonEncode([
+        for (final item in agencyGuides) item.toJson(),
+      ]),
+    };
+  }
+
+  Set<StoreArea> _changedSince(Map<StoreArea, String> before) {
+    final after = _areaSignatures();
+    return {
+      for (final area in StoreArea.values)
+        if (before[area] != after[area]) area,
+    };
+  }
+
   Future<void> _loadBackend() async {
     final snapshot = await _backend.load();
+    final before = _areaSignatures();
     agencyGuides
       ..clear()
       ..addAll(snapshot.guides);
@@ -378,12 +437,20 @@ class AppStore extends ChangeNotifier {
     favoriteTrailIds
       ..clear()
       ..addAll(snapshot.favorites);
-    await refreshNotifications();
-    notifyListeners();
+    await _fetchNotifications();
+    // Atualização que não trouxe novidade não reconstrói tela nenhuma; a que
+    // trouxe avisa só as áreas afetadas.
+    notifyAreas(_changedSince(before));
   }
 
   Future<void> refreshNotifications() async {
     if (!useBackend) return;
+    final before = _areaSignatures();
+    await _fetchNotifications();
+    notifyAreas(_changedSince(before));
+  }
+
+  Future<void> _fetchNotifications() async {
     final results = await Future.wait([
       _backend.notifications(),
       _backend.notificationPreferences(),
@@ -395,7 +462,6 @@ class AppStore extends ChangeNotifier {
     pushNotifications = preferences['push'] ?? true;
     bookingNotifications = preferences['agendamentos'] ?? true;
     marketingNotifications = preferences['marketing'] ?? false;
-    notifyListeners();
   }
 
   Future<void> updateUser(
@@ -520,7 +586,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.guides});
   }
 
   Future<void> updateGuideStatus(LocalGuide guide, String status) async {
@@ -530,7 +596,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.guides});
   }
 
   Future<void> removeGuide(LocalGuide guide) async {
@@ -540,7 +606,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.guides});
   }
 
   Future<void> addTrail(Trail trail) async {
@@ -1059,7 +1125,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.favorites});
   }
 
   bool isFavorite(String trailId) {
@@ -1090,7 +1156,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.notifications});
   }
 
   Future<void> markNotificationRead(AppNotificationItem item) async {
@@ -1099,7 +1165,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.notifications});
   }
 
   Future<void> markAllNotificationsRead() async {
@@ -1110,7 +1176,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.notifications});
   }
 
   int get unreadNotifications {
@@ -1125,7 +1191,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.settings});
   }
 
   Future<void> setBookingNotifications(bool value) async {
@@ -1136,7 +1202,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.settings});
   }
 
   Future<void> setMarketingNotifications(bool value) async {
@@ -1147,7 +1213,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.settings});
   }
 
   Future<void> setBiometricLock(bool value) async {
@@ -1155,7 +1221,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.settings});
   }
 
   Future<void> setProfileVisible(bool value) async {
@@ -1163,7 +1229,7 @@ class AppStore extends ChangeNotifier {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.settings});
   }
 
   Future<void> _persistAll() async {
