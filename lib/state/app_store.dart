@@ -348,7 +348,10 @@ class AppStore extends ChangeNotifier {
     if (last != null && DateTime.now().difference(last) < maxAge) {
       return Future.value();
     }
-    return refreshBackend();
+    // Atualização oportunista, em segundo plano: se falhar (sem rede, por
+    // exemplo), a tela continua com os dados que já tem. Sessão expirada é
+    // tratada pelo ApiClient antes de o erro chegar aqui.
+    return refreshBackend().catchError((Object _) {});
   }
 
   Future<void> refreshBackend() async {
