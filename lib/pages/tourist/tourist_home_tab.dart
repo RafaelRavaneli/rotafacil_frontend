@@ -86,7 +86,7 @@ class _TouristHomeTabState extends State<TouristHomeTab>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AppStore.instance.addListener(_refreshNearby);
+    AppStore.instance.watch(StoreArea.trails).addListener(_refreshNearby);
     unawaited(_loadPosition());
   }
 
@@ -123,7 +123,7 @@ class _TouristHomeTabState extends State<TouristHomeTab>
   @override
   void dispose() {
     _refreshTimer?.cancel();
-    AppStore.instance.removeListener(_refreshNearby);
+    AppStore.instance.watch(StoreArea.trails).removeListener(_refreshNearby);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -246,7 +246,12 @@ class _TouristHomeTabState extends State<TouristHomeTab>
     final store = AppStore.instance;
     return SafeArea(
       child: AnimatedBuilder(
-        animation: store,
+        // Só reconstrói quando mudam roteiros, favoritos ou o perfil.
+        animation: store.watch(
+          StoreArea.trails,
+          StoreArea.favorites,
+          StoreArea.profile,
+        ),
         builder: (context, _) {
           final trails = store.trails
               .where((t) => TrailStatus.isActive(t.status))
