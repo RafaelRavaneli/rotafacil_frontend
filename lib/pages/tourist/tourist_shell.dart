@@ -60,7 +60,7 @@ class _TouristShellState extends State<TouristShell> {
               AppRoutes.tabsForRole('turista')[value],
             ),
           );
-          unawaited(AppStore.instance.refreshBackend());
+          unawaited(AppStore.instance.refreshBackendIfStale());
         },
         destinations: const [
           RoleNavigationDestination(

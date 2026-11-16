@@ -679,6 +679,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               ),
               const SizedBox(height: 18),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: nameController,
                 decoration: const InputDecoration(labelText: 'Nome'),
               ),
@@ -693,6 +694,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: capacityController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -822,6 +824,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: distanceController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -833,6 +836,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.next,
                 controller: priceController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [InputMasks.currency],
@@ -844,6 +848,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                textInputAction: TextInputAction.done,
                 controller: organizerEmergencyPhone,
                 maxLength: 15,
                 keyboardType: TextInputType.phone,
