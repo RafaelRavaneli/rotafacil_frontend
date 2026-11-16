@@ -63,18 +63,18 @@ class RoleNavigationBar extends StatelessWidget {
           }),
         ),
         child: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onDestinationSelected,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: [
-          for (final item in destinations)
-            NavigationDestination(
-              icon: item.icon,
-              selectedIcon: item.selectedIcon,
-              label: item.label,
-            ),
-        ],
-      ),
+          selectedIndex: selectedIndex,
+          onDestinationSelected: onDestinationSelected,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            for (final item in destinations)
+              NavigationDestination(
+                icon: item.icon,
+                selectedIcon: item.selectedIcon,
+                label: item.label,
+              ),
+          ],
+        ),
       ),
     );
   }

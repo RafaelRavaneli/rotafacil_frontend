@@ -415,227 +415,238 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         body: Stack(
           children: [
             ListView(
-          // Espaço extra para o aviso de salvar não cobrir o fim da página.
-          padding: EdgeInsets.fromLTRB(20, 20, 20, hasUnsavedChanges ? 110 : 20),
-          children: [
-            Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  ProfileAvatar(dataUrl: previewDataUrl, radius: 54),
-                  Positioned(
-                    right: -4,
-                    bottom: 0,
-                    child: IconButton.filled(
-                      onPressed: _pickPhoto,
-                      icon: const Icon(Icons.photo_camera_outlined),
+              // Espaço extra para o aviso de salvar não cobrir o fim da página.
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                hasUnsavedChanges ? 110 : 20,
+              ),
+              children: [
+                Center(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      ProfileAvatar(dataUrl: previewDataUrl, radius: 54),
+                      Positioned(
+                        right: -4,
+                        bottom: 0,
+                        child: IconButton.filled(
+                          onPressed: _pickPhoto,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton.icon(
+                        onPressed: _pickPhoto,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Escolher foto'),
+                      ),
+                      if (previewDataUrl?.startsWith('data:image') ?? false)
+                        TextButton.icon(
+                          onPressed: _adjustCurrentPhoto,
+                          icon: const Icon(Icons.crop_rounded),
+                          label: const Text('Ajustar foto'),
+                        ),
+                      if (previewDataUrl != null)
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              pickedImageBytes = null;
+                              removeCurrentImage = true;
+                            });
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Remover'),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  textInputAction: TextInputAction.next,
+                  controller: name,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  textInputAction: TextInputAction.next,
+                  controller: email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+                if (needsDocument) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    textInputAction: TextInputAction.next,
+                    controller: document,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [InputMasks.documentForRole(widget.role)],
+                    decoration: InputDecoration(
+                      labelText: documentLabel,
+                      prefixIcon: const Icon(Icons.badge_outlined),
+                      helperText:
+                          '$documentLabel é obrigatório para este perfil.',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  CadasturFields(
+                    number: cadastur,
+                    validUntil: cadasturValidity,
+                    enabled: !saving,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextField(
+                  textInputAction: TextInputAction.next,
+                  controller: phone,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [InputMasks.phone],
+                  decoration: const InputDecoration(
+                    labelText: 'Telefone',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                BrazilLocationFields(
+                  enabled: !saving,
+                  city: city,
+                  state: state,
+                ),
+                if (needsDocument) ...[
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Perfil profissional público',
+                    style: TextStyle(
+                      color: AppColors.forest,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Esses dados ajudam o turista a conhecer o responsável. Documento, e-mail e telefone não são publicados.',
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: professionalDescription,
+                    maxLines: 4,
+                    maxLength: 600,
+                    decoration: const InputDecoration(
+                      labelText: 'Apresentação profissional',
+                      alignLabelWithHint: true,
+                      prefixIcon: Icon(Icons.description_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    textInputAction: TextInputAction.next,
+                    controller: specialties,
+                    decoration: const InputDecoration(
+                      labelText: 'Especialidades',
+                      helperText:
+                          'Separe por vírgulas. Ex.: trekking, cachoeiras',
+                      prefixIcon: Icon(Icons.workspace_premium_outlined),
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: Wrap(
-                spacing: 8,
-                children: [
+                if (!needsDocument) ...[
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Contato de emergência',
+                    style: TextStyle(
+                      color: AppColors.forest,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Compartilhado somente com o responsável operacional por reserva confirmada, de 24 horas antes do início até o término. Cancelamento, conclusão ou retirada do consentimento bloqueiam novas consultas.',
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    textInputAction: TextInputAction.next,
+                    controller: emergencyName,
+                    maxLength: 120,
+                    decoration: const InputDecoration(
+                      labelText: 'Nome do contato',
+                      prefixIcon: Icon(Icons.emergency_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    textInputAction: TextInputAction.next,
+                    controller: emergencyPhone,
+                    maxLength: 15,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [InputMasks.phone],
+                    decoration: const InputDecoration(
+                      counterText: '',
+                      labelText: 'Telefone de emergência',
+                      prefixIcon: Icon(Icons.phone_in_talk_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    textInputAction: TextInputAction.done,
+                    controller: emergencyRelation,
+                    maxLength: 80,
+                    decoration: const InputDecoration(
+                      labelText: 'Relação com o contato',
+                      hintText: 'Ex.: mãe, irmão, amiga',
+                    ),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: emergencyConsent,
+                    onChanged: saving
+                        ? null
+                        : (value) =>
+                              setState(() => emergencyConsent = value ?? false),
+                    title: const Text(
+                      'Autorizo o uso deste contato em emergência durante a atividade.',
+                    ),
+                    subtitle: const Text(
+                      'Confirme que a pessoa sabe que será seu contato. Você pode retirar a autorização a qualquer momento.',
+                    ),
+                  ),
                   TextButton.icon(
-                    onPressed: _pickPhoto,
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Escolher foto'),
+                    onPressed: saving
+                        ? null
+                        : () => setState(() {
+                            emergencyName.clear();
+                            emergencyPhone.clear();
+                            emergencyRelation.clear();
+                            emergencyConsent = false;
+                          }),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Remover contato ao salvar'),
                   ),
-                  if (previewDataUrl?.startsWith('data:image') ?? false)
-                    TextButton.icon(
-                      onPressed: _adjustCurrentPhoto,
-                      icon: const Icon(Icons.crop_rounded),
-                      label: const Text('Ajustar foto'),
-                    ),
-                  if (previewDataUrl != null)
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          pickedImageBytes = null;
-                          removeCurrentImage = true;
-                        });
-                      },
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Remover'),
-                    ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            TextField(
-              textInputAction: TextInputAction.next,
-              controller: name,
-              decoration: const InputDecoration(
-                labelText: 'Nome',
-                prefixIcon: Icon(Icons.person_outline_rounded),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              textInputAction: TextInputAction.next,
-              controller: email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'E-mail',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-            ),
-            if (needsDocument) ...[
-              const SizedBox(height: 12),
-              TextField(
-                textInputAction: TextInputAction.next,
-                controller: document,
-                keyboardType: TextInputType.number,
-                inputFormatters: [InputMasks.documentForRole(widget.role)],
-                decoration: InputDecoration(
-                  labelText: documentLabel,
-                  prefixIcon: const Icon(Icons.badge_outlined),
-                  helperText: '$documentLabel é obrigatório para este perfil.',
+                const SizedBox(height: 24),
+                const Text(
+                  'A foto, dados pessoais e documento ficam '
+                  'salvos neste dispositivo no modo local.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.muted, fontSize: 11),
                 ),
-              ),
-              const SizedBox(height: 16),
-              CadasturFields(
-                number: cadastur,
-                validUntil: cadasturValidity,
-                enabled: !saving,
-              ),
-            ],
-            const SizedBox(height: 12),
-            TextField(
-              textInputAction: TextInputAction.next,
-              controller: phone,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [InputMasks.phone],
-              decoration: const InputDecoration(
-                labelText: 'Telefone',
-                prefixIcon: Icon(Icons.phone_outlined),
-              ),
-            ),
-            const SizedBox(height: 12),
-            BrazilLocationFields(enabled: !saving, city: city, state: state),
-            if (needsDocument) ...[
-              const SizedBox(height: 18),
-              const Text(
-                'Perfil profissional público',
-                style: TextStyle(
-                  color: AppColors.forest,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Esses dados ajudam o turista a conhecer o responsável. Documento, e-mail e telefone não são publicados.',
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: professionalDescription,
-                maxLines: 4,
-                maxLength: 600,
-                decoration: const InputDecoration(
-                  labelText: 'Apresentação profissional',
-                  alignLabelWithHint: true,
-                  prefixIcon: Icon(Icons.description_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                textInputAction: TextInputAction.next,
-                controller: specialties,
-                decoration: const InputDecoration(
-                  labelText: 'Especialidades',
-                  helperText: 'Separe por vírgulas. Ex.: trekking, cachoeiras',
-                  prefixIcon: Icon(Icons.workspace_premium_outlined),
-                ),
-              ),
-            ],
-            if (!needsDocument) ...[
-              const SizedBox(height: 18),
-              const Text(
-                'Contato de emergência',
-                style: TextStyle(
-                  color: AppColors.forest,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Compartilhado somente com o responsável operacional por reserva confirmada, de 24 horas antes do início até o término. Cancelamento, conclusão ou retirada do consentimento bloqueiam novas consultas.',
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                textInputAction: TextInputAction.next,
-                controller: emergencyName,
-                maxLength: 120,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do contato',
-                  prefixIcon: Icon(Icons.emergency_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                textInputAction: TextInputAction.next,
-                controller: emergencyPhone,
-                maxLength: 15,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [InputMasks.phone],
-                decoration: const InputDecoration(
-                  counterText: '',
-                  labelText: 'Telefone de emergência',
-                  prefixIcon: Icon(Icons.phone_in_talk_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                textInputAction: TextInputAction.done,
-                controller: emergencyRelation,
-                maxLength: 80,
-                decoration: const InputDecoration(
-                  labelText: 'Relação com o contato',
-                  hintText: 'Ex.: mãe, irmão, amiga',
-                ),
-              ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: emergencyConsent,
-                onChanged: saving
-                    ? null
-                    : (value) =>
-                          setState(() => emergencyConsent = value ?? false),
-                title: const Text(
-                  'Autorizo o uso deste contato em emergência durante a atividade.',
-                ),
-                subtitle: const Text(
-                  'Confirme que a pessoa sabe que será seu contato. Você pode retirar a autorização a qualquer momento.',
-                ),
-              ),
-              TextButton.icon(
-                onPressed: saving
-                    ? null
-                    : () => setState(() {
-                        emergencyName.clear();
-                        emergencyPhone.clear();
-                        emergencyRelation.clear();
-                        emergencyConsent = false;
-                      }),
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Remover contato ao salvar'),
-              ),
-            ],
-            const SizedBox(height: 24),
-            const Text(
-              'A foto, dados pessoais e documento ficam '
-              'salvos neste dispositivo no modo local.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.muted, fontSize: 11),
-            ),
-          ],
+              ],
             ),
             if (hasUnsavedChanges)
               Positioned(
