@@ -335,7 +335,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         title: const Text('Detalhes da reserva'),
       ),
       body: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.bookings, StoreArea.trails),
         builder: (context, _) {
           final booking = store.bookings
               .where((b) => b.id == widget.bookingId)
