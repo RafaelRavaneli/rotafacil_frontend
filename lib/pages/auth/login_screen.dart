@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Esqueci minha senha',
                       style: TextStyle(
                         color: Color(0xFFD2FA87),
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -233,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: FilledButton(
                     onPressed: loading ? null : _login,
                     style: FilledButton.styleFrom(
-                      minimumSize: const Size(160, 52),
+                      minimumSize: const Size.fromHeight(52),
                       shape: const StadiumBorder(),
                     ),
                     child: loading
