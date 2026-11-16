@@ -148,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return AuthScaffold(
       title: 'Fazer login',
+      largeLogo: true,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -228,18 +229,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                FilledButton(
-                  onPressed: loading ? null : _login,
-                  child: loading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            color: AppColors.white,
-                          ),
-                        )
-                      : const Text('Entrar'),
+                Center(
+                  child: FilledButton(
+                    onPressed: loading ? null : _login,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(160, 52),
+                      shape: const StadiumBorder(),
+                    ),
+                    child: loading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: AppColors.white,
+                            ),
+                          )
+                        : const Text('Entrar'),
+                  ),
                 ),
                 if (AppConfig.useBackend)
                   TextButton(

@@ -28,33 +28,41 @@ class RoleNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBarTheme(
-      data: NavigationBarThemeData(
-        backgroundColor: AppColors.white,
-        indicatorColor: Colors.transparent,
-        height: 52,
-        elevation: 12,
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          return IconThemeData(
-            size: 22,
-            color: states.contains(WidgetState.selected)
-                ? AppColors.forest
-                : AppColors.muted,
-          );
-        }),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          return TextStyle(
-            color: states.contains(WidgetState.selected)
-                ? AppColors.forest
-                : AppColors.muted,
-            fontSize: destinations.length > 4 ? 10 : 11,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w800
-                : FontWeight.w500,
-          );
-        }),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.paper,
+        border: Border(top: BorderSide(color: AppColors.border)),
       ),
-      child: NavigationBar(
+      child: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: AppColors.paper,
+          surfaceTintColor: Colors.transparent,
+          // Item ativo com "pílula" clara, como no Figma.
+          indicatorColor: AppColors.sage,
+          indicatorShape: const StadiumBorder(),
+          height: 64,
+          elevation: 0,
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            return IconThemeData(
+              size: 22,
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.leaf
+                  : AppColors.leaf.withValues(alpha: .8),
+            );
+          }),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? AppColors.leaf
+                  : AppColors.leaf.withValues(alpha: .8),
+              fontSize: destinations.length > 4 ? 10 : 11,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.w800
+                  : FontWeight.w500,
+            );
+          }),
+        ),
+        child: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: onDestinationSelected,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -66,6 +74,7 @@ class RoleNavigationBar extends StatelessWidget {
               label: item.label,
             ),
         ],
+      ),
       ),
     );
   }

@@ -29,16 +29,8 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(number, '12.345.678/0001-90');
-    await tester.scrollUntilVisible(
-      find.text('Salvar alterações'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.ensureVisible(
-      find.widgetWithText(FilledButton, 'Salvar alterações'),
-    );
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar alterações'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
     expect(AppStore.instance.guide.cadasturNumber, '12345678000190');
     expect(find.text('Perfil'), findsOneWidget);

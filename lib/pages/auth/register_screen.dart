@@ -1,3 +1,5 @@
+import '../../utils/input_masks.dart';
+import 'package:flutter/services.dart';
 import '../common/legal_document_screen.dart';
 import 'verify_email_screen.dart';
 import '../../widgets/brazil_location_fields.dart';
@@ -209,6 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     TextInputType? keyboard,
     bool secret = false,
     int? maxLength,
+    List<TextInputFormatter>? formatters,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -225,6 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             enabled: !loading,
             keyboardType: keyboard,
             maxLength: maxLength,
+            inputFormatters: formatters,
             textCapitalization: maxLength == 2
                 ? TextCapitalization.characters
                 : TextCapitalization.none,
@@ -311,6 +315,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           phoneController,
           hint: '(00) 00000-0000',
           keyboard: TextInputType.phone,
+          formatters: [InputMasks.phone],
         ),
         Padding(
           padding: const EdgeInsets.only(bottom: 18),
@@ -333,6 +338,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ? '000.000.000-00'
                 : '00.000.000/0000-00',
             keyboard: TextInputType.number,
+            formatters: [
+              widget.role == UserRole.guide ? InputMasks.cpf : InputMasks.cnpj,
+            ],
           ),
         if (needsDocument) ...[
           CadasturFields(

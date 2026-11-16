@@ -73,6 +73,8 @@ class TrailResultsMap extends StatefulWidget {
     this.selectedId,
     this.tileProvider,
     this.height = 340,
+    this.borderRadius = 22,
+    this.showDetails = true,
   });
 
   final List<Trail> trails;
@@ -80,6 +82,12 @@ class TrailResultsMap extends StatefulWidget {
   final String? selectedId;
   final TileProvider? tileProvider;
   final double height;
+
+  /// Arredondamento do mapa (0 para ocupar a tela toda).
+  final double borderRadius;
+
+  /// Mostra as legendas abaixo do mapa. Desligado quando o mapa preenche a tela.
+  final bool showDetails;
 
   @override
   State<TrailResultsMap> createState() => _TrailResultsMapState();
@@ -154,11 +162,8 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
     final signature = mapped
         .map((t) => '${t.id}:${t.latitude}:${t.longitude}')
         .join('|');
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+    final mapView = ClipRRect(
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           child: SizedBox(
             height: widget.height,
             child: FlutterMap(
@@ -248,7 +253,12 @@ class _TrailResultsMapState extends State<TrailResultsMap> {
               ],
             ),
           ),
-        ),
+        );
+    if (!widget.showDetails) return mapView;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        mapView,
         const SizedBox(height: 8),
         Text(
           '${mapped.length} roteiro(s) no mapa. Toque em um marcador para abrir os detalhes.',

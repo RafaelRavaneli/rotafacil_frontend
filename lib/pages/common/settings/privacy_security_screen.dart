@@ -1,3 +1,4 @@
+import '../../../utils/input_masks.dart';
 import '../../auth/verify_email_screen.dart';
 import '../legal_document_screen.dart';
 import '../../../config/app_config.dart';
@@ -30,7 +31,7 @@ class PrivacySecurityScreen extends StatelessWidget {
         leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Privacidade e segurança',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       body: AnimatedBuilder(
@@ -317,6 +318,7 @@ class _ChangeAccountTypeDialogState extends State<_ChangeAccountTypeDialog> {
                 controller: document,
                 enabled: !loading,
                 keyboardType: TextInputType.number,
+                inputFormatters: [InputMasks.documentForRole(selected.title)],
                 decoration: InputDecoration(
                   labelText: DocumentValidator.labelForRole(selected.title),
                 ),

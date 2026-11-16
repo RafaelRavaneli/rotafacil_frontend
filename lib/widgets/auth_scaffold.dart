@@ -5,9 +5,17 @@ import 'app_logo.dart';
 
 /// Identidade visual compartilhada por todo o fluxo anterior à home.
 class AuthScaffold extends StatelessWidget {
-  const AuthScaffold({super.key, required this.body, required this.title});
+  const AuthScaffold({
+    super.key,
+    required this.body,
+    required this.title,
+    this.largeLogo = false,
+  });
   final Widget body;
   final String title;
+
+  /// Logo maior e mais espaço no topo, como nas telas do Figma.
+  final bool largeLogo;
   static const accent = Color(0xFFD2FA87);
   static const olive = Color(0xFF4F682B);
 
@@ -27,7 +35,7 @@ class AuthScaffold extends StatelessWidget {
           backgroundColor: Colors.transparent,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(32, 26, 32, 24),
+              padding: EdgeInsets.fromLTRB(32, largeLogo ? 64 : 26, 32, 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
@@ -36,9 +44,12 @@ class AuthScaffold extends StatelessWidget {
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          const Align(
+                          Align(
                             alignment: Alignment.center,
-                            child: AppLogo(iconOnly: true),
+                            child: AppLogo(
+                              iconOnly: true,
+                              scale: largeLogo ? 1.7 : 1,
+                            ),
                           ),
                           if (Navigator.canPop(context))
                             Align(

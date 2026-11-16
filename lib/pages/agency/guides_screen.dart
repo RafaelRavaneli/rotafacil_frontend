@@ -39,7 +39,7 @@ class _GuidesScreenState extends State<GuidesScreen> {
                     style: TextStyle(
                       color: AppColors.ink,
                       fontSize: 32,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: -1,
                     ),
                   ),

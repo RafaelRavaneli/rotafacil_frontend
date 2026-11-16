@@ -3,16 +3,24 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/trail.dart';
 
 class OrganizerEmergencyCard extends StatelessWidget {
-  const OrganizerEmergencyCard({super.key, required this.trail});
+  const OrganizerEmergencyCard({
+    super.key,
+    required this.trail,
+    this.showTitle = true,
+  });
   final Trail trail;
+
+  /// Falso quando o título já aparece no cabeçalho de uma seção expansível.
+  final bool showTitle;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        'Emergência: contato do organizador',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      if (showTitle)
+        const Text(
+          'Emergência: contato do organizador',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       SelectableText(
         trail.organizerEmergencyPhone.trim().isEmpty
             ? 'Telefone não informado'

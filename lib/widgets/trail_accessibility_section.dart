@@ -1,18 +1,27 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../models/trail_accessibility.dart';
 
 /// Informação declarada pelo organizador, sem presumir condições não informadas.
 class TrailAccessibilitySection extends StatelessWidget {
-  const TrailAccessibilitySection({super.key, required this.value});
+  const TrailAccessibilitySection({
+    super.key,
+    required this.value,
+    this.showTitle = true,
+  });
   final TrailAccessibility value;
+
+  /// Falso quando o título já aparece no cabeçalho de uma seção expansível.
+  final bool showTitle;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        'Acessibilidade e restrições',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      if (showTitle)
+        const Text(
+          'Acessibilidade e restrições',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       const Text(
         'Condições informadas pelo responsável. Consulte as adaptações antes de reservar.',
       ),
@@ -89,6 +98,10 @@ class _TrailAccessibilityEditorState extends State<TrailAccessibilityEditor> {
       TextFormField(
         initialValue: values['idade_minima']?.toString() ?? '',
         keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(3),
+        ],
         decoration: const InputDecoration(
           labelText: 'Idade mínima (anos)',
           helperText: 'Vazio: não informado. De 0 a 120 anos.',

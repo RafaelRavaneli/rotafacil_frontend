@@ -14,7 +14,6 @@ import 'favorites_screen.dart';
 import 'notification_center_screen.dart';
 import 'professional_documents_screen.dart';
 import 'settings/help_support_screen.dart';
-import 'settings/notifications_screen.dart';
 import 'settings/personal_data_screen.dart';
 import 'settings/privacy_security_screen.dart';
 
@@ -54,22 +53,8 @@ class ProfileTab extends StatelessWidget {
                       style: TextStyle(
                         color: AppColors.ink,
                         fontSize: 32,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: -1,
-                      ),
-                    ),
-                  ),
-                  Material(
-                    color: AppColors.white,
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      tooltip: 'Notificações',
-                      onPressed: () =>
-                          _open(context, const NotificationCenterScreen()),
-                      icon: Badge(
-                        isLabelVisible: store.unreadNotifications > 0,
-                        label: Text('${store.unreadNotifications}'),
-                        child: const Icon(Icons.notifications_none_rounded),
                       ),
                     ),
                   ),
@@ -79,15 +64,9 @@ class ProfileTab extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadow,
-                      blurRadius: 18,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
+                  color: AppColors.paper,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -107,7 +86,7 @@ class ProfileTab extends StatelessWidget {
                             style: const TextStyle(
                               color: AppColors.ink,
                               fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -144,19 +123,14 @@ class ProfileTab extends StatelessWidget {
                 style: TextStyle(
                   color: AppColors.ink,
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 8),
               _ProfileItem(
-                icon: Icons.edit_outlined,
-                title: 'Editar perfil',
-                subtitle: 'Foto, nome, e-mail, telefone, cidade e documento',
-                onTap: () => _open(context, PersonalDataScreen(role: role)),
-              ),
-              _ProfileItem(
                 icon: Icons.person_outline_rounded,
                 title: 'Dados pessoais',
+                subtitle: 'Foto, nome, e-mail, telefone, cidade e documento',
                 onTap: () => _open(context, PersonalDataScreen(role: role)),
               ),
               if (role.toLowerCase() == 'turista')
@@ -169,11 +143,6 @@ class ProfileTab extends StatelessWidget {
                 icon: Icons.notifications_none_rounded,
                 title: 'Notificações',
                 subtitle: '${store.unreadNotifications} não lida(s)',
-                onTap: () => _open(context, const NotificationsScreen()),
-              ),
-              _ProfileItem(
-                icon: Icons.notifications_active_outlined,
-                title: 'Central de notificações',
                 onTap: () => _open(context, const NotificationCenterScreen()),
               ),
               _ProfileItem(
@@ -251,12 +220,23 @@ class _ProfileItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: .6)),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: ListTile(
-        leading: Icon(icon, color: AppColors.ink),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            color: AppColors.sage,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.leaf, size: 20),
+        ),
         title: Text(
           title,
           style: const TextStyle(
@@ -271,7 +251,7 @@ class _ProfileItem extends StatelessWidget {
           Icons.chevron_right_rounded,
           color: AppColors.muted,
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         onTap: onTap,
       ),
     );

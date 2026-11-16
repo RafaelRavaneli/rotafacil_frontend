@@ -1,3 +1,4 @@
+import '../../../utils/input_masks.dart';
 import '../../../navigation/app_routes.dart';
 import '../../../widgets/app_back_button.dart';
 import '../../../widgets/brazil_location_fields.dart';
@@ -6,6 +7,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'photo_crop_screen.dart';
 
 import '../../../services/local_auth_service.dart';
 import '../../../utils/run_action.dart';
@@ -47,6 +50,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   bool removeCurrentImage = false;
   bool saving = false;
   bool allowPop = false;
+  bool _showSaveBar = false;
   late final Map<String, String> initialValues;
 
   bool get needsDocument {
@@ -71,7 +75,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     email = TextEditingController(text: user.email);
 
-    phone = TextEditingController(text: user.phone);
+    phone = TextEditingController(text: InputMasks.formatPhone(user.phone));
 
     city = TextEditingController(text: user.city);
 
@@ -85,7 +89,9 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
     cadasturValidity = TextEditingController(
       text: formatBrazilianDate(user.cadasturValidUntil),
     );
-    emergencyPhone = TextEditingController(text: user.emergencyContactPhone);
+    emergencyPhone = TextEditingController(
+      text: InputMasks.formatPhone(user.emergencyContactPhone),
+    );
     emergencyRelation = TextEditingController(
       text: user.emergencyContactRelation,
     );
@@ -97,6 +103,32 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     currentImageDataUrl = user.profileImageDataUrl;
     initialValues = _currentValues();
+    for (final controller in _textControllers) {
+      controller.addListener(_onFieldChanged);
+    }
+  }
+
+  List<TextEditingController> get _textControllers => [
+    name,
+    email,
+    phone,
+    city,
+    state,
+    document,
+    cadastur,
+    cadasturValidity,
+    emergencyName,
+    emergencyPhone,
+    emergencyRelation,
+    professionalDescription,
+    specialties,
+  ];
+
+  // Mostra ou esconde o aviso de "salvar" só quando o estado realmente muda.
+  void _onFieldChanged() {
+    if (!mounted) return;
+    final dirty = hasUnsavedChanges;
+    if (dirty != _showSaveBar) setState(() => _showSaveBar = dirty);
   }
 
   Map<String, String> _currentValues() => {
@@ -181,8 +213,8 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
   Future<void> _pickPhoto() async {
     final file = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 60,
-      maxWidth: 640,
+      imageQuality: 85,
+      maxWidth: 1024,
     );
 
     if (file == null) return;
@@ -191,15 +223,45 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
 
     if (!mounted) return;
 
+    await _adjustBytes(bytes);
+  }
+
+  // Abre o ajuste (arrastar e dar zoom) e guarda a foto já enquadrada.
+  Future<void> _adjustBytes(Uint8List bytes) async {
+    final cropped = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(builder: (_) => PhotoCropScreen(imageBytes: bytes)),
+    );
+
+    if (cropped == null || !mounted) return;
+
     setState(() {
-      pickedImageBytes = bytes;
+      pickedImageBytes = cropped;
       removeCurrentImage = false;
     });
   }
 
+  // Reajusta a foto atual (escolhida agora ou já salva neste dispositivo).
+  Future<void> _adjustCurrentPhoto() async {
+    final bytes = pickedImageBytes ?? _currentPhotoBytes();
+    if (bytes == null) return;
+    await _adjustBytes(bytes);
+  }
+
+  Uint8List? _currentPhotoBytes() {
+    final value = previewDataUrl;
+    if (value == null || !value.startsWith('data:image')) return null;
+    final comma = value.indexOf(',');
+    if (comma <= 0 || comma >= value.length - 1) return null;
+    try {
+      return base64Decode(value.substring(comma + 1));
+    } catch (_) {
+      return null;
+    }
+  }
+
   String? get previewDataUrl {
     if (pickedImageBytes != null) {
-      return 'data:image/jpeg;base64,'
+      return 'data:image/png;base64,'
           '${base64Encode(pickedImageBytes!)}';
     }
 
@@ -346,12 +408,15 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
         appBar: AppBar(
           leading: AppBackButton(onPressed: _handleBack),
           title: const Text(
-            'Editar perfil',
-            style: TextStyle(fontWeight: FontWeight.w900),
+            'Dados pessoais',
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
+        body: Stack(
+          children: [
+            ListView(
+          // Espaço extra para o aviso de salvar não cobrir o fim da página.
+          padding: EdgeInsets.fromLTRB(20, 20, 20, hasUnsavedChanges ? 110 : 20),
           children: [
             Center(
               child: Stack(
@@ -379,6 +444,12 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
                     icon: const Icon(Icons.photo_library_outlined),
                     label: const Text('Escolher foto'),
                   ),
+                  if (previewDataUrl?.startsWith('data:image') ?? false)
+                    TextButton.icon(
+                      onPressed: _adjustCurrentPhoto,
+                      icon: const Icon(Icons.crop_rounded),
+                      label: const Text('Ajustar foto'),
+                    ),
                   if (previewDataUrl != null)
                     TextButton.icon(
                       onPressed: () {
@@ -415,6 +486,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               TextField(
                 controller: document,
                 keyboardType: TextInputType.number,
+                inputFormatters: [InputMasks.documentForRole(widget.role)],
                 decoration: InputDecoration(
                   labelText: documentLabel,
                   prefixIcon: const Icon(Icons.badge_outlined),
@@ -432,6 +504,7 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
             TextField(
               controller: phone,
               keyboardType: TextInputType.phone,
+              inputFormatters: [InputMasks.phone],
               decoration: const InputDecoration(
                 labelText: 'Telefone',
                 prefixIcon: Icon(Icons.phone_outlined),
@@ -502,9 +575,11 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: emergencyPhone,
-                maxLength: 30,
+                maxLength: 15,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [InputMasks.phone],
                 decoration: const InputDecoration(
+                  counterText: '',
                   labelText: 'Telefone de emergência',
                   prefixIcon: Icon(Icons.phone_in_talk_outlined),
                 ),
@@ -546,18 +621,60 @@ class _PersonalDataScreenState extends State<PersonalDataScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: saving ? null : _save,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(saving ? 'Salvando...' : 'Salvar alterações'),
-            ),
-            const SizedBox(height: 10),
             const Text(
               'A foto, dados pessoais e documento ficam '
               'salvos neste dispositivo no modo local.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, fontSize: 11),
             ),
+          ],
+            ),
+            if (hasUnsavedChanges)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 12,
+                child: SafeArea(
+                  top: false,
+                  child: Material(
+                    key: const ValueKey('save-changes-bar'),
+                    color: AppColors.forest,
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Salve as alterações para não perdê-las.',
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          FilledButton(
+                            onPressed: saving ? null : _save,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.paper,
+                              foregroundColor: AppColors.forest,
+                              minimumSize: const Size(0, 40),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(saving ? 'Salvando...' : 'Salvar'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
