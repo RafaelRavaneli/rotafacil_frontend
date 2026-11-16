@@ -139,7 +139,7 @@ class _ProfessionalDocumentsScreenState
         leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Documentos profissionais',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -199,7 +199,7 @@ class _ProfessionalDocumentsScreenState
                                     document.documentType,
                                 style: const TextStyle(
                                   color: AppColors.green900,
-                                  fontWeight: FontWeight.w900,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),

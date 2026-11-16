@@ -54,7 +54,7 @@ class _AgencyShellState extends State<AgencyShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: AppColors.cream,
 
       // Constrói apenas a página selecionada.
       // Isso evita que abas pesadas escondidas bloqueiem

@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import '../../utils/input_masks.dart';
 import '../../models/trail_accessibility.dart';
 import '../../widgets/trail_accessibility_section.dart';
 import '../../navigation/app_routes.dart';
@@ -6,7 +8,6 @@ import '../../services/brazil_locations.dart';
 import '../../widgets/brazil_location_fields.dart';
 import '../../utils/auth_error_message.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -75,9 +76,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       cityController.text = trail.city;
       stateController.text = trail.state;
       distanceController.text = trail.hasDistance
-          ? trail.distanceKm.toString()
+          ? InputMasks.formatKm(trail.distanceKm)
           : '';
-      priceController.text = trail.price.toStringAsFixed(2);
+      priceController.text = Brl.format(trail.price, symbol: false);
       difficulty = TrailDifficulty.normalize(trail.difficulty);
       activities
         ..clear()
@@ -98,7 +99,9 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
       longitude = trail.longitude;
       meetingPointController.text = trail.meetingPoint;
       departures.addAll(trail.effectiveDepartures);
-      organizerEmergencyPhone.text = trail.organizerEmergencyPhone;
+      organizerEmergencyPhone.text = InputMasks.formatPhone(
+        trail.organizerEmergencyPhone,
+      );
       emergencyInstructions.text = trail.emergencyInstructions;
       accessible = trail.accessible;
       accessibility = trail.accessibility;
@@ -487,8 +490,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
     }
     setState(() => saving = true);
 
-    final price =
-        double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0;
+    final price = Brl.parse(priceController.text) ?? 0;
 
     String imageUrl =
         existingImageUrl ??
@@ -693,6 +695,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               TextField(
                 controller: capacityController,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   labelText: 'Número de vagas',
                   prefixIcon: Icon(Icons.groups_outlined),
@@ -823,6 +826,7 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
+                inputFormatters: [InputMasks.km],
                 decoration: const InputDecoration(
                   labelText: 'Distância do percurso (km)',
                 ),
@@ -830,19 +834,22 @@ class _TrailFormScreenState extends State<TrailFormScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: priceController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [InputMasks.currency],
                 decoration: const InputDecoration(
                   labelText: 'Valor por pessoa (R\$)',
+                  hintText: '0,00',
+                  prefixText: 'R\$ ',
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: organizerEmergencyPhone,
-                maxLength: 30,
+                maxLength: 15,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [InputMasks.phone],
                 decoration: const InputDecoration(
+                  counterText: '',
                   labelText: 'Telefone de emergência do organizador',
                   helperText:
                       'Contato da agência em roteiros de agência. Será exibido ao turista.',

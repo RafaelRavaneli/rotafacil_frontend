@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_theme.dart';
+import '../../theme/legacy_colors.dart';
 import '../../widgets/role_navigation_bar.dart';
 import '../../widgets/animated_tab_body.dart';
 import '../../state/app_store.dart';
@@ -27,7 +29,8 @@ class _TouristShellState extends State<TouristShell> {
   Widget _currentPage() {
     switch (index) {
       case 0:
-        return const TouristHomeTab();
+        // A home do turista permanece com o visual atual.
+        return Theme(data: AppTheme.legacy, child: const TouristHomeTab());
       case 1:
         return const FavoritesScreen();
       case 2:
@@ -35,14 +38,14 @@ class _TouristShellState extends State<TouristShell> {
       case 3:
         return const ProfileTab(role: 'Turista');
       default:
-        return const TouristHomeTab();
+        return Theme(data: AppTheme.legacy, child: const TouristHomeTab());
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: index == 0 ? LegacyColors.paper : AppColors.cream,
       body: AnimatedTabBody(index: index, child: _currentPage()),
       bottomNavigationBar: RoleNavigationBar(
         selectedIndex: index,

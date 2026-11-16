@@ -1,3 +1,5 @@
+import '../../widgets/expandable_info_section.dart';
+import '../../utils/input_masks.dart';
 import '../common/professional_profile_screen.dart';
 import '../../widgets/reviews_panel.dart';
 import '../../widgets/organizer_emergency_card.dart';
@@ -135,8 +137,12 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'R\$ ${trail.price.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+                    Brl.format(trail.price),
+                    style: const TextStyle(
+                      color: AppColors.forest,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -210,7 +216,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
         trail.responsibleRole == 'guia';
 
     return Scaffold(
-      backgroundColor: AppColors.paper,
+      backgroundColor: AppColors.cream,
       body: AnimatedBuilder(
         animation: store,
         builder: (context, _) {
@@ -222,7 +228,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                 expandedHeight: 300,
                 pinned: true,
                 stretch: true,
-                backgroundColor: AppColors.paper,
+                backgroundColor: AppColors.cream,
                 foregroundColor: AppColors.ink,
                 leading: Padding(
                   padding: const EdgeInsets.all(8),
@@ -268,7 +274,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(22, 22, 22, 120),
                     decoration: const BoxDecoration(
-                      color: AppColors.paper,
+                      color: AppColors.cream,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -301,7 +307,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                             color: AppColors.green900,
                             fontSize: 30,
                             height: 1.05,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -.8,
                           ),
                         ),
@@ -351,38 +357,41 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Sobre o roteiro',
-                          style: TextStyle(
-                            color: AppColors.ink,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
+                        ExpandableInfoSection(
+                          title: 'Sobre o roteiro',
+                          icon: Icons.info_outline_rounded,
+                          initiallyExpanded: true,
+                          child: Text(
+                            trail.description,
+                            style: const TextStyle(
+                              color: AppColors.ink,
+                              fontSize: 13.5,
+                              height: 1.55,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          trail.description,
-                          style: const TextStyle(
-                            color: AppColors.ink,
-                            fontSize: 13.5,
-                            height: 1.55,
+                        ExpandableInfoSection(
+                          title: 'Emergência: contato do organizador',
+                          icon: Icons.emergency_outlined,
+                          initiallyExpanded: true,
+                          child: OrganizerEmergencyCard(
+                            trail: trail,
+                            showTitle: false,
                           ),
                         ),
-                        const SizedBox(height: 18),
-                        OrganizerEmergencyCard(trail: trail),
-                        const SizedBox(height: 18),
-                        TrailAccessibilitySection(value: trail.accessibility),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'O que levar',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        ExpandableInfoSection(
+                          title: 'Acessibilidade e restrições',
+                          icon: Icons.accessible_rounded,
+                          child: TrailAccessibilitySection(
+                            value: trail.accessibility,
+                            showTitle: false,
                           ),
                         ),
-                        PackingItemsList(trail: trail),
+                        ExpandableInfoSection(
+                          title: 'O que levar',
+                          icon: Icons.checklist_rounded,
+                          child: PackingItemsList(trail: trail),
+                        ),
                         if (trail.route.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           Text(
@@ -427,7 +436,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                           style: TextStyle(
                             color: AppColors.ink,
                             fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -458,7 +467,7 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                                 child: Text(
                                   trail.responsibleName,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
@@ -536,13 +545,31 @@ class _TrailDetailsScreenState extends State<TrailDetailsScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        'R\$ ${trail.price.toStringAsFixed(2)}\npor pessoa',
-                        style: const TextStyle(
-                          color: AppColors.ink,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              Brl.format(trail.price),
+                              style: const TextStyle(
+                                color: AppColors.forest,
+                                fontSize: 20,
+                                height: 1.1,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'por pessoa',
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Expanded(

@@ -7,13 +7,16 @@ import '../../utils/run_action.dart';
 import '../../widgets/app_back_button.dart';
 
 class LegalLinks extends StatelessWidget {
-  const LegalLinks({super.key, this.light = false});
+  const LegalLinks({super.key, this.light = false, this.stacked = false});
   final bool light;
 
+  /// Empilha os links em coluna. Use dentro de IntrinsicHeight: o Wrap não
+  /// informa a altura intrínseca e o conteúdo estourava a tela em alturas baixas.
+  final bool stacked;
+
   @override
-  Widget build(BuildContext context) => Wrap(
-    alignment: WrapAlignment.center,
-    children: [
+  Widget build(BuildContext context) {
+    final links = [
       for (final entry in {
         'termos': 'Termos de Uso',
         'privacidade': 'Política de Privacidade',
@@ -25,8 +28,12 @@ class LegalLinks extends StatelessWidget {
           onPressed: () => Navigator.pushNamed(context, '/${entry.key}'),
           child: Text(entry.value),
         ),
-    ],
-  );
+    ];
+    if (stacked) {
+      return Column(mainAxisSize: MainAxisSize.min, children: links);
+    }
+    return Wrap(alignment: WrapAlignment.center, children: links);
+  }
 }
 
 class LegalDocumentScreen extends StatefulWidget {

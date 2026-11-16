@@ -31,7 +31,7 @@ class FavoritesScreen extends StatelessWidget {
                       style: TextStyle(
                         color: AppColors.ink,
                         fontSize: 32,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     Spacer(),
@@ -52,7 +52,7 @@ class FavoritesScreen extends StatelessWidget {
                             'Nenhum roteiro salvo',
                             style: TextStyle(
                               fontSize: 20,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           SizedBox(height: 8),
@@ -82,7 +82,7 @@ class FavoritesScreen extends StatelessWidget {
                           style: TextStyle(
                             color: AppColors.ink,
                             fontSize: 32,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),

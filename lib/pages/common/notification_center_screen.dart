@@ -42,7 +42,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         leading: const AppBackButton(fallbackLocation: '/perfil'),
         title: const Text(
           'Notificações',
-          style: TextStyle(fontWeight: FontWeight.w900),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -105,7 +105,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                   ),
                   title: Text(
                     item.title,
-                    style: const TextStyle(fontWeight: FontWeight.w900),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   subtitle: Text(item.body),
                   trailing: item.read
