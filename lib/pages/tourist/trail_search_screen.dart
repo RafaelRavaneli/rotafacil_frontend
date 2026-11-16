@@ -950,39 +950,34 @@ class _TrailSearchScreenState extends State<TrailSearchScreen>
         ),
         child: SafeArea(
           top: false,
-          child: Row(
-            children: [
-              OutlinedButton(
-                onPressed: _clear,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(0, 52),
-                  shape: const StadiumBorder(),
-                ),
-                child: const Text('Limpar filtros'),
+          child: _FooterButtons(
+            secondary: OutlinedButton(
+              onPressed: _clear,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 52),
+                shape: const StadiumBorder(),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  key: const ValueKey('search-show-results'),
-                  onPressed: () => _setMobileResults(true),
-                  style: FilledButton.styleFrom(shape: const StadiumBorder()),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          'Ver resultados',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, size: 20),
-                    ],
+              child: const Text('Limpar filtros'),
+            ),
+            primary: FilledButton(
+              key: const ValueKey('search-show-results'),
+              onPressed: () => _setMobileResults(true),
+              style: FilledButton.styleFrom(shape: const StadiumBorder()),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Ver resultados',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward_rounded, size: 20),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1484,6 +1479,34 @@ class _ResultCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Botões do rodapé dos filtros. Lado a lado em fonte normal; com fonte grande
+/// (acessibilidade) ficam um sobre o outro, para o texto não ser cortado.
+class _FooterButtons extends StatelessWidget {
+  const _FooterButtons({required this.secondary, required this.primary});
+
+  final Widget secondary;
+  final Widget primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final large = MediaQuery.textScalerOf(context).scale(16) > 22;
+    if (large) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [primary, const SizedBox(height: 8), secondary],
+      );
+    }
+    return Row(
+      children: [
+        secondary,
+        const SizedBox(width: 12),
+        Expanded(child: primary),
+      ],
     );
   }
 }
