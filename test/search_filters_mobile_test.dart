@@ -162,7 +162,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(queries.last['dificuldade'], 'Avançado');
-      expect(find.byType(TextField), findsWidgets);
+      // A tela de filtros continua aberta (a lista é rolável, então os campos
+      // de texto podem estar fora da área visível depois de rolar até o chip).
+      expect(advanced, findsOneWidget);
+      expect(find.text('1 resultado(s)'), findsNothing);
 
       final results = find.byKey(const ValueKey('search-show-results'));
       await tester.ensureVisible(results);
