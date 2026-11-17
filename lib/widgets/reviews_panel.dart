@@ -180,6 +180,7 @@ class _ReviewsPanelState extends State<ReviewsPanel>
             children: [
               for (final review in reviews)
                 Card(
+                  margin: const EdgeInsets.only(bottom: 12),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(

@@ -402,6 +402,22 @@ void main() {
     expect(find.text('Roteiro desativado'), findsNothing);
   }, skip: AppConfig.useBackend);
 
+  testWidgets('Menu do roteiro abre os detalhes sem permitir reserva', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app(const TrailsManagementScreen(isAgency: false)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Opções'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ver roteiro'));
+    await tester.pumpAndSettle();
+    final details = tester.widget<TrailDetailsScreen>(
+      find.byType(TrailDetailsScreen),
+    );
+    expect(details.trail.id, 't1');
+    expect(details.readOnly, isTrue);
+  }, skip: AppConfig.useBackend);
+
   testWidgets('Inscritos podem ser filtrados pela data do roteiro', (
     tester,
   ) async {
