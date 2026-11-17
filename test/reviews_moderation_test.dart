@@ -8,6 +8,9 @@ import 'package:rotafacil/models/trail_experience.dart';
 import 'package:rotafacil/services/backend_repository.dart';
 import 'package:rotafacil/services/api_client.dart';
 import 'package:rotafacil/widgets/reviews_panel.dart';
+import 'package:rotafacil/config/app_config.dart';
+import 'package:rotafacil/models/guide.dart';
+import 'package:rotafacil/pages/tourist/guide_profile_screen.dart';
 
 void main() {
   test(
@@ -114,6 +117,68 @@ void main() {
       expect(find.text('Ainda não há avaliações publicadas.'), findsOneWidget);
     },
   );
+  testWidgets('Cartões de avaliação ocupam toda a largura do painel', (
+    tester,
+  ) async {
+    Future<List<TrailReview>> load() async => [
+      TrailReview.fromJson({
+        'id': 'curta',
+        'nome_usuario': 'Ana',
+        'nota_roteiro': 5,
+        'comentario': 'Ótima.',
+      }),
+      TrailReview.fromJson({
+        'id': 'longa',
+        'nome_usuario': 'Bruno',
+        'nota_roteiro': 4,
+        'comentario': 'Trilha linda, mas a descida cansa. Bom ir preparado.',
+      }),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ReviewsPanel(id: 't', load: load),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    expect(cards, hasLength(2));
+    final widths = find
+        .byType(Card)
+        .evaluate()
+        .map((element) => tester.getSize(find.byWidget(element.widget)).width)
+        .toSet();
+    expect(widths, hasLength(1));
+  });
+  testWidgets('Perfil do guia abre as avaliações em tela própria', (
+    tester,
+  ) async {
+    const guide = GuideProfile(
+      id: 'g1',
+      name: 'Carla Mendes',
+      rating: 5,
+      reviews: 2,
+      imageUrl: '',
+      bio: 'Guia de montanha.',
+      specialties: ['Trekking'],
+      experienceYears: 5,
+      completedTrails: 10,
+      totalKm: 100,
+      city: 'Curitiba',
+      state: 'PR',
+    );
+    await tester.pumpWidget(
+      const MaterialApp(home: GuideProfileScreen(guide: guide)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(ReviewsPanel), findsNothing);
+    await tester.tap(find.text('Ver avaliações'));
+    await tester.pumpAndSettle();
+    expect(find.byType(GuideReviewsScreen), findsOneWidget);
+    expect(find.text('Avaliações de Carla Mendes'), findsOneWidget);
+    expect(find.byType(ReviewsPanel), findsOneWidget);
+  }, skip: AppConfig.useBackend);
   testWidgets(
     'Falha de rede permite repetir consulta sem exibir média demonstrativa',
     (tester) async {
