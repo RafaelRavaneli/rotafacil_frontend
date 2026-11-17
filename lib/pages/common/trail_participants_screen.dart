@@ -153,7 +153,7 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
         title: const Text('Inscritos no roteiro'),
       ),
       body: AnimatedBuilder(
-        animation: AppStore.instance,
+        animation: AppStore.instance.watch(StoreArea.bookings),
         builder: (context, _) {
           final allBookings = AppStore.instance.bookings
               .where(

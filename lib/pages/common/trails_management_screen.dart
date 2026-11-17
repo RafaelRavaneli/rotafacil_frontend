@@ -96,7 +96,7 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
 
     return SafeArea(
       child: AnimatedBuilder(
-        animation: store,
+        animation: store.watch(StoreArea.trails),
         builder: (context, child) {
           final managedTrails = store.managedTrails;
           final guideOptions = {

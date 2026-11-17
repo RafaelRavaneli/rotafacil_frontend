@@ -559,7 +559,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.profile});
   }
 
   Future<void> addGuide({
@@ -625,7 +625,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.trails});
   }
 
   Future<void> updateTrail(Trail trail) async {
@@ -645,7 +645,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.trails});
   }
 
   Future<void> removeTrail(Trail trail) async {
@@ -672,7 +672,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.trails, StoreArea.favorites});
   }
 
   Future<void> activateTrail(Trail trail) async {
@@ -737,7 +737,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.bookings});
   }
 
   Future<void> cancelBooking(LocalBooking booking) async {
@@ -765,7 +765,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
 
     await _persistAll();
 
-    notifyListeners();
+    notifyAreas(const {StoreArea.bookings});
   }
 
   Future<void> checkInBooking(
@@ -792,7 +792,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
     }
     booking.status = 'Em andamento';
     await _persistAll();
-    notifyListeners();
+    notifyAreas(const {StoreArea.bookings});
   }
 
   Future<void> checkOutBooking(LocalBooking booking) async {
@@ -811,7 +811,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
     }
     booking.status = 'Concluído';
     await _persistAll();
-    notifyListeners();
+    notifyAreas(const {StoreArea.bookings});
   }
 
   Future<List<Map<String, dynamic>>> adminRows(
@@ -886,7 +886,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
   Future<void> respondBooking(LocalBooking booking, String status) async {
     if (!useBackend) {
       booking.status = status;
-      notifyListeners();
+      notifyAreas(const {StoreArea.bookings});
       return;
     }
     await _backend.respondBooking(booking.id, status);
@@ -906,7 +906,7 @@ class AppStore extends ChangeNotifier with StoreAreas {
       )) {
         booking.status = 'Concluído';
       }
-      notifyListeners();
+      notifyAreas(const {StoreArea.bookings});
       return;
     }
     await _backend.finishDeparture(

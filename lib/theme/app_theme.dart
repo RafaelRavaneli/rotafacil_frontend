@@ -276,7 +276,10 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: LegacyColors.green700, width: 1.4),
+          borderSide: const BorderSide(
+            color: LegacyColors.green700,
+            width: 1.4,
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

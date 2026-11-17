@@ -120,7 +120,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
       onRefresh: widget.onRefresh,
       child: SafeArea(
         child: AnimatedBuilder(
-          animation: store,
+          animation: store.watch(StoreArea.bookings, StoreArea.trails),
           builder: (context, _) {
             final normalized = widget.role.toLowerCase();
             final allBookings = store.bookings.where((booking) {

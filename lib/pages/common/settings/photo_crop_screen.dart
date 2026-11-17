@@ -85,16 +85,29 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
         .clamp(side - _child.height * scale, 0.0)
         .toDouble();
     _controller.value = Matrix4(
-      scale, 0, 0, 0, //
-      0, scale, 0, 0, //
-      0, 0, 1, 0, //
-      tx, ty, 0, 1,
+      scale,
+      0,
+      0,
+      0, //
+      0,
+      scale,
+      0,
+      0, //
+      0,
+      0,
+      1,
+      0, //
+      tx,
+      ty,
+      0,
+      1,
     );
   }
 
   Future<void> _confirm() async {
     final boundary =
-        _captureKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+        _captureKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
     if (boundary == null || _side <= 0) return;
     setState(() => _saving = true);
     try {
