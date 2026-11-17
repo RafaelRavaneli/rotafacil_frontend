@@ -150,6 +150,12 @@ void main() {
         .map((element) => tester.getSize(find.byWidget(element.widget)).width)
         .toSet();
     expect(widths, hasLength(1));
+    Finder surface(Finder card) =>
+        find.descendant(of: card, matching: find.byType(Material)).first;
+    final gap =
+        tester.getTopLeft(surface(find.byType(Card).last)).dy -
+        tester.getBottomLeft(surface(find.byType(Card).first)).dy;
+    expect(gap, greaterThanOrEqualTo(12));
   });
   testWidgets('Perfil do guia abre as avaliações em tela própria', (
     tester,

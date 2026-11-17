@@ -10,6 +10,7 @@ import '../../widgets/network_image_box.dart';
 import '../../navigation/app_routes.dart';
 import '../management/trail_form_screen.dart';
 import 'trail_participants_screen.dart';
+import '../tourist/trail_details_screen.dart';
 import '../../utils/date_time_format.dart';
 
 class TrailsManagementScreen extends StatefulWidget {
@@ -286,6 +287,14 @@ class _TrailsManagementScreenState extends State<TrailsManagementScreen> {
                                   AppRoutes.trailParticipants(trail.id),
                                   (_) => TrailParticipantsScreen(trail: trail),
                                 ),
+                                onView: () => AppRoutes.push(
+                                  context,
+                                  AppRoutes.trail(trail.id),
+                                  (_) => TrailDetailsScreen(
+                                    trail: trail,
+                                    readOnly: true,
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -402,6 +411,7 @@ class _TrailRow extends StatelessWidget {
     required this.onDelete,
     required this.onArchive,
     required this.onParticipants,
+    required this.onView,
   });
 
   final Trail trail;
@@ -409,6 +419,7 @@ class _TrailRow extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onArchive;
   final VoidCallback onParticipants;
+  final VoidCallback onView;
 
   @override
   Widget build(BuildContext context) {
@@ -510,9 +521,22 @@ class _TrailRow extends StatelessWidget {
               if (value == 'participants') {
                 onParticipants();
               }
+              if (value == 'view') {
+                onView();
+              }
             },
             itemBuilder: (context) {
               return [
+                const PopupMenuItem(
+                  value: 'view',
+                  child: Row(
+                    children: [
+                      Icon(Icons.article_outlined),
+                      SizedBox(width: 8),
+                      Text('Ver roteiro'),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'participants',
                   child: Row(
