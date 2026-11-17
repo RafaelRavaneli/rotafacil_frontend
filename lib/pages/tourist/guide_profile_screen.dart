@@ -113,7 +113,16 @@ class GuideProfileScreen extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 20),
-                  ReviewsPanel(id: guide.id, professional: true, role: 'guia'),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => GuideReviewsScreen(guide: guide),
+                      ),
+                    ),
+                    icon: const Icon(Icons.star_outline),
+                    label: const Text('Ver avaliações'),
+                  ),
                   const SizedBox(height: 28),
                   Text(
                     'Roteiros deste guia',
@@ -144,6 +153,33 @@ class GuideProfileScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Avaliações do guia em tela própria, aberta pelo botão do perfil.
+class GuideReviewsScreen extends StatelessWidget {
+  const GuideReviewsScreen({super.key, required this.guide});
+  final GuideProfile guide;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        title: Text('Avaliações de ${guide.name}'),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              ReviewsPanel(id: guide.id, professional: true, role: 'guia'),
+            ],
+          ),
+        ),
       ),
     );
   }

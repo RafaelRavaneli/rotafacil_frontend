@@ -176,6 +176,7 @@ class _ReviewsPanelState extends State<ReviewsPanel>
             return const Text('Ainda não há avaliações publicadas.');
           }
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final review in reviews)
                 Card(
