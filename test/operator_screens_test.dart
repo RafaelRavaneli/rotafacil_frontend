@@ -505,6 +505,58 @@ void main() {
     },
   );
 
+  testWidgets('Agenda do guia abre as reservas da saída escolhida', (
+    tester,
+  ) async {
+    store.bookings
+      ..clear()
+      ..add(
+        LocalBooking(
+          id: 'r1',
+          trailId: 't1',
+          trailName: 'Trilha de demonstração',
+          personName: 'Pessoa de teste',
+          date: '25/10/2026',
+          status: 'Confirmado',
+          roleView: 'guia',
+          departureId: 'd1',
+        ),
+      );
+    await tester.pumpWidget(app(const BookingsScreen(role: 'guia')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Ver reservas'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Consultar roteiro'), findsNothing);
+    await tester.tap(find.text('Ver reservas'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TrailParticipantsScreen), findsOneWidget);
+    expect(find.text('Todas as datas'), findsNothing);
+    expect(find.text('Pessoa de teste'), findsOneWidget);
+  }, skip: AppConfig.useBackend);
+
+  testWidgets('Guia de roteiro da agência vê reservas sem poder respondê-las', (
+    tester,
+  ) async {
+    store.bookings
+      ..clear()
+      ..add(reservation(status: 'Pendente'));
+    await tester.pumpWidget(
+      app(
+        TrailParticipantsScreen(trail: store.trails.single, canManage: false),
+      ),
+    );
+    expect(find.text('Pessoa de teste'), findsOneWidget);
+    expect(
+      find.text('As reservas deste roteiro são respondidas pela agência.'),
+      findsOneWidget,
+    );
+    expect(find.text('Confirmar'), findsNothing);
+    expect(find.text('Recusar'), findsNothing);
+  });
+
   testWidgets('Guia confirma solicitação pendente nos inscritos', (
     tester,
   ) async {

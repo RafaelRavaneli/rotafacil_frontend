@@ -12,9 +12,21 @@ import '../../utils/date_time_format.dart';
 import '../../utils/run_action.dart';
 
 class TrailParticipantsScreen extends StatefulWidget {
-  const TrailParticipantsScreen({super.key, required this.trail});
+  const TrailParticipantsScreen({
+    super.key,
+    required this.trail,
+    this.initialDepartureId,
+    this.canManage = true,
+  });
 
   final Trail trail;
+
+  /// Saída já filtrada ao abrir (por exemplo, a data tocada na Agenda).
+  final String? initialDepartureId;
+
+  /// Falso para o guia atribuído a um roteiro de agência: ele vê as reservas,
+  /// mas confirmar, recusar e finalizar a saída cabem a quem criou o roteiro.
+  final bool canManage;
 
   @override
   State<TrailParticipantsScreen> createState() =>
@@ -25,6 +37,16 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
   String selectedDepartureId = 'all';
   String? busyBookingId;
   bool finishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialDepartureId;
+    if (initial != null &&
+        widget.trail.effectiveDepartures.any((item) => item.id == initial)) {
+      selectedDepartureId = initial;
+    }
+  }
 
   Future<void> _contact(LocalBooking booking) async {
     var phone = booking.personPhone.replaceAll(RegExp(r'\D'), '');
@@ -217,7 +239,19 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
                     onChanged: (value) =>
                         setState(() => selectedDepartureId = value ?? 'all'),
                   ),
-                  if (selected != null &&
+                  if (!widget.canManage) ...[
+                    const SizedBox(height: 12),
+                    const Card(
+                      child: ListTile(
+                        leading: Icon(Icons.info_outline),
+                        title: Text(
+                          'As reservas deste roteiro são respondidas pela agência.',
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (widget.canManage &&
+                      selected != null &&
                       visible.any(
                         (booking) => BookingStatus.isConfirmed(booking.status),
                       )) ...[
@@ -291,7 +325,8 @@ class _TrailParticipantsScreenState extends State<TrailParticipantsScreen> {
                                 ],
                               ),
                             ),
-                            if (BookingStatus.isPending(booking.status))
+                            if (widget.canManage &&
+                                BookingStatus.isPending(booking.status))
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   16,
