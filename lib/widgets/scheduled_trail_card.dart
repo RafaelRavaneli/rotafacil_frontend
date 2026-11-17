@@ -14,6 +14,7 @@ class ScheduledTrailCard extends StatelessWidget {
     this.onEdit,
     this.onDeactivate,
     this.onDetails,
+    this.detailsLabel = 'Consultar roteiro',
   });
 
   final Trail trail;
@@ -22,6 +23,7 @@ class ScheduledTrailCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDeactivate;
   final VoidCallback? onDetails;
+  final String detailsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -66,10 +68,7 @@ class ScheduledTrailCard extends StatelessWidget {
                     ),
                   ),
                   if (onDetails != null)
-                    TextButton(
-                      onPressed: onDetails,
-                      child: const Text('Consultar roteiro'),
-                    ),
+                    TextButton(onPressed: onDetails, child: Text(detailsLabel)),
                 ],
               ),
             ),
