@@ -10,347 +10,369 @@
   <meta property="og:title" content="RotaFácil — trilhas e aventuras ao ar livre">
   <meta property="og:description" content="Turistas encontram e reservam roteiros. Guias e agências organizam saídas, vagas e reservas.">
   <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add('js');</script>
   <style>
     :root {
-      --forest: #2F4A1E;
+      --bg: #FAF7EE;
+      --bg-2: #EAEFDD;
+      --surface: #FFFEF9;
+      --line: #DDDFCB;
+      --accent: #2F4A1E;
+      --accent-strong: #24391A;
       --leaf: #4F672B;
-      --sage: #EAEFDD;
-      --sand: #FAF7EE;
-      --paper: #FFFEF9;
-      --earth: #A67C52;
-      --ink: #253616;
+      --light-green: #C9E394;
+      --glow: rgba(79, 103, 43, .22);
+      --text: #253616;
       --muted: #5E6656;
-      --border: #DDDFCB;
-      --shadow: 0 18px 40px rgba(47, 74, 30, .14);
-      --radius: 20px;
-      --wrap: 1120px;
+      --forest: #2F4A1E;
+      --shadow: 0 18px 40px rgba(47, 74, 30, .12);
+      --radius: 22px;
+      --wrap: 1160px;
+      --display: "Bebas Neue", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
     body {
-      margin: 0;
+      margin: 0; background: var(--bg); color: var(--text);
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: var(--ink);
-      background: var(--sand);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden;
     }
-    img { max-width: 100%; display: block; }
+    img, video { max-width: 100%; display: block; }
     a { color: inherit; }
-    h1, h2, h3 { line-height: 1.15; margin: 0 0 .5em; letter-spacing: -.01em; }
-    h2 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); }
-    h3 { font-size: 1.15rem; }
     p { margin: 0 0 1em; }
+    h1, h2, h3 { margin: 0 0 .4em; line-height: 1.05; }
+    .display { font-family: var(--display); font-weight: 400; letter-spacing: .02em; text-transform: uppercase; }
+    h2.display { font-size: clamp(2.6rem, 6vw, 4.4rem); color: var(--forest); }
+    h3 { font-size: 1.25rem; line-height: 1.25; }
     .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 16px; }
     @media (min-width: 720px) { .wrap { padding: 0 32px; } }
-    .skip { position: absolute; left: -999px; top: 8px; background: var(--paper); padding: 8px 14px; border-radius: 8px; z-index: 100; }
+    .center { text-align: center; }
+    .lead { color: var(--muted); font-size: clamp(1.05rem, 1.7vw, 1.25rem); max-width: 40em; }
+    .center .lead { margin-left: auto; margin-right: auto; }
+    .skip { position: absolute; left: -999px; top: 8px; background: #fff; color: #000; padding: 8px 14px; border-radius: 8px; z-index: 100; }
     .skip:focus { left: 8px; }
-    :focus-visible { outline: 3px solid var(--earth); outline-offset: 3px; border-radius: 6px; }
+    :focus-visible { outline: 3px solid #A67C52; outline-offset: 3px; border-radius: 8px; }
 
-    /* Botões */
+    /* Botões em pílula */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 48px; padding: 12px 24px; border-radius: 999px;
-      font-weight: 700; font-size: 1rem; text-decoration: none;
-      border: 2px solid transparent; transition: transform .15s ease, background-color .15s ease;
+      min-height: 48px; padding: 12px 26px; border-radius: 999px; border: 1.5px solid transparent;
+      font-weight: 700; font-size: 1rem; text-decoration: none; cursor: pointer;
+      transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
     }
     .btn:hover { transform: translateY(-1px); }
-    .btn-primary { background: var(--forest); color: #fff; }
-    .btn-primary:hover { background: #24391A; }
-    .btn-light { background: #fff; color: var(--forest); }
-    .btn-ghost { border-color: rgba(255,255,255,.85); color: #fff; background: rgba(0,0,0,.18); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-strong); box-shadow: 0 10px 24px var(--glow); }
     .btn-outline { border-color: var(--forest); color: var(--forest); background: transparent; }
+    .btn-outline:hover { background: rgba(47, 74, 30, .06); }
+    .hero .btn-outline { border-color: rgba(255, 255, 255, .85); color: #fff; background: rgba(0, 0, 0, .2); }
+    .hero .btn-primary { background: #fff; color: var(--forest); }
+    .hero .btn-primary:hover { background: var(--light-green); }
+    .btn-white { background: #fff; color: var(--forest); border-color: var(--line); }
 
     /* Cabeçalho */
-    header.top {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(250, 247, 238, .92); backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-    }
-    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; }
-    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.2rem; color: var(--forest); }
-    .brand .mark { position: relative; width: 40px; height: 40px; overflow: hidden; border-radius: 10px; background: #fff; flex: none; }
-    .brand .mark img { position: absolute; width: 88px; height: 88px; max-width: none; left: -24px; top: -9px; }
-    nav.links { display: none; gap: 28px; }
-    nav.links a { text-decoration: none; font-weight: 600; color: var(--muted); }
-    nav.links a:hover { color: var(--forest); }
-    @media (min-width: 900px) { nav.links { display: flex; } }
-    .top .btn { min-height: 42px; padding: 8px 18px; font-size: .95rem; }
+    header.top { position: fixed; inset: 0 0 auto 0; z-index: 50; color: #fff; transition: background-color .25s ease, border-color .25s ease, color .25s ease; border-bottom: 1px solid transparent; }
+    header.top.scrolled { background: rgba(250, 247, 238, .92); backdrop-filter: blur(10px); border-color: var(--line); color: var(--text); }
+    .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 72px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.25rem; }
+    .brand b { color: var(--light-green); font-weight: 800; }
+    .scrolled .brand b { color: var(--leaf); }
+    .brand .mark { position: relative; width: 38px; height: 38px; overflow: hidden; border-radius: 10px; background: #fff; flex: none; }
+    .brand .mark img { position: absolute; width: 84px; height: 84px; max-width: none; left: -23px; top: -9px; }
+    .top-actions { display: flex; gap: 10px; align-items: center; }
+    .top .btn { min-height: 42px; padding: 8px 18px; font-size: .92rem; }
+    .top .btn-white { display: none; }
+    @media (min-width: 640px) { .top .btn-white { display: inline-flex; } }
 
     /* Hero */
     .hero {
-      position: relative; color: #fff; overflow: hidden;
-      background: var(--forest) url("img/trilha.jpg") center 60% / cover no-repeat;
+      position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-content: end;
+      background: var(--bg) url("img/trilha.jpg") center 62% / cover no-repeat; z-index: 2;
     }
     .hero::before {
       content: ""; position: absolute; inset: 0;
-      background: linear-gradient(100deg, rgba(25, 40, 15, .88) 0%, rgba(25, 40, 15, .62) 50%, rgba(25, 40, 15, .25) 100%);
+      background: linear-gradient(180deg, rgba(20,32,12,.6) 0%, rgba(20,32,12,.4) 40%, rgba(20,32,12,.35) 62%, rgba(250,247,238,.55) 86%, var(--bg) 100%);
     }
-    .hero .wrap {
-      position: relative; display: grid; gap: 40px; align-items: center;
-      padding-top: 56px; padding-bottom: 64px;
-    }
-    @media (min-width: 900px) { .hero .wrap { grid-template-columns: 1.15fr .85fr; padding-top: 88px; padding-bottom: 96px; } }
-    .eyebrow {
-      display: inline-block; font-size: .85rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 6px 14px; margin-bottom: 20px;
-    }
-    .hero h1 { font-size: clamp(2.2rem, 5.4vw, 3.8rem); margin-bottom: 20px; }
-    .hero p.lead { font-size: clamp(1.05rem, 1.8vw, 1.25rem); max-width: 34em; color: rgba(255,255,255,.92); margin-bottom: 28px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-    .hero-note { margin-top: 18px; font-size: .92rem; color: rgba(255,255,255,.8); }
+    .hero .wrap { position: relative; padding-top: 128px; text-align: center; color: #fff; }
+    .hero h1 { font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: .02em; font-size: clamp(3.2rem, 9vw, 7rem); line-height: .95; margin-bottom: 20px; text-shadow: 0 4px 30px rgba(0,0,0,.45); }
+    .hero h1 span { color: var(--light-green); }
+    .hero .lead { color: rgba(242,245,234,.9); margin: 0 auto 30px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 
-    /* Moldura de celular */
-    .phone {
-      width: min(300px, 78vw); margin: 0 auto; padding: 10px;
-      background: #121a0c; border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,.35);
+    /* Celular com cartões flutuantes */
+    .stage { position: relative; width: min(320px, 74vw); margin: 56px auto 0; }
+    .phone { position: relative; padding: 10px; background: #1B2612; border-radius: 42px; box-shadow: 0 30px 60px rgba(37, 54, 22, .3); }
+    .phone img { width: 100%; height: auto; border-radius: 32px; }
+    .hero .stage { margin-bottom: -180px; }
+    .hero + * { padding-top: 220px !important; }
+    .float {
+      position: absolute; z-index: 2; display: flex; align-items: center; gap: 10px;
+      background: var(--surface); color: var(--text); text-align: left; border: 1px solid var(--line); border-radius: 16px;
+      padding: 10px 14px; box-shadow: var(--shadow); font-size: .85rem; line-height: 1.3; white-space: nowrap;
     }
-    .phone img { border-radius: 30px; width: 100%; height: auto; }
-
-    /* Faixa de atividades */
-    .chips { background: var(--paper); border-bottom: 1px solid var(--border); }
-    .chips .wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-top: 22px; padding-bottom: 22px; }
-    .chip { background: var(--sage); color: var(--forest); font-weight: 700; font-size: .95rem; border-radius: 999px; padding: 8px 16px; }
+    .float strong { display: block; font-size: .92rem; color: var(--forest); }
+    .float span { color: var(--muted); }
+    .float .dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2); color: var(--forest); flex: none; }
+    .float .dot svg { width: 18px; height: 18px; }
+    .float.f1 { top: 18%; left: -46%; }
+    .float.f2 { top: 46%; right: -50%; }
+    .float.f3 { top: 72%; left: -40%; }
+    .float.f4 { top: 10%; right: -46%; }
+    @media (max-width: 760px) { .float { display: none; } }
 
     /* Seções */
-    section.block { padding: 72px 0; }
-    @media (min-width: 900px) { section.block { padding: 104px 0; } }
-    .section-head { max-width: 680px; margin-bottom: 44px; }
-    .section-head .kicker { color: var(--earth); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: .85rem; margin-bottom: 10px; }
-    .section-head p { color: var(--muted); font-size: 1.1rem; }
+    section.block { padding: 96px 0; position: relative; }
+    @media (min-width: 900px) { section.block { padding: 128px 0; } }
+    .kicker { color: var(--leaf); font-weight: 800; text-transform: uppercase; letter-spacing: .12em; font-size: .82rem; margin-bottom: 12px; }
 
-    section[id] { scroll-margin-top: 68px; }
-    .split { display: grid; gap: 48px; align-items: center; }
-    .split > .phone { order: 2; }
-    @media (min-width: 900px) {
-      .split { grid-template-columns: 1fr 1.1fr; }
-      .split > .phone { order: 0; }
-      .split.reverse > :first-child { order: 2; }
+    /* Vídeo */
+    .video-frame {
+      position: relative; margin: 44px auto 0; max-width: 980px; border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--line); box-shadow: var(--shadow);
+      background: #000;
     }
+    .video-frame video { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+    .corners { position: relative; }
+    .corners::before, .corners::after { content: ""; position: absolute; width: 34px; height: 34px; border: 3px solid var(--leaf); pointer-events: none; }
+    .corners::before { top: -14px; left: -14px; border-right: 0; border-bottom: 0; }
+    .corners::after { bottom: -14px; right: -14px; border-left: 0; border-top: 0; }
 
-    .features { display: grid; gap: 16px; }
-    @media (min-width: 600px) { .features { grid-template-columns: 1fr 1fr; } }
+    /* Cartões com foto/brilho */
+    .grid-cards { display: grid; gap: 18px; margin-top: 48px; }
+    @media (min-width: 800px) { .grid-cards { grid-template-columns: repeat(6, 1fr); } .c-wide { grid-column: span 4; } .c-narrow { grid-column: span 2; } .c-half { grid-column: span 3; } }
     .card {
-      background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 22px; box-shadow: 0 1px 0 rgba(47,74,30,.04);
+      position: relative; overflow: hidden; border-radius: var(--radius); min-height: 260px;
+      background: var(--surface); border: 1px solid var(--line);
+      display: flex; flex-direction: column; justify-content: flex-end; padding: 28px;
+      transition: border-color .25s ease, box-shadow .25s ease;
     }
+    .card:hover { border-color: var(--leaf); box-shadow: var(--shadow); }
+    .card h3 { color: var(--forest); }
     .card p { color: var(--muted); margin: 0; }
-    .icon {
-      width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
-      background: var(--sage); color: var(--forest); margin-bottom: 14px;
-    }
-    .icon svg { width: 24px; height: 24px; }
+    .card .icon { position: absolute; top: 26px; left: 28px; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--bg-2); color: var(--forest); }
+    .card .icon svg { width: 24px; height: 24px; }
+    .card.photo { min-height: 380px; background: #000 url("img/trilha.jpg") center 70% / cover no-repeat; }
+    .card.photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(8,13,5,.92) 100%); }
+    .card.photo > * { position: relative; }
+    .card.photo h3 { font-size: 1.7rem; color: #fff; }
+    .card.photo p { color: rgba(255, 255, 255, .88); }
 
-    /* Como funciona */
-    .steps-section { background: var(--forest); color: #fff; }
-    .steps-section .section-head p { color: rgba(255,255,255,.82); }
-    .steps-section .kicker { color: #D9C2A4 !important; }
-    ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; counter-reset: passo; }
-    @media (min-width: 720px) { ol.steps { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 1000px) { ol.steps { grid-template-columns: repeat(4, 1fr); } }
-    ol.steps li {
-      counter-increment: passo; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16);
-      border-radius: var(--radius); padding: 24px;
-    }
-    ol.steps li::before {
-      content: counter(passo); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
-      background: #fff; color: var(--forest); font-weight: 800; margin-bottom: 16px;
-    }
-    ol.steps p { color: rgba(255,255,255,.82); margin: 0; }
+    /* Detalhe do roteiro com chamadas */
+    .detail { display: grid; gap: 56px; align-items: center; margin-top: 56px; }
+    @media (min-width: 900px) { .detail { grid-template-columns: 1fr auto 1fr; } }
+    .callouts { display: grid; gap: 16px; }
+    .callout { border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; background: var(--surface); box-shadow: 0 1px 0 rgba(47,74,30,.04); }
+    .callout strong { display: block; margin-bottom: 2px; color: var(--forest); }
+    .callout span { color: var(--muted); font-size: .95rem; }
+    .detail .stage { margin: 0 auto; }
+
+    /* Números */
+    .stats { display: grid; gap: 36px; margin-top: 56px; }
+    @media (min-width: 800px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+    .stat { text-align: center; padding: 28px 16px; }
+    .stat .num { font-family: var(--display); font-size: clamp(3.4rem, 7vw, 5rem); line-height: 1; color: var(--forest); }
+    .stat p { color: var(--muted); margin: 8px 0 0; }
 
     /* Parceiros */
-    .partners { background: var(--paper); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .check-list { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 14px; }
-    .check-list li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }
-    .check-list li::before {
-      content: ""; width: 28px; height: 28px; border-radius: 50%; margin-top: 1px;
-      background: var(--sage) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232F4A1E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 16px no-repeat;
+    .partners { background: var(--bg-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .split { display: grid; gap: 48px; align-items: center; }
+    @media (min-width: 900px) { .split { grid-template-columns: 1.05fr .95fr; } }
+    .checks { list-style: none; padding: 0; margin: 28px 0 32px; display: grid; gap: 18px; }
+    .checks li { display: grid; grid-template-columns: 30px 1fr; gap: 14px; }
+    .checks li::before {
+      content: ""; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--leaf);
+      background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232F4A1E' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 15px no-repeat;
     }
-    .check-list strong { display: block; }
-    .check-list span { color: var(--muted); }
-    .panel-mock {
-      background: var(--sand); border: 1px solid var(--border); border-radius: 28px; padding: 24px; box-shadow: var(--shadow);
-    }
-    .panel-mock h3 { margin-bottom: 4px; }
-    .panel-mock .sub { color: var(--muted); font-size: .95rem; margin-bottom: 20px; }
-    .tabs-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tab { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; flex: 1 1 120px; }
+    .checks strong { display: block; color: var(--forest); }
+    .checks span { color: var(--muted); }
+    .panel { border: 1px solid var(--line); border-radius: 26px; padding: 26px; background: var(--surface); box-shadow: var(--shadow); }
+    .panel h3 { margin-bottom: 4px; color: var(--forest); }
+    .panel .sub { color: var(--muted); font-size: .95rem; margin-bottom: 20px; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tab { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--bg); }
     .tab strong { display: block; color: var(--forest); }
-    .tab span { font-size: .9rem; color: var(--muted); }
-
-    /* Confiança */
-    .trust { display: grid; gap: 16px; }
-    @media (min-width: 720px) { .trust { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 1000px) { .trust { grid-template-columns: repeat(4, 1fr); } }
+    .tab span { font-size: .88rem; color: var(--muted); }
 
     /* FAQ */
-    .faq { display: grid; gap: 12px; max-width: 820px; }
-    details { background: var(--paper); border: 1px solid var(--border); border-radius: 16px; padding: 4px 20px; }
-    summary { cursor: pointer; font-weight: 700; padding: 16px 0; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    .faq { display: grid; gap: 12px; max-width: 820px; margin: 44px auto 0; }
+    details { border: 1px solid var(--line); border-radius: 16px; padding: 4px 22px; background: var(--surface); }
+    details[open] { border-color: var(--leaf); }
+    summary { cursor: pointer; font-weight: 700; color: var(--forest); padding: 18px 0; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
     summary::-webkit-details-marker { display: none; }
-    summary::after { content: "+"; font-size: 1.4rem; line-height: 1; color: var(--leaf); }
+    summary::after { content: "+"; font-size: 1.5rem; line-height: 1; color: var(--leaf); }
     details[open] summary::after { content: "−"; }
     details p { color: var(--muted); }
 
     /* Chamada final */
-    .cta {
-      position: relative; color: #fff; text-align: center; overflow: hidden;
-      background: var(--forest) url("img/trilha.jpg") center 75% / cover no-repeat;
-    }
-    .cta::before { content: ""; position: absolute; inset: 0; background: rgba(25, 40, 15, .78); }
-    .cta .wrap { position: relative; padding-top: 88px; padding-bottom: 88px; }
-    .cta p { color: rgba(255,255,255,.88); font-size: 1.15rem; max-width: 36em; margin: 0 auto 28px; }
-    .cta .actions { justify-content: center; }
+    .final { text-align: center; overflow: hidden; }
+    .final::before { content: ""; position: absolute; left: 50%; top: 20%; width: 900px; height: 900px; transform: translateX(-50%); background: radial-gradient(circle, rgba(201,227,148,.45), rgba(201,227,148,0) 60%); pointer-events: none; }
+    .final .wrap { position: relative; }
+    .final .checks { max-width: 520px; margin: 32px auto 36px; text-align: left; }
 
-    footer { background: #1D2D12; color: rgba(255,255,255,.75); font-size: .95rem; }
-    footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: center; padding-top: 32px; padding-bottom: 32px; }
+    footer { border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: center; padding-top: 28px; padding-bottom: 28px; }
     footer nav { display: flex; flex-wrap: wrap; gap: 20px; }
     footer a { text-decoration: none; }
-    footer a:hover { color: #fff; text-decoration: underline; }
+    footer a:hover { color: var(--text); text-decoration: underline; }
+
+    /* Aparecer ao rolar (só com JS e sem redução de movimento) */
+    .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+    .js .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { opacity: 1; transform: none; transition: none; }
+      .btn, .card { transition: none; }
+    }
   </style>
 </head>
 <body>
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
-  <header class="top">
+  <header class="top" id="topo">
     <div class="wrap">
       <a class="brand" href="#" aria-label="RotaFácil, início da página">
-        <span class="mark"><img src="img/logo.png" alt="" width="88" height="88"></span>
-        RotaFácil
+        <span class="mark"><img src="img/logo.png" alt="" width="84" height="84"></span>
+        <span>Rota<b>Fácil</b></span>
       </a>
-      <nav class="links" aria-label="Seções da página">
-        <a href="#turistas">Para turistas</a>
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#parceiros">Para guias e agências</a>
-        <a href="#duvidas">Dúvidas</a>
-      </nav>
-      <a class="btn btn-primary" href="https://rotafacil.eco.br/">Acessar o app</a>
+      <div class="top-actions">
+        <a class="btn btn-white" href="#parceiros">Sou guia ou agência</a>
+        <a class="btn btn-primary" href="https://rotafacil.eco.br/">Acessar o app</a>
+      </div>
     </div>
   </header>
 
   <main id="conteudo">
     <section class="hero" aria-labelledby="titulo">
       <div class="wrap">
-        <div>
-          <span class="eyebrow">Turismo de natureza</span>
-          <h1 id="titulo">Sua próxima trilha começa aqui.</h1>
-          <p class="lead">O RotaFácil reúne trilhas, cachoeiras e acampamentos organizados por guias e agências. Você encontra o roteiro ideal, reserva em poucos toques e acompanha tudo até o dia da saída.</p>
-          <div class="actions">
-            <a class="btn btn-light" href="https://rotafacil.eco.br/">Encontrar um roteiro</a>
-            <a class="btn btn-ghost" href="#parceiros">Sou guia ou agência</a>
-          </div>
-          <p class="hero-note">Funciona no navegador do celular e do computador.</p>
+        <h1 id="titulo">Encontre a trilha.<br>Reserve. <span>Viva a aventura.</span></h1>
+        <p class="lead">Trilhas, cachoeiras e acampamentos organizados por guias e agências, com reserva em poucos toques e tudo o que você precisa saber antes de sair de casa.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://rotafacil.eco.br/">Encontrar um roteiro</a>
+          <a class="btn btn-outline" href="#video">Veja como funciona</a>
         </div>
-        <div class="phone">
-          <img src="img/app-explorar.png" width="393" height="853" alt="Tela Explorar do RotaFácil, com a busca de roteiros e o carrossel de atividades próximas mostrando uma cachoeira">
+        <div class="stage">
+          <div class="float f4" aria-hidden="true">
+            <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+            <div><strong>Atividades próximas</strong><span>Até 100 km de você</span></div>
+          </div>
+          <div class="float f1" aria-hidden="true">
+            <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <div><strong>Filtros</strong><span>Atividade, dificuldade e datas</span></div>
+          </div>
+          <div class="float f2" aria-hidden="true">
+            <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+            <div><strong>Reserva confirmada</strong><span>Você recebe o aviso</span></div>
+          </div>
+          <div class="float f3" aria-hidden="true">
+            <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+            <div><strong>Favoritos</strong><span>Salve para depois</span></div>
+          </div>
+          <div class="phone">
+            <img src="img/app-explorar.png" width="393" height="853" alt="Tela Explorar do RotaFácil, com a busca de roteiros e o carrossel de atividades próximas mostrando uma cachoeira">
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="chips" aria-label="Atividades disponíveis">
+    <section class="block center" id="video" aria-labelledby="t-video">
       <div class="wrap">
-        <span class="chip">Trekking</span>
-        <span class="chip">Cachoeiras</span>
-        <span class="chip">Aquatrekking</span>
-        <span class="chip">Acampamento</span>
-        <span class="chip">Tirolesa</span>
-        <span class="chip">Escalada</span>
-        <span class="chip">Ciclismo</span>
+        <p class="kicker reveal">Na prática</p>
+        <h2 class="display reveal" id="t-video">Do sofá para a trilha</h2>
+        <p class="lead reveal">Veja como é sair do “vamos marcar” para a aventura acontecendo.</p>
+        <div class="corners reveal" style="max-width: 980px; margin: 0 auto;">
+          <div class="video-frame">
+            <video controls playsinline preload="metadata" aria-label="Vídeo de apresentação do RotaFácil">
+              <source src="video/rotafacil-vlog.mp4#t=0.1" type="video/mp4">
+              Seu navegador não reproduz vídeos. <a href="video/rotafacil-vlog.mp4">Baixe o vídeo</a>.
+            </video>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
     <section class="block" id="turistas" aria-labelledby="t-turistas">
       <div class="wrap">
-        <div class="split">
-          <div class="phone">
-            <img src="img/app-roteiro.jpg" width="393" height="852" loading="lazy" alt="Página de um roteiro no RotaFácil, com dificuldade, distância, vagas, descrição, preço por pessoa e o botão Reservar">
+        <div class="center">
+          <p class="kicker reveal">Para turistas</p>
+          <h2 class="display reveal" id="t-turistas">Aventura planejada, sem improviso</h2>
+          <p class="lead reveal">Menos planilha e mensagem perdida. Tudo sobre o roteiro na mesma tela.</p>
+        </div>
+        <div class="grid-cards">
+          <article class="card photo c-wide reveal">
+            <h3>Roteiros perto de você</h3>
+            <p>Atividades a até 100 km da sua localização, os melhores avaliados e seções por tema, como cachoeiras, aquatrekking e acampamentos.</p>
+          </article>
+          <article class="card c-narrow reveal">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
+            <h3>Filtros que importam</h3>
+            <p>Atividade, dificuldade, datas e recursos de acessibilidade, com resultados no mapa.</p>
+          </article>
+          <article class="card c-half reveal">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg></div>
+            <h3>Checklist de preparação</h3>
+            <p>A lista do que levar vira um checklist só seu, com os itens obrigatórios em destaque.</p>
+          </article>
+          <article class="card c-half reveal">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></div>
+            <h3>Avisos a cada passo</h3>
+            <p>Notificações quando o organizador confirmar, recusar ou cancelar a sua reserva.</p>
+          </article>
+        </div>
+
+        <div class="detail">
+          <div class="callouts">
+            <div class="callout reveal"><strong>Tudo sobre o roteiro</strong><span>Dificuldade, distância, atividade e vagas logo no topo.</span></div>
+            <div class="callout reveal"><strong>Contato de emergência</strong><span>Telefone do organizador e instruções de acionamento.</span></div>
           </div>
-          <div>
-            <div class="section-head">
-              <p class="kicker">Para turistas</p>
-              <h2 id="t-turistas">Menos planilha e mensagem perdida. Mais tempo na trilha.</h2>
-              <p>Tudo o que você precisa saber antes de sair de casa, na mesma tela.</p>
+          <div class="stage reveal">
+            <div class="phone">
+              <img src="img/app-roteiro.jpg" width="393" height="852" loading="lazy" alt="Página de um roteiro no RotaFácil, com dificuldade, distância, vagas, descrição, preço por pessoa e o botão Reservar">
             </div>
-            <div class="features">
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
-                <h3>Perto de você</h3>
-                <p>Veja atividades a até 100 km da sua localização ou busque por estado e cidade.</p>
-              </div>
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg></div>
-                <h3>Filtros que importam</h3>
-                <p>Combine atividade, dificuldade, datas e recursos de acessibilidade, com resultados no mapa.</p>
-              </div>
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg></div>
-                <h3>Checklist de preparação</h3>
-                <p>A lista do que levar vira um checklist só seu, com os itens obrigatórios em destaque.</p>
-              </div>
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 13 3 3 0 0 0 6 19z"/></svg></div>
-                <h3>Previsão do tempo</h3>
-                <p>Consulte a previsão para a data escolhida e abra a rota até o ponto de encontro no Google Maps.</p>
-              </div>
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></div>
-                <h3>Avisos a cada passo</h3>
-                <p>Receba notificações quando o organizador confirmar, recusar ou cancelar a sua reserva.</p>
-              </div>
-              <div class="card">
-                <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
-                <h3>Favoritos</h3>
-                <p>Salve os roteiros que chamaram a sua atenção e volte a eles quando quiser.</p>
-              </div>
-            </div>
+          </div>
+          <div class="callouts">
+            <div class="callout reveal"><strong>Previsão do tempo</strong><span>Para a data escolhida, com até 16 dias de antecedência.</span></div>
+            <div class="callout reveal"><strong>Rota até o encontro</strong><span>Abra o ponto de encontro direto no Google Maps.</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="block steps-section" id="como-funciona" aria-labelledby="t-como">
+    <section class="block center" aria-labelledby="t-numeros" style="padding-top: 0">
       <div class="wrap">
-        <div class="section-head">
-          <p class="kicker">Como funciona</p>
-          <h2 id="t-como">Da busca à avaliação, em quatro passos.</h2>
-          <p>O organizador confirma cada reserva, e você acompanha a situação pelo app.</p>
+        <h2 class="display reveal" id="t-numeros">Feito para quem gosta de ar livre</h2>
+        <div class="stats">
+          <div class="stat corners reveal"><div class="num">100 km</div><p>de raio para achar atividades perto de você</p></div>
+          <div class="stat corners reveal"><div class="num">16 dias</div><p>de previsão do tempo para a data da saída</p></div>
+          <div class="stat corners reveal"><div class="num">4 passos</div><p>da busca à avaliação: encontre, reserve, prepare-se e avalie</p></div>
         </div>
-        <ol class="steps">
-          <li><h3>Encontre</h3><p>Explore roteiros próximos, os mais bem avaliados ou use os filtros.</p></li>
-          <li><h3>Reserve</h3><p>Escolha uma das datas disponíveis e envie a solicitação ao organizador.</p></li>
-          <li><h3>Prepare-se</h3><p>Com a reserva confirmada, veja o ponto de encontro, o checklist e o contato do responsável.</p></li>
-          <li><h3>Viva e avalie</h3><p>Depois da saída, avalie o roteiro, o guia e a agência e ajude outros aventureiros.</p></li>
-        </ol>
       </div>
     </section>
 
     <section class="block partners" id="parceiros" aria-labelledby="t-parceiros">
-      <div class="wrap">
-        <div class="split reverse">
-          <div class="panel-mock" aria-hidden="true">
-            <h3>Painel do organizador</h3>
-            <p class="sub">As áreas que guias e agências usam no dia a dia.</p>
-            <div class="tabs-row">
-              <div class="tab"><strong>Painel</strong><span>Roteiros ativos, reservas e próximos 30 dias</span></div>
-              <div class="tab"><strong>Roteiros</strong><span>Saídas, vagas, preço e ponto no mapa</span></div>
-              <div class="tab"><strong>Agenda</strong><span>Reservas por data, para confirmar ou recusar</span></div>
-              <div class="tab"><strong>Guias</strong><span>Convites e equipe da agência</span></div>
-            </div>
-          </div>
-          <div>
-            <div class="section-head">
-              <p class="kicker">Para guias e agências</p>
-              <h2 id="t-parceiros">Organize suas saídas e encha as vagas.</h2>
-              <p>Divulgue seus roteiros para quem já está procurando aventura e controle tudo em um só lugar.</p>
-            </div>
-            <ul class="check-list">
-              <li><div><strong>Roteiros completos</strong><span>Várias datas de saída, vagas, preço por pessoa, o que levar, acessibilidade e ponto de início no mapa.</span></div></li>
-              <li><div><strong>Reservas sob controle</strong><span>Seja avisado de cada solicitação, confirme ou recuse e veja os inscritos de cada data.</span></div></li>
-              <li><div><strong>Equipe da agência</strong><span>Convide guias e atribua cada um aos roteiros que vai conduzir.</span></div></li>
-              <li><div><strong>Reputação que conta</strong><span>Finalize a saída para liberar as avaliações e conquiste o selo Perfil verificado.</span></div></li>
-            </ul>
-            <a class="btn btn-primary" href="https://rotafacil.eco.br/">Cadastrar meus roteiros</a>
+      <div class="wrap split">
+        <div>
+          <p class="kicker reveal">Para guias e agências</p>
+          <h2 class="display reveal" id="t-parceiros">Organize suas saídas. Encha as vagas.</h2>
+          <p class="lead reveal">Divulgue seus roteiros para quem já está procurando aventura e controle tudo em um só lugar.</p>
+          <ul class="checks">
+            <li class="reveal"><div><strong>Roteiros completos</strong><span>Várias datas de saída, vagas, preço, o que levar, acessibilidade e ponto de início no mapa.</span></div></li>
+            <li class="reveal"><div><strong>Reservas sob controle</strong><span>Seja avisado de cada solicitação, confirme ou recuse e veja os inscritos por data.</span></div></li>
+            <li class="reveal"><div><strong>Equipe da agência</strong><span>Convide guias e atribua cada um aos roteiros que vai conduzir.</span></div></li>
+            <li class="reveal"><div><strong>Reputação que conta</strong><span>Finalize a saída para liberar avaliações e conquiste o selo Perfil verificado.</span></div></li>
+          </ul>
+          <a class="btn btn-primary reveal" href="https://rotafacil.eco.br/">Cadastrar meus roteiros</a>
+        </div>
+        <div class="panel reveal" aria-hidden="true">
+          <h3>Painel do organizador</h3>
+          <p class="sub">As áreas que guias e agências usam no dia a dia.</p>
+          <div class="tabs">
+            <div class="tab"><strong>Painel</strong><span>Roteiros ativos, reservas e próximos 30 dias</span></div>
+            <div class="tab"><strong>Roteiros</strong><span>Saídas, vagas, preço e ponto no mapa</span></div>
+            <div class="tab"><strong>Agenda</strong><span>Reservas por data, para confirmar ou recusar</span></div>
+            <div class="tab"><strong>Guias</strong><span>Convites e equipe da agência</span></div>
           </div>
         </div>
       </div>
@@ -358,59 +380,47 @@
 
     <section class="block" aria-labelledby="t-confianca">
       <div class="wrap">
-        <div class="section-head">
-          <p class="kicker">Segurança e confiança</p>
-          <h2 id="t-confianca">Aventura com responsabilidade.</h2>
+        <div class="center">
+          <p class="kicker reveal">Segurança e confiança</p>
+          <h2 class="display reveal" id="t-confianca">Aventura com responsabilidade</h2>
         </div>
-        <div class="trust">
-          <div class="card">
-            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div>
-            <h3>Contato de emergência</h3>
-            <p>Cada roteiro informa o telefone de emergência do organizador e como acioná-lo.</p>
-          </div>
-          <div class="card">
+        <div class="grid-cards">
+          <article class="card c-half reveal">
             <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
             <h3>Perfil verificado</h3>
             <p>Guias e agências enviam documentos profissionais, analisados antes de receberem o selo.</p>
-          </div>
-          <div class="card">
+          </article>
+          <article class="card c-half reveal">
             <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></div>
             <h3>Avaliações reais</h3>
             <p>Só avalia quem participou: as avaliações são liberadas depois que a saída é concluída.</p>
-          </div>
-          <div class="card">
+          </article>
+          <article class="card c-half reveal">
+            <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div>
+            <h3>Contato de emergência</h3>
+            <p>Cada roteiro informa o telefone de emergência do organizador e como acioná-lo.</p>
+          </article>
+          <article class="card c-half reveal">
             <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 9h14M12 9v13M8 22l4-7 4 7"/></svg></div>
             <h3>Acessibilidade informada</h3>
             <p>Os roteiros mostram as condições de acessibilidade e restrições declaradas pelo organizador.</p>
-          </div>
+          </article>
         </div>
-      </div>
-    </section>
 
-    <section class="block" id="duvidas" aria-labelledby="t-duvidas" style="padding-top: 0">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="kicker">Dúvidas frequentes</p>
-          <h2 id="t-duvidas">Antes de começar</h2>
-        </div>
-        <div class="faq">
-          <details>
+        <div class="faq" id="duvidas">
+          <details class="reveal">
             <summary>Preciso instalar alguma coisa?</summary>
             <p>Não. O RotaFácil funciona direto no navegador do celular ou do computador. Basta acessar rotafacil.eco.br e criar a sua conta.</p>
           </details>
-          <details>
+          <details class="reveal">
             <summary>O pagamento é feito pelo app?</summary>
             <p>Não. O RotaFácil organiza a busca e a reserva. O valor mostrado é informado pelo organizador, e o pagamento é combinado diretamente com ele.</p>
           </details>
-          <details>
+          <details class="reveal">
             <summary>Quem pode cadastrar roteiros?</summary>
             <p>Guias e agências com conta de organizador e Cadastur informado. Agências também podem convidar guias para a sua equipe.</p>
           </details>
-          <details>
-            <summary>Como sei se o roteiro é acessível para mim?</summary>
-            <p>Use o filtro de recursos de acessibilidade na busca e confira a seção "Acessibilidade e restrições" do roteiro. As condições são informadas pelo organizador; em caso de dúvida, fale com ele antes de reservar.</p>
-          </details>
-          <details>
+          <details class="reveal">
             <summary>Posso cancelar uma reserva?</summary>
             <p>Sim. Você acompanha e cancela as suas reservas na aba Reservas, e o organizador é avisado.</p>
           </details>
@@ -418,13 +428,18 @@
       </div>
     </section>
 
-    <section class="cta" aria-labelledby="t-cta">
+    <section class="block final" aria-labelledby="t-final">
       <div class="wrap">
-        <h2 id="t-cta">Pronto para a próxima aventura?</h2>
-        <p>Crie a sua conta e descubra roteiros perto de você, ou cadastre os seus e alcance novos aventureiros.</p>
-        <div class="actions">
-          <a class="btn btn-light" href="https://rotafacil.eco.br/">Começar agora</a>
-          <a class="btn btn-ghost" href="#parceiros">Quero divulgar meus roteiros</a>
+        <h2 class="display reveal" id="t-final" style="font-size: clamp(3rem, 8vw, 6rem)">Sua próxima trilha<br>começa aqui</h2>
+        <ul class="checks">
+          <li class="reveal"><div><strong>Encontre roteiros perto de você</strong></div></li>
+          <li class="reveal"><div><strong>Reserve direto com guias e agências</strong></div></li>
+          <li class="reveal"><div><strong>Prepare-se com checklist e previsão do tempo</strong></div></li>
+          <li class="reveal"><div><strong>Funciona no navegador, sem instalar nada</strong></div></li>
+        </ul>
+        <div class="actions reveal">
+          <a class="btn btn-primary" href="https://rotafacil.eco.br/">Começar agora</a>
+          <a class="btn btn-outline" href="#parceiros">Quero divulgar meus roteiros</a>
         </div>
       </div>
     </section>
@@ -440,5 +455,26 @@
       </nav>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      var header = document.getElementById('topo');
+      function onScroll() { header.classList.toggle('scrolled', window.scrollY > 24); }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      var items = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        items.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+      items.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
 </body>
 </html>
